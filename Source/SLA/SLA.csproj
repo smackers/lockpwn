@@ -1,0 +1,116 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">x86</Platform>
+    <ProductVersion>8.0.30703</ProductVersion>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectGuid>{502822C2-B456-424E-9980-F2535010A057}</ProjectGuid>
+    <OutputType>Exe</OutputType>
+    <RootNamespace>Lockpwn</RootNamespace>
+    <AssemblyName>lockpwn</AssemblyName>
+    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|x86' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>..\..\Binaries</OutputPath>
+    <DefineConstants>DEBUG;</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <ConsolePause>false</ConsolePause>
+    <PlatformTarget>x86</PlatformTarget>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|x86' ">
+    <Optimize>true</Optimize>
+    <OutputPath>..\..\Binaries</OutputPath>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <ConsolePause>false</ConsolePause>
+    <PlatformTarget>x86</PlatformTarget>
+  </PropertyGroup>
+  <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
+  <ItemGroup>
+    <Reference Include="System" />
+    <Reference Include="Microsoft.CSharp" />
+    <Reference Include="Core">
+      <HintPath>..\..\BoogieBinaries\Core.dll</HintPath>
+    </Reference>
+    <Reference Include="Basetypes">
+      <HintPath>..\..\BoogieBinaries\Basetypes.dll</HintPath>
+    </Reference>
+    <Reference Include="CodeContractsExtender">
+      <HintPath>..\..\BoogieBinaries\CodeContractsExtender.dll</HintPath>
+    </Reference>
+    <Reference Include="AbsInt">
+      <HintPath>..\..\BoogieBinaries\AbsInt.dll</HintPath>
+    </Reference>
+    <Reference Include="ExecutionEngine">
+      <HintPath>..\..\BoogieBinaries\ExecutionEngine.dll</HintPath>
+    </Reference>
+    <Reference Include="ParserHelper">
+      <HintPath>..\..\BoogieBinaries\ParserHelper.dll</HintPath>
+    </Reference>
+    <Reference Include="Provers.SMTLib">
+      <HintPath>..\..\BoogieBinaries\Provers.SMTLib.dll</HintPath>
+    </Reference>
+    <Reference Include="VCExpr">
+      <HintPath>..\..\BoogieBinaries\VCExpr.dll</HintPath>
+    </Reference>
+    <Reference Include="VCGeneration">
+      <HintPath>..\..\BoogieBinaries\VCGeneration.dll</HintPath>
+    </Reference>
+    <Reference Include="Graph">
+      <HintPath>..\..\BoogieBinaries\Graph.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Program.cs" />
+    <Compile Include="Utilities\Utilities.cs" />
+    <Compile Include="Utilities\AnalysisContextParser.cs" />
+    <Compile Include="Utilities\ExecutionTimer.cs" />
+    <Compile Include="IO\BoogieProgramEmitter.cs" />
+    <Compile Include="IO\Reporter.cs" />
+    <Compile Include="AnalysisContext.cs" />
+    <Compile Include="AccessType.cs" />
+    <Compile Include="Outcome.cs" />
+    <Compile Include="Analysis\ModelCleaner.cs" />
+    <Compile Include="Analysis\PointerArithmeticAnalyser.cs" />
+    <Compile Include="Analysis\Factory.cs" />
+    <Compile Include="Analysis\Passes\LockAbstraction.cs" />
+    <Compile Include="Analysis\Passes\SharedStateAbstraction.cs" />
+    <Compile Include="IPass.cs" />
+    <Compile Include="ToolCommandLineOptions.cs" />
+    <Compile Include="Refactoring\Passes\LockRefactoring.cs" />
+    <Compile Include="Refactoring\Factory.cs" />
+    <Compile Include="Analysis\Passes\ThreadCreationAnalysis.cs" />
+    <Compile Include="DataStructures\Graph.cs" />
+    <Compile Include="DataStructures\Lock.cs" />
+    <Compile Include="DataStructures\Lockset.cs" />
+    <Compile Include="DataStructures\Thread.cs" />
+    <Compile Include="LocksetInstrumentationEngine.cs" />
+    <Compile Include="Instrumentation\Factory.cs" />
+    <Compile Include="Instrumentation\Passes\LocksetInstrumentation.cs" />
+    <Compile Include="Instrumentation\Passes\YieldInstrumentation.cs" />
+    <Compile Include="Instrumentation\Passes\GlobalRaceCheckingInstrumentation.cs" />
+    <Compile Include="Analysis\Passes\SharedStateAnalysis.cs" />
+    <Compile Include="ParsingEngine.cs" />
+    <Compile Include="Instrumentation\Passes\RaceCheckingInstrumentation.cs" />
+    <Compile Include="Instrumentation\Passes\ErrorReportingInstrumentation.cs" />
+    <Compile Include="ThreadAnalysisEngine.cs" />
+    <Compile Include="Refactoring\Passes\ThreadRefactoring.cs" />
+    <Compile Include="Instrumentation\Passes\AccessCheckingInstrumentation.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Utilities\" />
+    <Folder Include="IO\" />
+    <Folder Include="Analysis\" />
+    <Folder Include="Refactoring\" />
+    <Folder Include="Instrumentation\" />
+    <Folder Include="Analysis\Passes\" />
+    <Folder Include="Instrumentation\Passes\" />
+    <Folder Include="Refactoring\Passes\" />
+    <Folder Include="DataStructures\" />
+  </ItemGroup>
+</Project>
