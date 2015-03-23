@@ -15,6 +15,11 @@ namespace Lockpwn.Refactoring
 {
   internal static class Factory
   {
+    internal static IPass CreateProgramSimplifier(AnalysisContext ac)
+    {
+      return new ProgramSimplifier(ac);
+    }
+
     internal static IPass CreateLockRefactoring(AnalysisContext ac)
     {
       return new LockRefactoring(ac);

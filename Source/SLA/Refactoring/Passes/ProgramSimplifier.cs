@@ -12,24 +12,31 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics.Contracts;
 using System.Linq;
+using System.ComponentModel.Design.Serialization;
 
-namespace Lockpwn
+using Microsoft.Boogie;
+using Microsoft.Basetypes;
+
+namespace Lockpwn.Refactoring
 {
-  internal sealed class ThreadAnalysisEngine
+  internal class ProgramSimplifier : IPass
   {
     private AnalysisContext AC;
     private ExecutionTimer Timer;
 
-    internal ThreadAnalysisEngine(AnalysisContext ac)
+    internal ProgramSimplifier(AnalysisContext ac)
     {
       Contract.Requires(ac != null);
       this.AC = ac;
     }
 
-    internal void Run()
+    /// <summary>
+    /// Runs a program simplification pass.
+    /// </summary>
+    void IPass.Run()
     {
       if (ToolCommandLineOptions.Get().VerboseMode)
-        Console.WriteLine(". ThreadAnalysis");
+        Console.WriteLine("... ProgramSimplifier");
 
       if (ToolCommandLineOptions.Get().MeasureTime)
       {
@@ -37,20 +44,23 @@ namespace Lockpwn
         this.Timer.Start();
       }
 
-      Refactoring.Factory.CreateProgramSimplifier(this.AC).Run();
-
-      Analysis.Factory.CreateThreadCreationAnalysis(this.AC).Run();
-      Analysis.Factory.CreateLockAbstraction(this.AC).Run();
-
-      Refactoring.Factory.CreateLockRefactoring(this.AC).Run();
-      Refactoring.Factory.CreateThreadRefactoring(this.AC).Run();
-
-      Analysis.Factory.CreateSharedStateAnalysis(this.AC).Run();
+      foreach (var impl in this.AC.TopLevelDeclarations.OfType<Implementation>().ToList())
+      {
+        this.RemoveExternalAsserts(impl);
+      }
 
       if (ToolCommandLineOptions.Get().MeasureTime)
       {
         this.Timer.Stop();
-        Console.WriteLine("... ThreadAnalysis done [{0}]", this.Timer.Result());
+        Console.WriteLine("..... [{0}]", this.Timer.Result());
+      }
+    }
+
+    private void RemoveExternalAsserts(Implementation impl)
+    {
+      foreach (var block in impl.Blocks)
+      {
+        block.Cmds.RemoveAll(val => val is AssertCmd);
       }
     }
   }

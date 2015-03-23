@@ -16,6 +16,7 @@ using System.ComponentModel.Design.Serialization;
 
 using Microsoft.Boogie;
 using Microsoft.Basetypes;
+
 using Lockpwn.Analysis;
 
 namespace Lockpwn.Refactoring

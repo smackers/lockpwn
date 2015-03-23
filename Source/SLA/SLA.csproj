@@ -107,6 +107,7 @@
     <Compile Include="ErrorReporter.cs" />
     <Compile Include="Analysis\Passes\RaceCheckAnalysis.cs" />
     <Compile Include="Analysis\Passes\ThreadUsageAnalysis.cs" />
+    <Compile Include="Refactoring\Passes\ProgramSimplifier.cs" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Utilities\" />
