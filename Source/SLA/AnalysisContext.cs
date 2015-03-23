@@ -35,15 +35,11 @@ namespace Lockpwn
     internal HashSet<GlobalVariable> SharedMemoryRegions;
     internal Dictionary<Thread, HashSet<GlobalVariable>> ThreadMemoryRegions;
 
+    internal ErrorReporter ErrorReporter;
+
     internal Microsoft.Boogie.Type MemoryModelType;
 
     internal Implementation EntryPoint
-    {
-      get;
-      private set;
-    }
-
-    internal Implementation Checker
     {
       get;
       private set;
@@ -73,13 +69,19 @@ namespace Lockpwn
 
       this.MemoryModelType = Microsoft.Boogie.Type.Int;
 
+      this.ErrorReporter = new ErrorReporter();
+
       this.ResetToProgramTopLevelDeclarations();
 
       this.EntryPoint = this.TopLevelDeclarations.OfType<Implementation>().ToList().
         FirstOrDefault(val => QKeyValue.FindBoolAttribute(val.Attributes, "entrypoint"));
-
-      this.Checker = this.TopLevelDeclarations.OfType<Implementation>().ToList().
-        FirstOrDefault(val => val.Name.Equals("lockpwn$checker"));
+      if (this.EntryPoint == null)
+        this.EntryPoint = this.GetImplementation("main");
+      if (this.EntryPoint == null)
+      {
+        Lockpwn.IO.Reporter.ErrorWriteLine("Unable to detect entrypoint or main function.");
+        Environment.Exit((int)Outcome.ParsingError);
+      }
     }
 
     internal void EliminateDeadVariables()
@@ -97,6 +99,21 @@ namespace Lockpwn
       foreach (var impl in this.GetThreadSpecificFunctions(thread))
       {
         if (impl.Equals(thread.Function))
+          continue;
+        impl.Proc.Attributes = new QKeyValue(Token.NoToken,
+          "inline", new List<object>{ new LiteralExpr(Token.NoToken, BigNum.FromInt(1)) },
+          impl.Proc.Attributes);
+        impl.Attributes = new QKeyValue(Token.NoToken,
+          "inline", new List<object>{ new LiteralExpr(Token.NoToken, BigNum.FromInt(1)) },
+          impl.Attributes);
+      }
+    }
+
+    internal void InlineThreadHelpers()
+    {
+      foreach (var impl in this.TopLevelDeclarations.OfType<Implementation>())
+      {
+        if (!Utilities.IsPThreadFunction(impl.Name))
           continue;
         impl.Proc.Attributes = new QKeyValue(Token.NoToken,
           "inline", new List<object>{ new LiteralExpr(Token.NoToken, BigNum.FromInt(1)) },

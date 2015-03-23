@@ -64,6 +64,9 @@
     <Reference Include="Graph">
       <HintPath>..\..\BoogieBinaries\Graph.dll</HintPath>
     </Reference>
+    <Reference Include="Model">
+      <HintPath>..\..\BoogieBinaries\Model.dll</HintPath>
+    </Reference>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Program.cs" />
@@ -101,6 +104,9 @@
     <Compile Include="ThreadAnalysisEngine.cs" />
     <Compile Include="Refactoring\Passes\ThreadRefactoring.cs" />
     <Compile Include="Instrumentation\Passes\AccessCheckingInstrumentation.cs" />
+    <Compile Include="StaticLocksetAnalyser.cs" />
+    <Compile Include="ErrorReporter.cs" />
+    <Compile Include="Analysis\Passes\RaceCheckAnalysis.cs" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Utilities\" />

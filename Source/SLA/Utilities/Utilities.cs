@@ -81,7 +81,8 @@ namespace Lockpwn
         funcName.Contains("pthread_exit") ||
         funcName.Contains("pthread_mutexattr_init") ||
         funcName.Contains("pthread_mutexattr_settype") ||
-        funcName.Contains("pthread_self"))
+        funcName.Contains("pthread_self") ||
+        funcName.Contains("__call_wrapper"))
         return true;
       return false;
     }

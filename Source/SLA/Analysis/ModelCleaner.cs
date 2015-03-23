@@ -73,8 +73,6 @@ namespace Lockpwn.Analysis
       {
         if (impl.Name.Equals(ac.EntryPoint))
           continue;
-        if (impl.Equals(ac.Checker))
-          continue;
         if (QKeyValue.FindBoolAttribute(impl.Attributes, "checker"))
           continue;
         if (impl.Name.StartsWith("$memcpy") || impl.Name.StartsWith("memcpy_fromio") ||
@@ -184,10 +182,6 @@ namespace Lockpwn.Analysis
       ac.TopLevelDeclarations.Remove(ac.GetConstant(ac.EntryPoint.Name));
       ac.TopLevelDeclarations.Remove(ac.EntryPoint.Proc);
       ac.TopLevelDeclarations.Remove(ac.EntryPoint);
-
-      ac.TopLevelDeclarations.Remove(ac.GetConstant(ac.Checker.Name));
-      ac.TopLevelDeclarations.Remove(ac.Checker.Proc);
-      ac.TopLevelDeclarations.Remove(ac.Checker);
     }
 
     internal static void RemoveUnecesseryInfoFromSpecialFunctions(AnalysisContext ac)

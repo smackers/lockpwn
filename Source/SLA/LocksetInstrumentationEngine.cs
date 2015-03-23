@@ -47,9 +47,8 @@ namespace Lockpwn
       Instrumentation.Factory.CreateAccessCheckingInstrumentation(this.AC).Run();
 
       foreach (var thread in this.AC.Threads)
-      {
         this.AC.InlineThread(thread);
-      }
+      this.AC.InlineThreadHelpers();
 
 //        ModelCleaner.RemoveInlineFromHelperFunctions(this.AC, this.EP);
 //      ModelCleaner.RemoveUnecesseryInfoFromSpecialFunctions(this.AC);

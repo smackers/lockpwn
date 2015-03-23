@@ -69,10 +69,22 @@ namespace Lockpwn
           }
         }
 
+        if (ToolCommandLineOptions.Get().NoInstrumentation)
+        {
+          Program.CheckAndSpitProgram(fileList);
+        }
+
         var ac = new ParsingEngine(fileList).Run();
 
         new ThreadAnalysisEngine(ac).Run();
         new LocksetInstrumentationEngine(ac).Run();
+
+        Lockpwn.IO.BoogieProgramEmitter.Emit(ac.TopLevelDeclarations, ToolCommandLineOptions.Get().Files[
+          ToolCommandLineOptions.Get().Files.Count - 1], "$instrumented", "bpl");
+
+        new AnalysisContextParser(fileList[fileList.Count - 1], "bpl").TryParseNew(ref ac,
+          new List<string> { "$instrumented" });
+        new StaticLocksetAnalyser(ac).Run();
 
         if (ToolCommandLineOptions.Get().VerboseMode)
           Console.WriteLine(". Done");
@@ -90,21 +102,20 @@ namespace Lockpwn
       }
     }
 
-//    private static void RunStaticLocksetAnalysisInstrumentationEngine(AnalysisContext ac)
-//    {
-//      Program.StartTimer("StaticLocksetAnalysisInstrumentationEngine");
-//
-//      AnalysisContext ac = null;
-//      new AnalysisContextParser(Program.FileList[Program.FileList.Count - 1], "bpl").TryParseNew(
-//        ref ac, new List<string> { ep.Name });
-//
-//      Analysis.SharedStateAnalyser.AnalyseMemoryRegions(ac, ep);
-//      AnalysisContext.RegisterEntryPointAnalysisContext(ac, ep);
-//
-//      var ac = AnalysisContext.GetAnalysisContext(ep);
-//      new StaticLocksetAnalysisInstrumentationEngine(ac, ep).Run();
-//
-//      Program.StopTimer();
-//    }
+    internal static void CheckAndSpitProgram(List<string> fileList)
+    {
+      AnalysisContext ac = null;
+      new AnalysisContextParser(fileList[fileList.Count - 1], "bpl").TryParseNew(ref ac,
+        new List<string> { "$instrumented" });
+      new StaticLocksetAnalyser(ac).Run();
+
+      if (ToolCommandLineOptions.Get().VerboseMode)
+        Console.WriteLine(". Done");
+
+      Lockpwn.IO.BoogieProgramEmitter.Emit(ac.TopLevelDeclarations, ToolCommandLineOptions.Get().Files[
+        ToolCommandLineOptions.Get().Files.Count - 1], "$pwned", "bpl");
+
+      Environment.Exit((int)Outcome.Done);
+    }
   }
 }

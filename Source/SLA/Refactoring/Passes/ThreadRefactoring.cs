@@ -68,10 +68,6 @@ namespace Lockpwn.Refactoring
 
     private void RefactorEntryPointAttributes()
     {
-      var constant = this.AC.TopLevelDeclarations.OfType<Constant>().First(val =>
-        val.Name.Equals(this.Thread.Name));
-      this.AC.TopLevelDeclarations.Remove(constant);
-
       this.Thread.Function.Proc.Attributes = new QKeyValue(Token.NoToken,
         "thread", new List<object>(), null);
       this.Thread.Function.Attributes = new QKeyValue(Token.NoToken,

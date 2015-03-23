@@ -34,6 +34,11 @@ namespace Lockpwn.Analysis
       return new SharedStateAbstraction(ac);
     }
 
+    internal static IPass CreateRaceCheckAnalysis(AnalysisContext ac)
+    {
+      return new RaceCheckAnalysis(ac);
+    }
+
 //    internal static IPass CreateWatchdogInformationAnalysis(AnalysisContext ac, EntryPoint ep)
 //    {
 //      return new WatchdogInformationAnalysis(ac, ep);

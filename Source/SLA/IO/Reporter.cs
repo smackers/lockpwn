@@ -75,5 +75,41 @@ namespace Lockpwn.IO
         Console.WriteLine(s);
       }
     }
+
+    public static void WriteTrailer(PipelineStatistics stats)
+    {
+      Contract.Requires(0 <= stats.ErrorCount);
+
+      if (CommandLineOptions.Clo.vcVariety == CommandLineOptions.VCVariety.Doomed)
+      {
+        Console.Write("..... {0} credible, {1} doomed{2}", stats.VerifiedCount,
+          stats.ErrorCount, stats.ErrorCount == 1 ? "" : "s");
+      }
+      else
+      {
+        Console.Write("..... {0} verified, {1} error{2}", stats.VerifiedCount,
+          stats.ErrorCount, stats.ErrorCount == 1 ? "" : "s");
+      }
+
+      if (stats.InconclusiveCount != 0)
+      {
+        Console.Write(", {0} inconclusive{1}", stats.InconclusiveCount,
+          stats.InconclusiveCount == 1 ? "" : "s");
+      }
+
+      if (stats.TimeoutCount != 0)
+      {
+        Console.Write(", {0} time out{1}", stats.TimeoutCount,
+          stats.TimeoutCount == 1 ? "" : "s");
+      }
+
+      if (stats.OutOfMemoryCount != 0)
+      {
+        Console.Write(", {0} out of memory", stats.OutOfMemoryCount);
+      }
+
+      Console.WriteLine();
+      Console.Out.Flush();
+    }
   }
 }

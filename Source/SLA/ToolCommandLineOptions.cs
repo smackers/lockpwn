@@ -24,6 +24,10 @@ namespace Lockpwn
     internal bool SuperVerboseMode = false;
     internal bool DebugMode = false;
 
+    internal bool ShowErrorModel = false;
+
+    internal bool NoInstrumentation = false;
+
     internal ToolCommandLineOptions() : base("lockpwn", "lockpwn static lockset analyser")
     {
 
@@ -72,6 +76,16 @@ namespace Lockpwn
       else if (option == "debug" || option == "d")
       {
         this.DebugMode = true;
+        return true;
+      }
+      else if (option == "showErrorModel")
+      {
+        this.ShowErrorModel = true;
+        return true;
+      }
+      else if (option == "noInstrument")
+      {
+        this.NoInstrumentation = true;
         return true;
       }
 
