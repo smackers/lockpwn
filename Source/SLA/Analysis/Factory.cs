@@ -21,7 +21,7 @@ namespace Lockpwn.Analysis
 
     internal static IPass CreateThreadCreationAnalysis(AnalysisContext ac)
     {
-      return new ThreadCreationAnalysis(ac);
+      return new ThreadUsageAnalysis(ac);
     }
 
     internal static IPass CreateSharedStateAnalysis(AnalysisContext ac)

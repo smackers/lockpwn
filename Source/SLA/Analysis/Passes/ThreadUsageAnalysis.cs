@@ -18,24 +18,24 @@ using Microsoft.Basetypes;
 
 namespace Lockpwn.Analysis
 {
-  internal class ThreadCreationAnalysis : IPass
+  internal class ThreadUsageAnalysis : IPass
   {
     private AnalysisContext AC;
     private ExecutionTimer Timer;
 
-    internal ThreadCreationAnalysis(AnalysisContext ac)
+    internal ThreadUsageAnalysis(AnalysisContext ac)
     {
       Contract.Requires(ac != null);
       this.AC = ac;
     }
 
     /// <summary>
-    /// Runs a thread creation analysis pass.
+    /// Runs a thread usage analysis pass.
     /// </summary>
     void IPass.Run()
     {
       if (ToolCommandLineOptions.Get().VerboseMode)
-        Console.WriteLine("... ThreadCreationAnalysis");
+        Console.WriteLine("... ThreadUsageAnalysis");
 
       if (ToolCommandLineOptions.Get().MeasureTime)
       {
@@ -45,6 +45,7 @@ namespace Lockpwn.Analysis
 
       this.CreateMainThread();
       this.IdentifyThreadCreation();
+      this.IdentifyThreadJoin();
 
       if (ToolCommandLineOptions.Get().MeasureTime)
       {
@@ -87,6 +88,46 @@ namespace Lockpwn.Analysis
           if (ToolCommandLineOptions.Get().SuperVerboseMode)
             Console.WriteLine("..... '{0}' spawns new thread '{1}'",
               this.AC.EntryPoint.Name, thread.Name);
+        }
+      }
+    }
+
+    /// <summary>
+    /// Performs an analysis to identify thread join.
+    /// </summary>
+    private void IdentifyThreadJoin()
+    {
+      foreach (var block in this.AC.EntryPoint.Blocks)
+      {
+        for (int idx = 0; idx < block.Cmds.Count; idx++)
+        {
+          if (!(block.Cmds[idx] is CallCmd))
+            continue;
+
+          var call = block.Cmds[idx] as CallCmd;
+          if (!(block.Cmds[idx] as CallCmd).callee.Contains("pthread_join"))
+            continue;
+
+          var threadIdExpr = PointerArithmeticAnalyser.ComputeRootPointer(
+            this.AC.EntryPoint, block.Label, call.Ins[0], true);
+          if (threadIdExpr is NAryExpr)
+          {
+            var nary = threadIdExpr as NAryExpr;
+            if (nary.Fun is MapSelect && nary.Args.Count == 2)
+            {
+              threadIdExpr = nary.Args[1];
+            }
+          }
+
+          if (!(threadIdExpr is IdentifierExpr))
+            continue;
+
+          var thread = this.AC.Threads.First(val => !val.IsMain &&
+            val.Id.Name.Equals((threadIdExpr as IdentifierExpr).Name));
+          if (!thread.Creator.Equals(this.AC.EntryPoint))
+            continue;
+
+          thread.Joiner = new Tuple<Implementation, Block, CallCmd>(this.AC.EntryPoint, block, call);
         }
       }
     }

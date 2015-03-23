@@ -23,7 +23,8 @@ namespace Lockpwn
     internal readonly Implementation Function;
     internal readonly Expr Arg;
 
-    internal readonly Implementation Creator;
+    internal Implementation Creator;
+    internal Tuple<Implementation, Block, CallCmd> Joiner;
 
     internal readonly bool IsMain;
     internal readonly bool CreatedAtRoot;
@@ -44,6 +45,7 @@ namespace Lockpwn
       this.Function = ac.GetImplementation(this.Name);
       this.Arg = arg;
       this.Creator = creator;
+      this.Joiner = null;
 
       this.IsMain = false;
       if (ac.EntryPoint.Equals(creator))

@@ -57,16 +57,7 @@ namespace Lockpwn.Instrumentation
 
     private void InstrumentMain()
     {
-      Block exitBlock = null;
-      foreach (var b in this.AC.EntryPoint.Blocks)
-      {
-        if (b.TransferCmd is ReturnCmd)
-        {
-          exitBlock = b;
-          break;
-        }
-      }
-
+      int enableCounter = 0;
       foreach (var mr in this.AC.SharedMemoryRegions)
       {
         var asserts = this.CreateRaceCheckingAssertions(mr);
@@ -75,8 +66,46 @@ namespace Lockpwn.Instrumentation
 
         foreach (var assert in asserts)
         {
-          exitBlock.Cmds.Add(this.CreateCaptureStateAssume(mr));
-          exitBlock.Cmds.Add(assert);
+          var enabler = new GlobalVariable(Token.NoToken, new TypedIdent(Token.NoToken,
+            "assertion$enabler$" + enableCounter++, Microsoft.Boogie.Type.Bool));
+          var enablerId = new IdentifierExpr(Token.NoToken, enabler);
+          var enablerAssign = new AssignCmd(Token.NoToken, new List<AssignLhs> {
+            new SimpleAssignLhs(Token.NoToken, enablerId)
+          }, new List<Expr> { Expr.False });
+
+          this.AC.TopLevelDeclarations.Add(enabler);
+          this.AC.EntryPoint.Proc.Requires.Add(new Requires(false, enablerId));
+
+          assert.Item3.Expr = Expr.Imp(enablerId, assert.Item3.Expr);
+
+          var ip1 = this.GetInstrumentationPointForThread(assert.Item1);
+          var ip2 = this.GetInstrumentationPointForThread(assert.Item2);
+
+          if (ip1.Item2 >= 0)
+          {
+            ip1.Item1.Cmds.Insert(ip1.Item2, enablerAssign);
+            ip1.Item1.Cmds.Insert(ip1.Item2, assert.Item3);
+            ip1.Item1.Cmds.Insert(ip1.Item2, this.CreateCaptureStateAssume(mr));
+          }
+          else
+          {
+            ip1.Item1.Cmds.Add(this.CreateCaptureStateAssume(mr));
+            ip1.Item1.Cmds.Add(assert.Item3);
+            ip1.Item1.Cmds.Add(enablerAssign);
+          }
+
+          if (!(ip1.Item1.Equals(ip2.Item1) && ip1.Item2 == ip2.Item2) && ip2.Item2 >= 0)
+          {
+            ip2.Item1.Cmds.Insert(ip2.Item2, enablerAssign);
+            ip2.Item1.Cmds.Insert(ip2.Item2, assert.Item3);
+            ip2.Item1.Cmds.Insert(ip2.Item2, this.CreateCaptureStateAssume(mr));
+          }
+          else if (!(ip1.Item1.Equals(ip2.Item1) && ip1.Item2 == ip2.Item2))
+          {
+            ip2.Item1.Cmds.Add(this.CreateCaptureStateAssume(mr));
+            ip2.Item1.Cmds.Add(assert.Item3);
+            ip2.Item1.Cmds.Add(enablerAssign);
+          }
         }
 
         if (ToolCommandLineOptions.Get().SuperVerboseMode)
@@ -89,9 +118,9 @@ namespace Lockpwn.Instrumentation
       }
     }
 
-    private List<AssertCmd> CreateRaceCheckingAssertions(Variable mr)
+    private List<Tuple<Thread, Thread, AssertCmd>> CreateRaceCheckingAssertions(Variable mr)
     {
-      var asserts = new List<AssertCmd>();
+      var asserts = new List<Tuple<Thread, Thread, AssertCmd>>();
       var threads = new List<Thread>();
 
       foreach (var pair in this.AC.ThreadMemoryRegions)
@@ -108,7 +137,8 @@ namespace Lockpwn.Instrumentation
       {
         for (int j = i + 1; j < threads.Count; j++)
         {
-          asserts.Add(this.CreateRaceCheckingAssertion(threads[i], threads[j], mr));
+          asserts.Add(new Tuple<Thread, Thread, AssertCmd>(threads[i], threads[j],
+            this.CreateRaceCheckingAssertion(threads[i], threads[j], mr)));
         }
       }
 
@@ -190,6 +220,42 @@ namespace Lockpwn.Instrumentation
         new List<object>(), assert.Attributes);
 
       return assert;
+    }
+
+    private Tuple<Block, int> GetInstrumentationPointForThread(Thread thread)
+    {
+      Block block = null;
+      var index = -1;
+
+      if (thread.IsMain)
+      {
+        foreach (var b in thread.Function.Blocks)
+        {
+          if (b.TransferCmd is ReturnCmd)
+          {
+            block = b;
+            break;
+          }
+        }
+      }
+      else
+      {
+        for (int idx = 0; idx < thread.Joiner.Item2.Cmds.Count; idx++)
+        {
+          if (!(thread.Joiner.Item2.Cmds[idx] is CallCmd))
+            continue;
+
+          var call = thread.Joiner.Item2.Cmds[idx] as CallCmd;
+          if (!call.Equals(thread.Joiner.Item3))
+            continue;
+
+          block = thread.Joiner.Item2;
+          index = idx;
+          break;
+        }
+      }
+
+      return new Tuple<Block, int>(block, index);
     }
 
     private AssumeCmd CreateCaptureStateAssume(Variable mr)

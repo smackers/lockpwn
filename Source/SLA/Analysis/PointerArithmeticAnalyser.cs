@@ -196,7 +196,8 @@ namespace Lockpwn.Analysis
     /// <param name="impl">Implementation</param>
     /// <param name="label">Root block label</param>
     /// <param name="id">Identifier expression</param>
-    internal static Expr ComputeRootPointer(Implementation impl, string label, Expr id)
+    /// <param name="reportRegions">Report memory regions</param>
+    internal static Expr ComputeRootPointer(Implementation impl, string label, Expr id, bool reportRegions = false)
     {
       if (id is LiteralExpr) return id;
       if (id is NAryExpr && (id as NAryExpr).Args.Count == 1 &&
@@ -221,6 +222,8 @@ namespace Lockpwn.Analysis
           if (((result as NAryExpr).Args[0] is IdentifierExpr) &&
             ((result as NAryExpr).Args[0] as IdentifierExpr).Name.StartsWith("$M."))
           {
+            if (reportRegions)
+              return result;
             return id;
           }
 

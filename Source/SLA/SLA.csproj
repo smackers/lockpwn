@@ -87,7 +87,6 @@
     <Compile Include="ToolCommandLineOptions.cs" />
     <Compile Include="Refactoring\Passes\LockRefactoring.cs" />
     <Compile Include="Refactoring\Factory.cs" />
-    <Compile Include="Analysis\Passes\ThreadCreationAnalysis.cs" />
     <Compile Include="DataStructures\Graph.cs" />
     <Compile Include="DataStructures\Lock.cs" />
     <Compile Include="DataStructures\Lockset.cs" />
@@ -107,6 +106,7 @@
     <Compile Include="StaticLocksetAnalyser.cs" />
     <Compile Include="ErrorReporter.cs" />
     <Compile Include="Analysis\Passes\RaceCheckAnalysis.cs" />
+    <Compile Include="Analysis\Passes\ThreadUsageAnalysis.cs" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Utilities\" />
