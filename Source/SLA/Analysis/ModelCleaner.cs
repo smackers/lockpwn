@@ -21,80 +21,6 @@ namespace Lockpwn.Analysis
 {
   internal class ModelCleaner
   {
-//    internal static void RemoveGenericTopLevelDeclerations(AnalysisContext ac, EntryPoint ep)
-//    {
-//      List<string> toRemove = new List<string>();
-//      List<string> tagged = new List<string>();
-//
-//      foreach (var proc in ac.TopLevelDeclarations.OfType<Procedure>())
-//      {
-//        if (QKeyValue.FindBoolAttribute(proc.Attributes, "entrypoint") ||
-//            (QKeyValue.FindStringAttribute(proc.Attributes, "tag") != null &&
-//            QKeyValue.FindStringAttribute(proc.Attributes, "tag").Equals(ep.Name)))
-//        {
-//          tagged.Add(proc.Name);
-//          continue;
-//        }
-//        if (ac.IsAToolFunc(proc.Name))
-//          continue;
-//        toRemove.Add(proc.Name);
-//      }
-//
-//      foreach (var str in toRemove)
-//      {
-//        ac.TopLevelDeclarations.RemoveAll(val =>
-//          (val is Constant) && (val as Constant).Name.Equals(str));
-//        ac.TopLevelDeclarations.RemoveAll(val =>
-//          (val is Procedure) && (val as Procedure).Name.Equals(str));
-//        ac.TopLevelDeclarations.RemoveAll(val =>
-//          (val is Implementation) && (val as Implementation).Name.Equals(str));
-//      }
-//
-//      ac.TopLevelDeclarations.RemoveAll(val =>
-//        (val is Procedure) && ((val as Procedure).Name.Equals("$malloc") ||
-//          (val as Procedure).Name.Equals("$free") ||
-//          (val as Procedure).Name.Equals("$alloca")));
-//
-//      ac.TopLevelDeclarations.RemoveAll(val =>
-//        (val is Variable) && !ac.IsAToolVariable(val as Variable) &&
-//        !tagged.Exists(str => str.Equals((val as Variable).Name)));
-//
-//      ac.TopLevelDeclarations.RemoveAll(val => (val is Axiom));
-//      ac.TopLevelDeclarations.RemoveAll(val => (val is Function));
-//      ac.TopLevelDeclarations.RemoveAll(val => (val is TypeCtorDecl));
-//      ac.TopLevelDeclarations.RemoveAll(val => (val is TypeSynonymDecl));
-//    }
-
-    internal static void RemoveEntryPointSpecificTopLevelDeclerations(AnalysisContext ac)
-    {
-      HashSet<string> toRemove = new HashSet<string>();
-
-      foreach (var impl in ac.TopLevelDeclarations.OfType<Implementation>())
-      {
-        if (impl.Name.Equals(ac.EntryPoint))
-          continue;
-        if (QKeyValue.FindBoolAttribute(impl.Attributes, "checker"))
-          continue;
-        if (impl.Name.StartsWith("$memcpy") || impl.Name.StartsWith("memcpy_fromio") ||
-            impl.Name.StartsWith("$memset") ||
-            impl.Name.StartsWith("$malloc") || impl.Name.StartsWith("$alloca") ||
-            impl.Name.StartsWith("$free"))
-          continue;
-
-        toRemove.Add(impl.Name);
-      }
-
-      foreach (var str in toRemove)
-      {
-        ac.TopLevelDeclarations.RemoveAll(val => (val is Constant) &&
-          (val as Constant).Name.Equals(str));
-        ac.TopLevelDeclarations.RemoveAll(val => (val is Procedure) &&
-          (val as Procedure).Name.Equals(str));
-        ac.TopLevelDeclarations.RemoveAll(val => (val is Implementation) &&
-          (val as Implementation).Name.Equals(str));
-      }
-    }
-
     internal static void RemoveGlobalLocksets(AnalysisContext ac)
     {
       List<Variable> toRemove = new List<Variable>();
@@ -151,7 +77,7 @@ namespace Lockpwn.Analysis
       ac.TopLevelDeclarations.RemoveAll(val => val is Constant);
     }
 
-    internal static void RemoveWhoopFunctions(AnalysisContext ac)
+    internal static void RemoveToolFunctions(AnalysisContext ac)
     {
       ac.TopLevelDeclarations.RemoveAll(val => (val is Implementation) &&
         ac.IsAToolFunc((val as Implementation).Name));

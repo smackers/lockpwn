@@ -250,7 +250,10 @@ namespace Lockpwn.Instrumentation
             continue;
 
           block = thread.Joiner.Item2;
-          index = idx;
+          if (index + 1 == thread.Joiner.Item2.Cmds.Count)
+            index = -1;
+          else
+            index = idx + 1;
           break;
         }
       }
