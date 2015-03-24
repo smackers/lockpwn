@@ -43,6 +43,8 @@ namespace Lockpwn
 
       Analysis.Factory.CreateSharedStateAbstraction(this.AC).Run();
 
+      Instrumentation.Factory.CreateLoopSummaryInstrumentation(this.AC).Run();
+
       Instrumentation.Factory.CreateErrorReportingInstrumentation(this.AC).Run();
       Instrumentation.Factory.CreateAccessCheckingInstrumentation(this.AC).Run();
 

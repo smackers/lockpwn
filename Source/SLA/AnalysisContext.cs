@@ -12,8 +12,10 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics.Contracts;
 using System.Linq;
+
 using Microsoft.Boogie;
 using Microsoft.Basetypes;
+using Microsoft.Boogie.GraphUtil;
 
 namespace Lockpwn
 {
@@ -98,7 +100,7 @@ namespace Lockpwn
     {
       foreach (var impl in this.GetThreadSpecificFunctions(thread))
       {
-        if (impl.Equals(thread.Function))
+        if (impl.Equals(thread.Function) && thread.IsMain)
           continue;
         impl.Proc.Attributes = new QKeyValue(Token.NoToken,
           "inline", new List<object>{ new LiteralExpr(Token.NoToken, BigNum.FromInt(1)) },
@@ -122,6 +124,11 @@ namespace Lockpwn
           "inline", new List<object>{ new LiteralExpr(Token.NoToken, BigNum.FromInt(1)) },
           impl.Attributes);
       }
+    }
+
+    internal Graph<Block> GetImplementationGraph(Implementation impl)
+    {
+      return Microsoft.Boogie.Program.GraphFromImpl(impl);
     }
 
     internal List<Implementation> GetThreadSpecificFunctions(Thread thread)

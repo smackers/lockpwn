@@ -114,7 +114,7 @@ namespace Lockpwn
 //      ErrorReporter.ErrorWriteLine("\n" + sourceInfoForAccess1.GetFile() + ":",
 //        "potential " + access1 + "-" + access2 + " race:\n", ErrorMsgType.Error);
 
-      Console.Error.Write(access1 + " by thread " + t1 + ", ");
+//      Console.Error.Write(access1 + " by thread " + t1 + ", ");
 //      Console.Error.WriteLine(sourceInfoForAccess1.ToString());
 //      sourceInfoForAccess1.PrintStackTrace();
 

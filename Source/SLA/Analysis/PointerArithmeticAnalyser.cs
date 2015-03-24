@@ -668,25 +668,6 @@ namespace Lockpwn.Analysis
 
     #region helper functions
 
-    private Graph<Block> BuildBlockGraph(List<Block> blocks)
-    {
-      var blockGraph = new Graph<Block>();
-
-      foreach (var block in blocks)
-      {
-        if (!(block.TransferCmd is GotoCmd))
-          continue;
-
-        var gotoCmd = block.TransferCmd as GotoCmd;
-        foreach (var target in gotoCmd.labelTargets)
-        {
-          blockGraph.AddEdge(block, target);
-        }
-      }
-
-      return blockGraph;
-    }
-
     private static bool TryPerformCast(ref Expr expr)
     {
       if (!(expr is NAryExpr))

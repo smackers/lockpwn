@@ -87,7 +87,6 @@
     <Compile Include="ToolCommandLineOptions.cs" />
     <Compile Include="Refactoring\Passes\LockRefactoring.cs" />
     <Compile Include="Refactoring\Factory.cs" />
-    <Compile Include="DataStructures\Graph.cs" />
     <Compile Include="DataStructures\Lock.cs" />
     <Compile Include="DataStructures\Lockset.cs" />
     <Compile Include="DataStructures\Thread.cs" />
@@ -108,6 +107,7 @@
     <Compile Include="Analysis\Passes\RaceCheckAnalysis.cs" />
     <Compile Include="Analysis\Passes\ThreadUsageAnalysis.cs" />
     <Compile Include="Refactoring\Passes\ProgramSimplifier.cs" />
+    <Compile Include="Instrumentation\Passes\LoopSummaryInstrumentation.cs" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Utilities\" />

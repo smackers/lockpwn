@@ -46,7 +46,7 @@ namespace Lockpwn.Refactoring
 
       foreach (var impl in this.AC.TopLevelDeclarations.OfType<Implementation>().ToList())
       {
-        this.RemoveExternalAsserts(impl);
+        this.SimplifyImplementation(impl);
       }
 
       if (ToolCommandLineOptions.Get().MeasureTime)
@@ -56,11 +56,15 @@ namespace Lockpwn.Refactoring
       }
     }
 
-    private void RemoveExternalAsserts(Implementation impl)
+    private void SimplifyImplementation(Implementation impl)
     {
       foreach (var block in impl.Blocks)
       {
         block.Cmds.RemoveAll(val => val is AssertCmd);
+        foreach (var call in block.cmds.OfType<CallCmd>().Where(val => val.IsAsync))
+        {
+          call.IsAsync = false;
+        }
       }
     }
   }
