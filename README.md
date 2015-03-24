@@ -15,10 +15,10 @@ The input to lockpwn is a concurrent C program translated to the Boogie intermed
 Given an input ${PROGRAM} in Boogie, do the following:
 
 ```
-.\lockpwn.exe ${PROGRAM}.bpl
+.\lockpwn.exe ${PROGRAM}.bpl /o ${OUTPUT}.bpl
 ```
 
-The output is an instrumented Boogie program that can be fed to the Corral bug-finder.
+The output, ${OUTPUT}.bpl, is an instrumented with context switches Boogie program. This can be directly fed to the Corral bug-finder using the /cooperative option (so Corral does not automatically instrument yield statements).
 
 ## Tool options
 
