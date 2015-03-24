@@ -82,20 +82,18 @@ namespace Lockpwn
 
         AnalysisContext postAc = null;
         new AnalysisContextParser(fileList[fileList.Count - 1], "bpl").TryParseNew(ref ac,
-          new List<string> { "$instrumented" });
+          new List<string> { "instrumented" });
         new AnalysisContextParser(fileList[fileList.Count - 1], "bpl").TryParseNew(ref postAc,
-          new List<string> { "$instrumented" });
+          new List<string> { "instrumented" });
         new Cruncher(ac, postAc).Run();
 
         new AnalysisContextParser(fileList[fileList.Count - 1], "bpl").TryParseNew(ref ac,
-          new List<string> { "$summarised" });
-        new StaticLocksetAnalyser(ac).Run();
+          new List<string> { "summarised" });
+        new AnalysisContextParser(fileList[fileList.Count - 1], "bpl").TryParseNew(ref postAc);
+        new StaticLocksetAnalyser(ac, postAc).Run();
 
         if (ToolCommandLineOptions.Get().VerboseMode)
           Console.WriteLine(". Done");
-
-        Lockpwn.IO.BoogieProgramEmitter.Emit(ac.TopLevelDeclarations, ToolCommandLineOptions.Get().Files[
-          ToolCommandLineOptions.Get().Files.Count - 1], "$pwned", "bpl");
 
         Environment.Exit((int)Outcome.Done);
       }
@@ -121,15 +119,14 @@ namespace Lockpwn
     internal static void CheckAndSpitProgram(List<string> fileList)
     {
       AnalysisContext ac = null;
+      AnalysisContext postAc = null;
       new AnalysisContextParser(fileList[fileList.Count - 1], "bpl").TryParseNew(ref ac,
-        new List<string> { "$instrumented" });
-      new StaticLocksetAnalyser(ac).Run();
+        new List<string> { "instrumented" });
+      new AnalysisContextParser(fileList[fileList.Count - 1], "bpl").TryParseNew(ref postAc);
+      new StaticLocksetAnalyser(ac, postAc).Run();
 
       if (ToolCommandLineOptions.Get().VerboseMode)
         Console.WriteLine(". Done");
-
-      Lockpwn.IO.BoogieProgramEmitter.Emit(ac.TopLevelDeclarations, ToolCommandLineOptions.Get().Files[
-        ToolCommandLineOptions.Get().Files.Count - 1], "$pwned", "bpl");
 
       Environment.Exit((int)Outcome.Done);
     }

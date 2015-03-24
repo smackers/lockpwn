@@ -18,17 +18,17 @@ using Microsoft.Boogie;
 
 namespace Lockpwn
 {
-  using FunctionPairType = Tuple<string, List<Tuple<string, List<string>>>, AnalysisContext>;
-
   internal sealed class StaticLocksetAnalyser
   {
     AnalysisContext AC;
+    private AnalysisContext PostAC;
     private ExecutionTimer Timer;
 
-    public StaticLocksetAnalyser(AnalysisContext ac)
+    public StaticLocksetAnalyser(AnalysisContext ac, AnalysisContext postAc)
     {
-      Contract.Requires(ac != null);
+      Contract.Requires(ac != null && postAc != null);
       this.AC = ac;
+      this.PostAC = postAc;
     }
 
     public void Run()
@@ -43,12 +43,16 @@ namespace Lockpwn
       }
 
       Analysis.Factory.CreateRaceCheckAnalysis(this.AC).Run();
+      Instrumentation.Factory.CreateYieldInstrumentation(this.PostAC).Run();
 
       if (ToolCommandLineOptions.Get().MeasureTime)
       {
         this.Timer.Stop();
         Console.WriteLine("... StaticLocksetAnalysis done [{0}]", this.Timer.Result());
       }
+
+      Lockpwn.IO.BoogieProgramEmitter.EmitOutput(this.PostAC.TopLevelDeclarations, ToolCommandLineOptions.
+        Get().Files[ToolCommandLineOptions.Get().Files.Count - 1]);
     }
   }
 }

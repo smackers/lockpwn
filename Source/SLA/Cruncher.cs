@@ -65,7 +65,7 @@ namespace Lockpwn
       }
 
       Lockpwn.IO.BoogieProgramEmitter.Emit(this.PostAC.TopLevelDeclarations, ToolCommandLineOptions.Get().
-        Files[ToolCommandLineOptions.Get().Files.Count - 1], "$summarised", "bpl");
+        Files[ToolCommandLineOptions.Get().Files.Count - 1], "summarised", "bpl");
     }
 
     private void PerformHoudini()

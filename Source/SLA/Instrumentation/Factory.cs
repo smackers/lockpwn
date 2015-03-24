@@ -44,9 +44,9 @@ namespace Lockpwn.Instrumentation
       return new LoopSummaryInstrumentation(ac);
     }
 
-//    public static IPass CreateYieldInstrumentation(AnalysisContext ac, ErrorReporter errorReporter)
-//    {
-//      return new YieldInstrumentation(ac, errorReporter);
-//    }
+    public static IPass CreateYieldInstrumentation(AnalysisContext ac)
+    {
+      return new YieldInstrumentation(ac);
+    }
   }
 }

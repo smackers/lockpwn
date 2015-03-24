@@ -74,16 +74,7 @@ namespace Lockpwn
       this.ErrorReporter = new ErrorReporter();
 
       this.ResetToProgramTopLevelDeclarations();
-
-      this.EntryPoint = this.TopLevelDeclarations.OfType<Implementation>().ToList().
-        FirstOrDefault(val => QKeyValue.FindBoolAttribute(val.Attributes, "entrypoint"));
-      if (this.EntryPoint == null)
-        this.EntryPoint = this.GetImplementation("main");
-      if (this.EntryPoint == null)
-      {
-        Lockpwn.IO.Reporter.ErrorWriteLine("Unable to detect entrypoint or main function.");
-        Environment.Exit((int)Outcome.ParsingError);
-      }
+      this.DetectEntryPoint();
     }
 
     internal void EliminateDeadVariables()
@@ -298,6 +289,26 @@ namespace Lockpwn
     internal void ResetToProgramTopLevelDeclarations()
     {
       this.TopLevelDeclarations = this.Program.TopLevelDeclarations.ToArray().ToList();
+    }
+
+    private void DetectEntryPoint()
+    {
+      this.EntryPoint = this.TopLevelDeclarations.OfType<Implementation>().ToList().
+        FirstOrDefault(val => QKeyValue.FindBoolAttribute(val.Attributes, "entrypoint"));
+      if (this.EntryPoint == null)
+      {
+        this.EntryPoint = this.GetImplementation("main");
+        if (this.EntryPoint == null)
+        {
+          Lockpwn.IO.Reporter.ErrorWriteLine("Unable to detect entrypoint or main function.");
+          Environment.Exit((int)Outcome.ParsingError);
+        }
+
+        this.EntryPoint.Proc.Attributes = new QKeyValue(Token.NoToken, "entrypoint",
+          new List<object>() { }, this.EntryPoint.Proc.Attributes);
+        this.EntryPoint.Attributes = new QKeyValue(Token.NoToken, "entrypoint",
+          new List<object>() { }, this.EntryPoint.Attributes);
+      }
     }
 
     #endregion

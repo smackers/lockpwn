@@ -9,6 +9,7 @@
 //===----------------------------------------------------------------------===//
 
 using System;
+
 using Microsoft.Boogie;
 
 namespace Lockpwn
@@ -41,7 +42,7 @@ namespace Lockpwn
 
     protected override bool ParseOption(string option, CommandLineOptionEngine.CommandLineParseState ps)
     {
-      if (option == "inputFile")
+      if (option == "inputFile" || option == "i")
       {
         if (ps.ConfirmArgumentCount(1))
         {
@@ -49,11 +50,18 @@ namespace Lockpwn
         }
         return true;
       }
-      else if (option == "outputFile")
+      else if (option == "outputFile" || option == "o")
       {
         if (ps.ConfirmArgumentCount(1))
         {
-          this.OutputFile = ps.args[ps.i];
+          var split = ps.args[ps.i].Split('.');
+          if (split.Length != 2 || !split[1].Equals("bpl"))
+          {
+            Lockpwn.IO.Reporter.ErrorWriteLine("Extension of output must be '.bpl'");
+            System.Environment.Exit((int)Outcome.ParsingError);
+          }
+
+          this.OutputFile = split[0];
         }
         return true;
       }
