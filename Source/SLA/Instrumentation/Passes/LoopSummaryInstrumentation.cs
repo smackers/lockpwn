@@ -24,12 +24,14 @@ namespace Lockpwn.Instrumentation
     private Thread Thread;
     private ExecutionTimer Timer;
 
+    private HashSet<Constant> ExistentialBooleans;
     private int CandidateCounter;
 
     public LoopSummaryInstrumentation(AnalysisContext ac)
     {
       Contract.Requires(ac != null);
       this.AC = ac;
+      this.ExistentialBooleans = new HashSet<Constant>();
       this.CandidateCounter = 0;
     }
 
@@ -55,6 +57,8 @@ namespace Lockpwn.Instrumentation
             " in '{1}'", this.CandidateCounter, thread.Name);
         }
       }
+
+      this.InstrumentExistentialBooleans();
 
       if (ToolCommandLineOptions.Get().MeasureTime)
       {
@@ -117,11 +121,18 @@ namespace Lockpwn.Instrumentation
       return cfg.Headers.ToList();
     }
 
+    private void InstrumentExistentialBooleans()
+    {
+      foreach (var b in this.ExistentialBooleans)
+      {
+        b.Attributes = new QKeyValue(Token.NoToken, "existential", new List<object>() { Expr.True }, null);
+        this.AC.TopLevelDeclarations.Add(b);
+      }
+    }
+
     private void InstrumentAssertCandidate(Block block, Variable variable, bool value)
     {
       var cons = this.CreateConstant();
-      this.AC.TopLevelDeclarations.Add(cons);
-
       Expr expr = this.CreateImplExpr(cons, variable, value);
       block.Cmds.Insert(0, new AssertCmd(Token.NoToken, expr));
     }
@@ -149,7 +160,7 @@ namespace Lockpwn.Instrumentation
     {
       Constant cons = new Constant(Token.NoToken, new TypedIdent(Token.NoToken, "_b$" +
         this.Thread.Name + "$" + this.CandidateCounter, Microsoft.Boogie.Type.Bool), false);
-//      base.ExistentialBooleans.Add(cons);
+      this.ExistentialBooleans.Add(cons);
       this.CandidateCounter++;
       return cons;
     }

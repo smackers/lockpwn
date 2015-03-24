@@ -32,7 +32,7 @@ namespace Lockpwn.Analysis
     }
 
     /// <summary>
-    /// Runs a shared state analysis pass.
+    /// Runs a race checking analysis pass.
     /// </summary>
     void IPass.Run()
     {

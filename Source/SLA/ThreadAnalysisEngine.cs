@@ -37,8 +37,6 @@ namespace Lockpwn
         this.Timer.Start();
       }
 
-      Refactoring.Factory.CreateProgramSimplifier(this.AC).Run();
-
       Analysis.Factory.CreateThreadCreationAnalysis(this.AC).Run();
       Analysis.Factory.CreateLockAbstraction(this.AC).Run();
 

@@ -62,6 +62,9 @@ namespace Lockpwn
         this.Timer.Stop();
         Console.WriteLine("... StaticLocksetInstrumentation done [{0}]", this.Timer.Result());
       }
+
+      Lockpwn.IO.BoogieProgramEmitter.Emit(this.AC.TopLevelDeclarations, ToolCommandLineOptions.Get().
+        Files[ToolCommandLineOptions.Get().Files.Count - 1], "$instrumented", "bpl");
     }
   }
 }

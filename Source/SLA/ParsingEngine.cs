@@ -40,6 +40,8 @@ namespace Lockpwn
       new AnalysisContextParser(this.FileList[this.FileList.Count - 1],
         "bpl").TryParseNew(ref ac);
 
+      Refactoring.Factory.CreateProgramSimplifier(ac).Run();
+
       if (ToolCommandLineOptions.Get().MeasureTime)
       {
         this.Timer.Stop();

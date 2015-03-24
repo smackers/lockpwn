@@ -24,7 +24,8 @@ namespace Lockpwn
     {
       Contract.Requires(cce.NonNullElements(args));
       CommandLineOptions.Install(new ToolCommandLineOptions());
-      CommandLineOptions.Clo.DoModSetAnalysis = true;
+
+      Program.EnableBoogieOptions();
 
       var fileList = new List<string>();
 
@@ -79,11 +80,15 @@ namespace Lockpwn
         new ThreadAnalysisEngine(ac).Run();
         new LocksetInstrumentationEngine(ac).Run();
 
-        Lockpwn.IO.BoogieProgramEmitter.Emit(ac.TopLevelDeclarations, ToolCommandLineOptions.Get().Files[
-          ToolCommandLineOptions.Get().Files.Count - 1], "$instrumented", "bpl");
-
+        AnalysisContext postAc = null;
         new AnalysisContextParser(fileList[fileList.Count - 1], "bpl").TryParseNew(ref ac,
           new List<string> { "$instrumented" });
+        new AnalysisContextParser(fileList[fileList.Count - 1], "bpl").TryParseNew(ref postAc,
+          new List<string> { "$instrumented" });
+        new Cruncher(ac, postAc).Run();
+
+        new AnalysisContextParser(fileList[fileList.Count - 1], "bpl").TryParseNew(ref ac,
+          new List<string> { "$summarised" });
         new StaticLocksetAnalyser(ac).Run();
 
         if (ToolCommandLineOptions.Get().VerboseMode)
@@ -100,6 +105,17 @@ namespace Lockpwn
         Console.Error.WriteLine(e);
         Environment.Exit((int)Outcome.FatalError);
       }
+    }
+
+    internal static void EnableBoogieOptions()
+    {
+      CommandLineOptions.Clo.DoModSetAnalysis = true;
+      CommandLineOptions.Clo.DontShowLogo = true;
+      CommandLineOptions.Clo.TypeEncodingMethod = CommandLineOptions.TypeEncoding.Monomorphic;
+      CommandLineOptions.Clo.ModelViewFile = "-";
+      CommandLineOptions.Clo.UseLabels = false;
+      CommandLineOptions.Clo.EnhancedErrorMessages = 1;
+      CommandLineOptions.Clo.ContractInfer = true;
     }
 
     internal static void CheckAndSpitProgram(List<string> fileList)
