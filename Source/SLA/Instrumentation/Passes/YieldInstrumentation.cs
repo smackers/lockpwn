@@ -48,11 +48,11 @@ namespace Lockpwn.Instrumentation
       foreach (var impl in this.AC.TopLevelDeclarations.OfType<Implementation>().ToList())
       {
         if (this.AC.IsAToolFunc(impl.Name))
-          return;
+          continue;
         if (!Utilities.ShouldAccessFunction(impl.Name))
-          return;
+          continue;
         if (Utilities.ShouldSkipFromAnalysis(impl.Name))
-          return;
+          continue;
 
         this.InstrumentYieldsInLocks(impl);
         this.InstrumentYieldsInMemoryAccesses(impl);
