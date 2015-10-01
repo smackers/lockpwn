@@ -182,13 +182,14 @@ namespace Lockpwn.Refactoring
     private void DuplicateFunction(Implementation func)
     {
       var cons = this.AC.GetConstant(func.Name);
-      if (cons == null)
-        return;
-
-      var consName = cons.Name + "$" + this.Thread.Name;
-      var newCons = new Constant(cons.tok,
-        new TypedIdent(cons.TypedIdent.tok, consName,
-          cons.TypedIdent.Type), cons.Unique);
+      if (cons != null)
+      {
+        var consName = cons.Name + "$" + this.Thread.Name;
+        var newCons = new Constant(cons.tok,
+          new TypedIdent(cons.TypedIdent.tok, consName,
+            cons.TypedIdent.Type), cons.Unique);
+        this.AC.TopLevelDeclarations.Add(newCons);
+      }
 
       var newProc = new Duplicator().Visit(func.Proc.Clone()) as Procedure;
       var newImpl = new Duplicator().Visit(func.Clone()) as Implementation;
@@ -204,7 +205,6 @@ namespace Lockpwn.Refactoring
 
       this.AC.TopLevelDeclarations.Add(newProc);
       this.AC.TopLevelDeclarations.Add(newImpl);
-      this.AC.TopLevelDeclarations.Add(newCons);
     }
   }
 }
