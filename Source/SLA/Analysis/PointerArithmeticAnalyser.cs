@@ -676,7 +676,10 @@ namespace Lockpwn.Analysis
       }
 
       var fun = (expr as NAryExpr).Fun;
-      if (!(fun.FunctionName == "$i2p" || fun.FunctionName == "$p2i"))
+      if (!(fun.FunctionName == "$bitcast.ref.ref" ||
+        fun.FunctionName.StartsWith("$zext.") ||
+        fun.FunctionName.StartsWith("$i2p.") ||
+        fun.FunctionName.StartsWith("$p2i.")))
       {
         return false;
       }
@@ -688,9 +691,12 @@ namespace Lockpwn.Analysis
 
     private static bool IsArithmeticExpression(NAryExpr expr)
     {
-      if (expr.Fun.FunctionName == "$add" || (expr as NAryExpr).Fun.FunctionName == "+" ||
-        expr.Fun.FunctionName == "$sub" || (expr as NAryExpr).Fun.FunctionName == "-" ||
-        expr.Fun.FunctionName == "$mul" || (expr as NAryExpr).Fun.FunctionName == "*")
+      if (expr.Fun.FunctionName.StartsWith("$add.") ||
+        (expr as NAryExpr).Fun.FunctionName == "+" ||
+        expr.Fun.FunctionName.StartsWith("$sub.") ||
+        (expr as NAryExpr).Fun.FunctionName == "-" ||
+        expr.Fun.FunctionName.StartsWith("$mul.") ||
+        (expr as NAryExpr).Fun.FunctionName == "*")
         return true;
       return false;
     }
@@ -702,15 +708,28 @@ namespace Lockpwn.Analysis
     /// <param name="call">CallCmd</param>
     private static bool ShouldSkipFromAnalysis(NAryExpr expr)
     {
-      if (expr.Fun.FunctionName == "$and" || expr.Fun.FunctionName == "$or" ||
-          expr.Fun.FunctionName == "$xor" ||
-          expr.Fun.FunctionName == "$lshr" ||
-          expr.Fun.FunctionName == "$i2p" || expr.Fun.FunctionName == "$p2i" ||
-          expr.Fun.FunctionName == "$b2p" ||
-          expr.Fun.FunctionName == "$trunc" ||
-          expr.Fun.FunctionName == "$ashr" || expr.Fun.FunctionName == "$urem" ||
-          expr.Fun.FunctionName == "$udiv" ||
-          expr.Fun.FunctionName == "!=" || expr.Fun.FunctionName == "-")
+      if (expr.Fun.FunctionName.StartsWith("$and.") ||
+        expr.Fun.FunctionName.StartsWith("$or.") ||
+        expr.Fun.FunctionName.StartsWith("$xor.") ||
+        expr.Fun.FunctionName.StartsWith("$eq.") ||
+        expr.Fun.FunctionName.StartsWith("$ne.") ||
+        expr.Fun.FunctionName.StartsWith("$ugt.") ||
+        expr.Fun.FunctionName.StartsWith("$uge.") ||
+        expr.Fun.FunctionName.StartsWith("$ult.") ||
+        expr.Fun.FunctionName.StartsWith("$ule.") ||
+        expr.Fun.FunctionName.StartsWith("$sgt.") ||
+        expr.Fun.FunctionName.StartsWith("$sge.") ||
+        expr.Fun.FunctionName.StartsWith("$slt.") ||
+        expr.Fun.FunctionName.StartsWith("$sle.") ||
+        expr.Fun.FunctionName.StartsWith("$i2p.") ||
+        expr.Fun.FunctionName.StartsWith("$p2i.") ||
+        expr.Fun.FunctionName.StartsWith("$trunc.") ||
+        expr.Fun.FunctionName.StartsWith("$ashr") ||
+        expr.Fun.FunctionName.StartsWith("$lshr") ||
+        expr.Fun.FunctionName.StartsWith("$urem") ||
+        expr.Fun.FunctionName.StartsWith("$udiv") ||
+        expr.Fun.FunctionName == "!=" ||
+        expr.Fun.FunctionName == "-")
         return true;
       return false;
     }
