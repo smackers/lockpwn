@@ -1,8 +1,8 @@
 lockpwn
 ====================
-lockpwn is a static lockset analyser for concurrent Boogie programs.
+lockpwn is a lightweight symbolic lockset analyser for concurrent C programs.
 
-We currently support only C and pthreads.
+We currently support only pthreads.
 
 ## Build instructions
 1. Clone this project.
@@ -10,7 +10,7 @@ We currently support only C and pthreads.
 
 ## How to use
 
-The input to lockpwn is a concurrent C program translated to the Boogie intermediate verification language using the SMACK LLVM-to-Boogie translator.
+The input to lockpwn is a concurrent C program translated to the Boogie intermediate verification language using the [SMACK](https://github.com/smackers/smack) LLVM-to-Boogie translator.
 
 Given an input ${PROGRAM} in Boogie, do the following:
 
