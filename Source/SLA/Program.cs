@@ -85,11 +85,15 @@ namespace Lockpwn
           new List<string> { "instrumented" });
         new AnalysisContextParser(fileList[fileList.Count - 1], "bpl").TryParseNew(ref postAc,
           new List<string> { "instrumented" });
+        postAc.ErrorReporter = ac.ErrorReporter;
+
         new Cruncher(ac, postAc).Run();
 
         new AnalysisContextParser(fileList[fileList.Count - 1], "bpl").TryParseNew(ref ac,
           new List<string> { "summarised" });
         new AnalysisContextParser(fileList[fileList.Count - 1], "bpl").TryParseNew(ref postAc);
+        postAc.ErrorReporter = ac.ErrorReporter;
+
         new StaticLocksetAnalyser(ac, postAc).Run();
 
         if (ToolCommandLineOptions.Get().VerboseMode)
@@ -123,6 +127,8 @@ namespace Lockpwn
       new AnalysisContextParser(fileList[fileList.Count - 1], "bpl").TryParseNew(ref ac,
         new List<string> { "instrumented" });
       new AnalysisContextParser(fileList[fileList.Count - 1], "bpl").TryParseNew(ref postAc);
+      postAc.ErrorReporter = ac.ErrorReporter;
+
       new StaticLocksetAnalyser(ac, postAc).Run();
 
       if (ToolCommandLineOptions.Get().VerboseMode)
