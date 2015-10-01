@@ -40,7 +40,11 @@ namespace Lockpwn
       Analysis.Factory.CreateThreadCreationAnalysis(this.AC).Run();
       Analysis.Factory.CreateLockAbstraction(this.AC).Run();
 
-      Refactoring.Factory.CreateLockRefactoring(this.AC).Run();
+      if (this.AC.Locks.Count > 0)
+      {
+        Refactoring.Factory.CreateLockRefactoring(this.AC).Run();
+      }
+
       Refactoring.Factory.CreateThreadRefactoring(this.AC).Run();
 
       Analysis.Factory.CreateSharedStateAnalysis(this.AC).Run();
