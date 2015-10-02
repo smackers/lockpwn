@@ -15,6 +15,8 @@ using System.IO;
 
 using Microsoft.Boogie;
 
+using Lockpwn.IO;
+
 namespace Lockpwn.IO
 {
   /// <summary>
@@ -42,7 +44,7 @@ namespace Lockpwn.IO
       }
       else
       {
-        Console.WriteLine(s);
+        Output.PrintLine(s);
       }
     }
 
@@ -64,7 +66,7 @@ namespace Lockpwn.IO
       Contract.Requires(format != null);
       ConsoleColor col = Console.ForegroundColor;
       Console.ForegroundColor = ConsoleColor.Yellow;
-      Console.WriteLine(format, args);
+      Output.PrintLine(format, args);
       Console.ForegroundColor = col;
     }
 
@@ -72,7 +74,7 @@ namespace Lockpwn.IO
     {
       if (CommandLineOptions.Clo.Trace || CommandLineOptions.Clo.TraceProofObligations)
       {
-        Console.WriteLine(s);
+        Output.PrintLine(s);
       }
     }
 
@@ -82,34 +84,34 @@ namespace Lockpwn.IO
 
       if (CommandLineOptions.Clo.vcVariety == CommandLineOptions.VCVariety.Doomed)
       {
-        Console.Write("..... {0} credible, {1} doomed{2}", stats.VerifiedCount,
+        Output.Print("..... {0} credible, {1} doomed{2}", stats.VerifiedCount,
           stats.ErrorCount, stats.ErrorCount == 1 ? "" : "s");
       }
       else
       {
-        Console.Write("..... {0} verified, {1} error{2}", stats.VerifiedCount,
+        Output.Print("..... {0} verified, {1} error{2}", stats.VerifiedCount,
           stats.ErrorCount, stats.ErrorCount == 1 ? "" : "s");
       }
 
       if (stats.InconclusiveCount != 0)
       {
-        Console.Write(", {0} inconclusive{1}", stats.InconclusiveCount,
+        Output.Print(", {0} inconclusive{1}", stats.InconclusiveCount,
           stats.InconclusiveCount == 1 ? "" : "s");
       }
 
       if (stats.TimeoutCount != 0)
       {
-        Console.Write(", {0} time out{1}", stats.TimeoutCount,
+        Output.Print(", {0} time out{1}", stats.TimeoutCount,
           stats.TimeoutCount == 1 ? "" : "s");
       }
 
       if (stats.OutOfMemoryCount != 0)
       {
-        Console.Write(", {0} out of memory", stats.OutOfMemoryCount);
+        Output.Print(", {0} out of memory", stats.OutOfMemoryCount);
       }
 
-      Console.WriteLine();
-      Console.Out.Flush();
+      Output.PrintLine("");
+      Output.Flush();
     }
   }
 }

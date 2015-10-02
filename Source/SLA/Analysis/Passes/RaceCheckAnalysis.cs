@@ -16,6 +16,8 @@ using System.Linq;
 using Microsoft.Boogie;
 using Microsoft.Basetypes;
 
+using Lockpwn.IO;
+
 namespace Lockpwn.Analysis
 {
   internal class RaceCheckAnalysis : IPass
@@ -37,7 +39,7 @@ namespace Lockpwn.Analysis
     void IPass.Run()
     {
       if (ToolCommandLineOptions.Get().VerboseMode)
-        Console.WriteLine("... RaceCheckAnalysis");
+        Output.PrintLine("... RaceCheckAnalysis");
 
       if (ToolCommandLineOptions.Get().MeasureTime)
       {
@@ -50,7 +52,7 @@ namespace Lockpwn.Analysis
       if (ToolCommandLineOptions.Get().MeasureTime)
       {
         this.Timer.Stop();
-        Console.WriteLine("..... [{0}]", this.Timer.Result());
+        Output.PrintLine("..... [{0}]", this.Timer.Result());
       }
     }
 
@@ -85,8 +87,8 @@ namespace Lockpwn.Analysis
         start = DateTime.UtcNow;
         if (ToolCommandLineOptions.Get().Trace)
         {
-          Console.WriteLine("");
-          Console.WriteLine("Verifying {0} ...", this.AC.EntryPoint.Name.Substring(5));
+          Output.PrintLine("");
+          Output.PrintLine("Verifying {0} ...", this.AC.EntryPoint.Name.Substring(5));
         }
       }
 
@@ -140,7 +142,7 @@ namespace Lockpwn.Analysis
       {
         case VC.VCGen.Outcome.ReachedBound:
           Lockpwn.IO.Reporter.Inform(String.Format("{0}verified", timeIndication));
-          Console.WriteLine(string.Format("Stratified Inlining: Reached recursion bound of {0}",
+          Output.PrintLine(string.Format("Stratified Inlining: Reached recursion bound of {0}",
             ToolCommandLineOptions.Get().RecursionBound));
           stats.VerifiedCount++;
           break;

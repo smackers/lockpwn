@@ -16,6 +16,8 @@ using System.Linq;
 using Microsoft.Boogie;
 using Microsoft.Basetypes;
 
+using Lockpwn.IO;
+
 namespace Lockpwn.Analysis
 {
   internal class ThreadUsageAnalysis : IPass
@@ -35,7 +37,7 @@ namespace Lockpwn.Analysis
     void IPass.Run()
     {
       if (ToolCommandLineOptions.Get().VerboseMode)
-        Console.WriteLine("... ThreadUsageAnalysis");
+        Output.PrintLine("... ThreadUsageAnalysis");
 
       if (ToolCommandLineOptions.Get().MeasureTime)
       {
@@ -50,7 +52,7 @@ namespace Lockpwn.Analysis
       if (ToolCommandLineOptions.Get().MeasureTime)
       {
         this.Timer.Stop();
-        Console.WriteLine("..... [{0}]", this.Timer.Result());
+        Output.PrintLine("..... [{0}]", this.Timer.Result());
       }
     }
 
@@ -62,7 +64,7 @@ namespace Lockpwn.Analysis
       var thread = Thread.CreateMain(this.AC);
 
       if (ToolCommandLineOptions.Get().SuperVerboseMode)
-        Console.WriteLine("..... '{0}' is the main thread", thread.Name);
+        Output.PrintLine("..... '{0}' is the main thread", thread.Name);
     }
 
     /// <summary>
@@ -86,7 +88,7 @@ namespace Lockpwn.Analysis
           var thread = Thread.Create(this.AC, call.Ins[0], call.Ins[2], call.Ins[3], currentThread);
 
           if (ToolCommandLineOptions.Get().SuperVerboseMode)
-            Console.WriteLine("..... '{0}' spawns new thread '{1}'",
+            Output.PrintLine("..... '{0}' spawns new thread '{1}'",
               currentThread.Name, thread.Name);
         }
       }
@@ -132,7 +134,7 @@ namespace Lockpwn.Analysis
           thread.Joiner = new Tuple<Implementation, Block, CallCmd>(currentThread, block, call);
 
           if (ToolCommandLineOptions.Get().SuperVerboseMode)
-            Console.WriteLine("..... '{0}' blocks on thread '{1}'",
+            Output.PrintLine("..... '{0}' blocks on thread '{1}'",
               currentThread.Name, thread.Name);
         }
       }

@@ -17,6 +17,8 @@ using Microsoft.Boogie;
 using Microsoft.Basetypes;
 using Microsoft.Boogie.GraphUtil;
 
+using Lockpwn.IO;
+
 namespace Lockpwn.Refactoring
 {
   internal class ThreadRefactoring : IPass
@@ -37,7 +39,7 @@ namespace Lockpwn.Refactoring
     public void Run()
     {
       if (ToolCommandLineOptions.Get().VerboseMode)
-        Console.WriteLine("... ThreadRefactoring");
+        Output.PrintLine("... ThreadRefactoring");
 
       if (ToolCommandLineOptions.Get().MeasureTime)
       {
@@ -56,13 +58,13 @@ namespace Lockpwn.Refactoring
         this.AlreadyAnalysedFunctions.Clear();
 
         if (ToolCommandLineOptions.Get().SuperVerboseMode)
-          Console.WriteLine("..... Separated call graph of '{0}'", thread.Name);
+          Output.PrintLine("..... Separated call graph of '{0}'", thread.Name);
       }
 
       if (ToolCommandLineOptions.Get().MeasureTime)
       {
         this.Timer.Stop();
-        Console.WriteLine("..... [{0}]", this.Timer.Result());
+        Output.PrintLine("..... [{0}]", this.Timer.Result());
       }
     }
 

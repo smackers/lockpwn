@@ -12,6 +12,8 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics.Contracts;
 
+using Lockpwn.IO;
+
 namespace Lockpwn
 {
   internal sealed class ParsingEngine
@@ -28,7 +30,7 @@ namespace Lockpwn
     internal AnalysisContext Run()
     {
       if (ToolCommandLineOptions.Get().VerboseMode)
-        Console.WriteLine(". Parsing");
+        Output.PrintLine(". Parsing");
 
       if (ToolCommandLineOptions.Get().MeasureTime)
       {
@@ -45,7 +47,7 @@ namespace Lockpwn
       if (ToolCommandLineOptions.Get().MeasureTime)
       {
         this.Timer.Stop();
-        Console.WriteLine("... Parsing done [{0}]", this.Timer.Result());
+        Output.PrintLine("... Parsing done [{0}]", this.Timer.Result());
       }
 
       return ac;

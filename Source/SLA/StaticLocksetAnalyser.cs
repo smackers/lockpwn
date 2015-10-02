@@ -16,6 +16,8 @@ using System.Linq;
 
 using Microsoft.Boogie;
 
+using Lockpwn.IO;
+
 namespace Lockpwn
 {
   internal sealed class StaticLocksetAnalyser
@@ -34,7 +36,7 @@ namespace Lockpwn
     public void Run()
     {
       if (ToolCommandLineOptions.Get().VerboseMode)
-        Console.WriteLine(". StaticLocksetAnalysis");
+        Output.PrintLine(". StaticLocksetAnalysis");
 
       if (ToolCommandLineOptions.Get().MeasureTime)
       {
@@ -48,7 +50,7 @@ namespace Lockpwn
       if (ToolCommandLineOptions.Get().MeasureTime)
       {
         this.Timer.Stop();
-        Console.WriteLine("... StaticLocksetAnalysis done [{0}]", this.Timer.Result());
+        Output.PrintLine("... StaticLocksetAnalysis done [{0}]", this.Timer.Result());
       }
 
       Lockpwn.IO.BoogieProgramEmitter.EmitOutput(this.PostAC.TopLevelDeclarations, ToolCommandLineOptions.

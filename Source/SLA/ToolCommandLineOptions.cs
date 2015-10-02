@@ -9,18 +9,13 @@
 //===----------------------------------------------------------------------===//
 
 using System;
-
+using Lockpwn.IO;
 using Microsoft.Boogie;
 
 namespace Lockpwn
 {
   internal class ToolCommandLineOptions : CommandLineOptions
   {
-    /// <summary>
-    /// The input file.
-    /// </summary>
-    internal string InputFile = "";
-
     /// <summary>
     /// The output file.
     /// </summary>
@@ -40,11 +35,6 @@ namespace Lockpwn
     /// Print even more verbose information.
     /// </summary>
     internal bool SuperVerboseMode = false;
-
-    /// <summary>
-    /// Print debugging information.
-    /// </summary>
-    internal bool DebugMode = false;
 
     /// <summary>
     /// Disables the user provided assertions.
@@ -68,15 +58,12 @@ namespace Lockpwn
 
     protected override bool ParseOption(string option, CommandLineOptionEngine.CommandLineParseState ps)
     {
-      if (option == "inputFile" || option == "i")
+      if (option == "?")
       {
-        if (ps.ConfirmArgumentCount(1))
-        {
-          this.InputFile = ps.args[ps.i];
-        }
-        return true;
+        this.ShowHelp();
+        System.Environment.Exit(1);
       }
-      else if (option == "outputFile" || option == "o")
+      else if (option == "o")
       {
         if (ps.ConfirmArgumentCount(1))
         {
@@ -91,28 +78,28 @@ namespace Lockpwn
         }
         return true;
       }
-      else if (option == "time")
-      {
-        this.MeasureTime = true;
-        return true;
-      }
-      else if (option == "verbose" || option == "v")
+      else if (option == "v")
       {
         this.VerboseMode = true;
         return true;
       }
-      else if (option == "superVerbose" || option == "v2")
+      else if (option == "v2")
       {
         this.VerboseMode = true;
         this.SuperVerboseMode = true;
         return true;
       }
-      else if (option == "debug" || option == "d")
+      else if (option == "debug")
       {
-        this.DebugMode = true;
+        Output.Debugging = true;
         return true;
       }
-      else if (option == "noUserAssertions")
+      else if (option == "time")
+      {
+        this.MeasureTime = true;
+        return true;
+      }
+      else if (option == "noAssert")
       {
         this.DisableUserAssertions = true;
         return true;
@@ -129,6 +116,33 @@ namespace Lockpwn
       }
 
       return base.ParseOption(option, ps);
+    }
+
+    /// <summary>
+    /// Shows help.
+    /// </summary>
+    private void ShowHelp()
+    {
+      string help = "\n";
+
+      help += "--------------";
+      help += "\nBasic options:";
+      help += "\n--------------";
+      help += "\n  /?\t\t Show this help menu";
+      help += "\n  /o:[x]\t Name of the output file";
+      help += "\n  /v\t\t Enable verbose mode";
+      help += "\n  /v2\t\t Enable super verbose mode";
+      help += "\n  /debug\t Enable debugging";
+      help += "\n  /time\t\t Print timing information";
+
+      help += "\n\n-----------------";
+      help += "\nAdvanced options:";
+      help += "\n-----------------";
+      help += "\n  /noAssert\t Disables user-provided assertions";
+
+      help += "\n";
+
+      Output.PrettyPrintLine(help);
     }
 
     internal static ToolCommandLineOptions Get()

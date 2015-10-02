@@ -16,6 +16,8 @@ using System.Linq;
 using Microsoft.Boogie;
 using Microsoft.Basetypes;
 
+using Lockpwn.IO;
+
 namespace Lockpwn.Analysis
 {
   internal class SharedStateAbstraction : IPass
@@ -32,7 +34,7 @@ namespace Lockpwn.Analysis
     void IPass.Run()
     {
       if (ToolCommandLineOptions.Get().VerboseMode)
-        Console.WriteLine("... SharedStateAbstraction");
+        Output.PrintLine("... SharedStateAbstraction");
 
       if (ToolCommandLineOptions.Get().MeasureTime)
       {
@@ -50,7 +52,7 @@ namespace Lockpwn.Analysis
       if (ToolCommandLineOptions.Get().MeasureTime)
       {
         this.Timer.Stop();
-        Console.WriteLine("..... [{0}]", this.Timer.Result());
+        Output.PrintLine("..... [{0}]", this.Timer.Result());
       }
     }
 

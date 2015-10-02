@@ -16,6 +16,8 @@ using System.Linq;
 using Microsoft.Boogie;
 using Microsoft.Basetypes;
 
+using Lockpwn.IO;
+
 namespace Lockpwn.Instrumentation
 {
   internal class LocksetInstrumentation : IPass
@@ -38,7 +40,7 @@ namespace Lockpwn.Instrumentation
     void IPass.Run()
     {
       if (ToolCommandLineOptions.Get().VerboseMode)
-        Console.WriteLine("... LocksetInstrumentation");
+        Output.PrintLine("... LocksetInstrumentation");
 
       if (ToolCommandLineOptions.Get().MeasureTime)
       {
@@ -57,7 +59,7 @@ namespace Lockpwn.Instrumentation
       if (ToolCommandLineOptions.Get().MeasureTime)
       {
         this.Timer.Stop();
-        Console.WriteLine("..... [{0}]", this.Timer.Result());
+        Output.PrintLine("..... [{0}]", this.Timer.Result());
       }
     }
 
@@ -77,9 +79,9 @@ namespace Lockpwn.Instrumentation
       {
         var p1 = this.LockCounter == 1 ? "" : "s";
         var p2 = this.UnlockCounter == 1 ? "" : "s";
-        Console.WriteLine("..... Instrumented '{0}' lock" + p1 + " in '{1}'",
+        Output.PrintLine("..... Instrumented '{0}' lock" + p1 + " in '{1}'",
           this.LockCounter, thread.Name);
-        Console.WriteLine("..... Instrumented '{0}' unlock" + p2 + " in '{1}'",
+        Output.PrintLine("..... Instrumented '{0}' unlock" + p2 + " in '{1}'",
           this.UnlockCounter, thread.Name);
       }
 

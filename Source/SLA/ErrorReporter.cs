@@ -15,6 +15,8 @@ using System.Linq;
 
 using Microsoft.Boogie;
 
+using Lockpwn.IO;
+
 namespace Lockpwn
 {
   public sealed class ErrorReporter
@@ -55,7 +57,7 @@ namespace Lockpwn
         else
         {
           if (ToolCommandLineOptions.Get().VerboseMode)
-            Console.WriteLine("..... Error: AssertCounterexample");
+            Output.PrintLine("..... Error: AssertCounterexample");
           errors++;
         }
       }
@@ -75,7 +77,7 @@ namespace Lockpwn
       this.UnprotectedResources.Add(resource);
 
       if (ToolCommandLineOptions.Get().VerboseMode)
-        Console.WriteLine("..... Conflict in memory region: " + resource);
+        Output.PrintLine("..... Conflict in memory region: " + resource);
       if (ToolCommandLineOptions.Get().ShowErrorModel)
         this.Write(cex.Model, conflictingActions);
 
@@ -198,26 +200,26 @@ namespace Lockpwn
 
     public void Write(Model model, Dictionary<string, AssumeCmd> conflictingActions = null)
     {
-      Console.WriteLine("*** MODEL");
+      Output.PrintLine("*** MODEL");
 //      foreach (var f in model.Functions.OrderBy(f => f.Name))
 //        if (f.Arity == 0)
 //        {
-//          Console.WriteLine("{0} -> {1}", f.Name, f.GetConstant());
+//          Output.PrintLine("{0} -> {1}", f.Name, f.GetConstant());
 //        }
 //      foreach (var f in model.Functions)
 //        if (f.Arity != 0)
 //        {
-//          Console.WriteLine("{0} -> {1}", f.Name, "{");
+//          Output.PrintLine("{0} -> {1}", f.Name, "{");
 //          foreach (var app in f.Apps)
 //          {
-//            Console.Write("  ");
+//            Output.Print("  ");
 //            foreach (var a in app.Args)
-//              Console.Write("{0} ", a);
-//            Console.WriteLine("-> {0}", app.Result);
+//              Output.Print("{0} ", a);
+//            Output.PrintLine("-> {0}", app.Result);
 //          }
 //          if (f.Else != null)
-//            Console.WriteLine("  else -> {0}", f.Else);
-//          Console.WriteLine("}");
+//            Output.PrintLine("  else -> {0}", f.Else);
+//          Output.PrintLine("}");
 //        }
 
       foreach (var s in model.States)
@@ -227,13 +229,13 @@ namespace Lockpwn
           continue;
         if (s == model.InitialState && s.VariableCount == 0)
           continue;
-        Console.WriteLine("*** STATE {0}", s.Name);
+        Output.PrintLine("*** STATE {0}", s.Name);
         foreach (var v in s.Variables)
-          Console.WriteLine("  {0} -> {1}", v, s.TryGet(v));
-        Console.WriteLine("*** END_STATE", s.Name);
+          Output.PrintLine("  {0} -> {1}", v, s.TryGet(v));
+        Output.PrintLine("*** END_STATE", s.Name);
       }
 
-      Console.WriteLine("*** END_MODEL");
+      Output.PrintLine("*** END_MODEL");
     }
 
     private int ReportRequiresFailure(CallCounterexample cex)

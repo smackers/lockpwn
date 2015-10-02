@@ -16,6 +16,8 @@ using System.Linq;
 using Microsoft.Boogie;
 using Microsoft.Basetypes;
 
+using Lockpwn.IO;
+
 namespace Lockpwn.Instrumentation
 {
   internal class RaceCheckingInstrumentation : IPass
@@ -38,7 +40,7 @@ namespace Lockpwn.Instrumentation
     void IPass.Run()
     {
       if (ToolCommandLineOptions.Get().VerboseMode)
-        Console.WriteLine("... RaceCheckingInstrumentation");
+        Output.PrintLine("... RaceCheckingInstrumentation");
 
       if (ToolCommandLineOptions.Get().MeasureTime)
       {
@@ -54,7 +56,7 @@ namespace Lockpwn.Instrumentation
       if (ToolCommandLineOptions.Get().MeasureTime)
       {
         this.Timer.Stop();
-        Console.WriteLine("..... [{0}]", this.Timer.Result());
+        Output.PrintLine("..... [{0}]", this.Timer.Result());
       }
     }
 
@@ -75,9 +77,9 @@ namespace Lockpwn.Instrumentation
       {
         var p1 = this.ReadCounter == 1 ? "" : "es";
         var p2 = this.WriteCounter == 1 ? "" : "es";
-        Console.WriteLine("..... Instrumented '{0}' read access" + p1 + " in '{1}'",
+        Output.PrintLine("..... Instrumented '{0}' read access" + p1 + " in '{1}'",
           this.ReadCounter, thread.Name);
-        Console.WriteLine("..... Instrumented '{0}' write access" + p2 + " in '{1}'",
+        Output.PrintLine("..... Instrumented '{0}' write access" + p2 + " in '{1}'",
           this.WriteCounter, thread.Name);
       }
 

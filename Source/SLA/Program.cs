@@ -16,6 +16,8 @@ using System.Diagnostics.Contracts;
 using Microsoft.Boogie;
 using System.Diagnostics;
 
+using Lockpwn.IO;
+
 namespace Lockpwn
 {
   internal class Program
@@ -93,7 +95,7 @@ namespace Lockpwn
         new StaticLocksetAnalyser(ac, postAc).Run();
 
         if (ToolCommandLineOptions.Get().VerboseMode)
-          Console.WriteLine(". Done");
+          Output.PrintLine(". Done");
 
         Environment.Exit((int)Outcome.Done);
       }
@@ -126,7 +128,7 @@ namespace Lockpwn
       new StaticLocksetAnalyser(ac, postAc).Run();
 
       if (ToolCommandLineOptions.Get().VerboseMode)
-        Console.WriteLine(". Done");
+        Output.PrintLine(". Done");
 
       Environment.Exit((int)Outcome.Done);
     }

@@ -13,6 +13,8 @@ using System.Collections.Generic;
 using System.Diagnostics.Contracts;
 using System.Linq;
 
+using Lockpwn.IO;
+
 namespace Lockpwn
 {
   internal sealed class ThreadAnalysisEngine
@@ -29,7 +31,7 @@ namespace Lockpwn
     internal void Run()
     {
       if (ToolCommandLineOptions.Get().VerboseMode)
-        Console.WriteLine(". ThreadAnalysis");
+        Output.PrintLine(". ThreadAnalysis");
 
       if (ToolCommandLineOptions.Get().MeasureTime)
       {
@@ -52,7 +54,7 @@ namespace Lockpwn
       if (ToolCommandLineOptions.Get().MeasureTime)
       {
         this.Timer.Stop();
-        Console.WriteLine("... ThreadAnalysis done [{0}]", this.Timer.Result());
+        Output.PrintLine("... ThreadAnalysis done [{0}]", this.Timer.Result());
       }
     }
   }

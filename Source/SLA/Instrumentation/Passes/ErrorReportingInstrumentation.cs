@@ -16,6 +16,8 @@ using System.Linq;
 using Microsoft.Boogie;
 using Microsoft.Basetypes;
 
+using Lockpwn.IO;
+
 namespace Lockpwn.Instrumentation
 {
   internal class ErrorReportingInstrumentation : IPass
@@ -38,7 +40,7 @@ namespace Lockpwn.Instrumentation
     public void Run()
     {
       if (ToolCommandLineOptions.Get().VerboseMode)
-        Console.WriteLine("... ErrorReportingInstrumentation");
+        Output.PrintLine("... ErrorReportingInstrumentation");
 
       if (ToolCommandLineOptions.Get().MeasureTime)
       {
@@ -56,7 +58,7 @@ namespace Lockpwn.Instrumentation
       if (ToolCommandLineOptions.Get().MeasureTime)
       {
         this.Timer.Stop();
-        Console.WriteLine("..... [{0}]", this.Timer.Result());
+        Output.PrintLine("..... [{0}]", this.Timer.Result());
       }
     }
 

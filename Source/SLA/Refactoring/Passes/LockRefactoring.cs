@@ -18,6 +18,7 @@ using Microsoft.Boogie;
 using Microsoft.Basetypes;
 
 using Lockpwn.Analysis;
+using Lockpwn.IO;
 
 namespace Lockpwn.Refactoring
 {
@@ -42,7 +43,7 @@ namespace Lockpwn.Refactoring
     void IPass.Run()
     {
       if (ToolCommandLineOptions.Get().VerboseMode)
-        Console.WriteLine("... LockRefactoring");
+        Output.PrintLine("... LockRefactoring");
 
       if (ToolCommandLineOptions.Get().MeasureTime)
       {
@@ -59,7 +60,7 @@ namespace Lockpwn.Refactoring
       if (ToolCommandLineOptions.Get().MeasureTime)
       {
         this.Timer.Stop();
-        Console.WriteLine("..... [{0}]", this.Timer.Result());
+        Output.PrintLine("..... [{0}]", this.Timer.Result());
       }
     }
 
@@ -127,7 +128,7 @@ namespace Lockpwn.Refactoring
                   matched = true;
 
                   if (ToolCommandLineOptions.Get().SuperVerboseMode)
-                    Console.WriteLine("..... '{0}' uses lock '{1}'", impl.Name, l.Name);
+                    Output.PrintLine("..... '{0}' uses lock '{1}'", impl.Name, l.Name);
 
                   break;
                 }

@@ -12,6 +12,8 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics.Contracts;
 
+using Lockpwn.IO;
+
 namespace Lockpwn
 {
   internal sealed class ThreadInstrumentationEngine
@@ -28,7 +30,7 @@ namespace Lockpwn
     internal void Run()
     {
       if (ToolCommandLineOptions.Get().VerboseMode)
-        Console.WriteLine(". ThreadInstrumentation");
+        Output.PrintLine(". ThreadInstrumentation");
 
       if (ToolCommandLineOptions.Get().MeasureTime)
       {
@@ -60,7 +62,7 @@ namespace Lockpwn
       if (ToolCommandLineOptions.Get().MeasureTime)
       {
         this.Timer.Stop();
-        Console.WriteLine("... ThreadInstrumentation done [{0}]", this.Timer.Result());
+        Output.PrintLine("... ThreadInstrumentation done [{0}]", this.Timer.Result());
       }
 
       Lockpwn.IO.BoogieProgramEmitter.Emit(this.AC.TopLevelDeclarations, ToolCommandLineOptions.Get().

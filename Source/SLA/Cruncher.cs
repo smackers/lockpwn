@@ -18,6 +18,7 @@ using Microsoft.Basetypes;
 using Microsoft.Boogie.Houdini;
 
 using Lockpwn.Analysis;
+using Lockpwn.IO;
 
 namespace Lockpwn
 {
@@ -39,7 +40,7 @@ namespace Lockpwn
     internal void Run()
     {
       if (ToolCommandLineOptions.Get().VerboseMode)
-        Console.WriteLine(". Cruncher");
+        Output.PrintLine(". Cruncher");
 
       if (ToolCommandLineOptions.Get().MeasureTime)
       {
@@ -61,7 +62,7 @@ namespace Lockpwn
       if (ToolCommandLineOptions.Get().MeasureTime)
       {
         this.Timer.Stop();
-        Console.WriteLine("... Cruncher done [{0}]", this.Timer.Result());
+        Output.PrintLine("... Cruncher done [{0}]", this.Timer.Result());
       }
 
       Lockpwn.IO.BoogieProgramEmitter.Emit(this.PostAC.TopLevelDeclarations, ToolCommandLineOptions.Get().
@@ -76,10 +77,10 @@ namespace Lockpwn
 
       if (CommandLineOptions.Clo.PrintAssignment)
       {
-        Console.WriteLine("Assignment computed by Houdini:");
+        Output.PrintLine("Assignment computed by Houdini:");
         foreach (var x in this.Outcome.assignment)
         {
-          Console.WriteLine(x.Key + " = " + x.Value);
+          Output.PrintLine(x.Key + " = " + x.Value);
         }
       }
 
@@ -94,13 +95,13 @@ namespace Lockpwn
           }
         }
 
-        Console.WriteLine("Number of true assignments = " + numTrueAssigns);
-        Console.WriteLine("Number of false assignments = " + (this.Outcome.assignment.Count - numTrueAssigns));
-        Console.WriteLine("Prover time = " + houdiniStats.proverTime.ToString("F2"));
-        Console.WriteLine("Unsat core prover time = " + houdiniStats.unsatCoreProverTime.ToString("F2"));
-        Console.WriteLine("Number of prover queries = " + houdiniStats.numProverQueries);
-        Console.WriteLine("Number of unsat core prover queries = " + houdiniStats.numUnsatCoreProverQueries);
-        Console.WriteLine("Number of unsat core prunings = " + houdiniStats.numUnsatCorePrunings);
+        Output.PrintLine("Number of true assignments = " + numTrueAssigns);
+        Output.PrintLine("Number of false assignments = " + (this.Outcome.assignment.Count - numTrueAssigns));
+        Output.PrintLine("Prover time = " + houdiniStats.proverTime.ToString("F2"));
+        Output.PrintLine("Unsat core prover time = " + houdiniStats.unsatCoreProverTime.ToString("F2"));
+        Output.PrintLine("Number of prover queries = " + houdiniStats.numProverQueries);
+        Output.PrintLine("Number of unsat core prover queries = " + houdiniStats.numUnsatCoreProverQueries);
+        Output.PrintLine("Number of unsat core prunings = " + houdiniStats.numUnsatCorePrunings);
       }
     }
 

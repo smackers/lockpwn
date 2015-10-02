@@ -17,6 +17,8 @@ using System.ComponentModel.Design.Serialization;
 using Microsoft.Boogie;
 using Microsoft.Basetypes;
 
+using Lockpwn.IO;
+
 namespace Lockpwn.Refactoring
 {
   internal class ProgramSimplifier : IPass
@@ -36,7 +38,7 @@ namespace Lockpwn.Refactoring
     void IPass.Run()
     {
       if (ToolCommandLineOptions.Get().VerboseMode)
-        Console.WriteLine("... ProgramSimplifier");
+        Output.PrintLine("... ProgramSimplifier");
 
       if (ToolCommandLineOptions.Get().MeasureTime)
       {
@@ -52,7 +54,7 @@ namespace Lockpwn.Refactoring
       if (ToolCommandLineOptions.Get().MeasureTime)
       {
         this.Timer.Stop();
-        Console.WriteLine("..... [{0}]", this.Timer.Result());
+        Output.PrintLine("..... [{0}]", this.Timer.Result());
       }
     }
 

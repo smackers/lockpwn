@@ -17,6 +17,7 @@ using Microsoft.Boogie;
 using Microsoft.Basetypes;
 
 using Lockpwn.Analysis;
+using Lockpwn.IO;
 
 namespace Lockpwn.Instrumentation
 {
@@ -37,7 +38,7 @@ namespace Lockpwn.Instrumentation
     void IPass.Run()
     {
       if (ToolCommandLineOptions.Get().VerboseMode)
-        Console.WriteLine("... YieldInstrumentation");
+        Output.PrintLine("... YieldInstrumentation");
 
       if (ToolCommandLineOptions.Get().MeasureTime)
       {
@@ -61,13 +62,13 @@ namespace Lockpwn.Instrumentation
       if (ToolCommandLineOptions.Get().SuperVerboseMode)
       {
         var suffix = this.YieldCounter == 1 ? "" : "s";
-        Console.WriteLine("..... Instrumented '{0}' yield" + suffix + "", this.YieldCounter);
+        Output.PrintLine("..... Instrumented '{0}' yield" + suffix + "", this.YieldCounter);
       }
 
       if (ToolCommandLineOptions.Get().MeasureTime)
       {
         this.Timer.Stop();
-        Console.WriteLine("..... [{0}]", this.Timer.Result());
+        Output.PrintLine("..... [{0}]", this.Timer.Result());
       }
     }
 

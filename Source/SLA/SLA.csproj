@@ -112,6 +112,7 @@
     <Compile Include="Instrumentation\Passes\LoopSummaryInstrumentation.cs" />
     <Compile Include="Cruncher.cs" />
     <Compile Include="ThreadInstrumentationEngine.cs" />
+    <Compile Include="IO\Output.cs" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Utilities\" />

@@ -16,6 +16,8 @@ using System.Linq;
 using Microsoft.Boogie;
 using Microsoft.Basetypes;
 
+using Lockpwn.IO;
+
 namespace Lockpwn.Analysis
 {
   internal class SharedStateAnalysis : IPass
@@ -40,7 +42,7 @@ namespace Lockpwn.Analysis
     void IPass.Run()
     {
       if (ToolCommandLineOptions.Get().VerboseMode)
-        Console.WriteLine("... SharedStateAnalysis");
+        Output.PrintLine("... SharedStateAnalysis");
 
       if (ToolCommandLineOptions.Get().MeasureTime)
       {
@@ -56,7 +58,7 @@ namespace Lockpwn.Analysis
       if (ToolCommandLineOptions.Get().MeasureTime)
       {
         this.Timer.Stop();
-        Console.WriteLine("..... [{0}]", this.Timer.Result());
+        Output.PrintLine("..... [{0}]", this.Timer.Result());
       }
     }
 
@@ -77,11 +79,11 @@ namespace Lockpwn.Analysis
           accesses += " '" + mr.Name + "'";
 
         if (this.AC.ThreadMemoryRegions[this.Thread].Count == 0)
-          Console.WriteLine("..... '{0}' accesses no memory regions", this.Thread.Name, accesses);
+          Output.PrintLine("..... '{0}' accesses no memory regions", this.Thread.Name, accesses);
         else if (this.AC.ThreadMemoryRegions[this.Thread].Count == 1)
-          Console.WriteLine("..... '{0}' accesses{1}", this.Thread.Name, accesses);
+          Output.PrintLine("..... '{0}' accesses{1}", this.Thread.Name, accesses);
         else
-          Console.WriteLine("..... '{0}' accesses{1}", this.Thread.Name, accesses);
+          Output.PrintLine("..... '{0}' accesses{1}", this.Thread.Name, accesses);
       }
     }
 

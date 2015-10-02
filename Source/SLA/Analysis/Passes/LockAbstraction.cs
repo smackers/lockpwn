@@ -16,6 +16,8 @@ using System.Linq;
 using Microsoft.Boogie;
 using Microsoft.Basetypes;
 
+using Lockpwn.IO;
+
 namespace Lockpwn.Analysis
 {
   internal class LockAbstraction : IPass
@@ -35,7 +37,7 @@ namespace Lockpwn.Analysis
     void IPass.Run()
     {
       if (ToolCommandLineOptions.Get().VerboseMode)
-        Console.WriteLine("... LockAbstraction");
+        Output.PrintLine("... LockAbstraction");
 
       if (ToolCommandLineOptions.Get().MeasureTime)
       {
@@ -48,7 +50,7 @@ namespace Lockpwn.Analysis
       if (ToolCommandLineOptions.Get().MeasureTime)
       {
         this.Timer.Stop();
-        Console.WriteLine("..... [{0}]", this.Timer.Result());
+        Output.PrintLine("..... [{0}]", this.Timer.Result());
       }
     }
 
@@ -74,7 +76,7 @@ namespace Lockpwn.Analysis
               Microsoft.Boogie.Type.Int), true), lockExpr);
 
           if (ToolCommandLineOptions.Get().SuperVerboseMode)
-            Console.WriteLine("..... New abstract lock '{0}'", newLock.Id);
+            Output.PrintLine("..... New abstract lock '{0}'", newLock.Id);
 
           newLock.Id.AddAttribute("lock", new object[] { });
           this.AC.TopLevelDeclarations.Add(newLock.Id);
@@ -85,7 +87,7 @@ namespace Lockpwn.Analysis
       if (ToolCommandLineOptions.Get().SuperVerboseMode &&
         this.AC.Locks.Count == 0)
       {
-        Console.WriteLine("..... No locks detected");
+        Output.PrintLine("..... No locks detected");
       }
     }
   }

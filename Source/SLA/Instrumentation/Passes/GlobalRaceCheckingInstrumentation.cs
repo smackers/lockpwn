@@ -16,6 +16,8 @@ using System.Linq;
 using Microsoft.Boogie;
 using Microsoft.Basetypes;
 
+using Lockpwn.IO;
+
 namespace Lockpwn.Instrumentation
 {
   internal class GlobalRaceCheckingInstrumentation : IPass
@@ -32,7 +34,7 @@ namespace Lockpwn.Instrumentation
     void IPass.Run()
     {
       if (ToolCommandLineOptions.Get().VerboseMode)
-        Console.WriteLine("... GlobalRaceCheckingInstrumentation");
+        Output.PrintLine("... GlobalRaceCheckingInstrumentation");
 
       if (ToolCommandLineOptions.Get().MeasureTime)
       {
@@ -47,7 +49,7 @@ namespace Lockpwn.Instrumentation
         this.AddAccessCheckingVariables(thread);
 
         if (ToolCommandLineOptions.Get().SuperVerboseMode)
-          Console.WriteLine("..... Instrumented lockset analysis globals for '{0}'", thread.Name);
+          Output.PrintLine("..... Instrumented lockset analysis globals for '{0}'", thread.Name);
       }
 
       this.AddAccessWatchdogConstants();
@@ -55,7 +57,7 @@ namespace Lockpwn.Instrumentation
       if (ToolCommandLineOptions.Get().MeasureTime)
       {
         this.Timer.Stop();
-        Console.WriteLine("..... [{0}]", this.Timer.Result());
+        Output.PrintLine("..... [{0}]", this.Timer.Result());
       }
     }
 

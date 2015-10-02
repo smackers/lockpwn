@@ -12,10 +12,12 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics.Contracts;
 using System.Linq;
+using System.Runtime.InteropServices;
+
+using Lockpwn.IO;
 
 using Microsoft.Boogie;
 using Microsoft.Basetypes;
-using System.Runtime.InteropServices;
 
 namespace Lockpwn.Instrumentation
 {
@@ -36,7 +38,7 @@ namespace Lockpwn.Instrumentation
     void IPass.Run()
     {
       if (ToolCommandLineOptions.Get().VerboseMode)
-        Console.WriteLine("... AccessCheckingInstrumentation");
+        Output.PrintLine("... AccessCheckingInstrumentation");
 
       if (ToolCommandLineOptions.Get().MeasureTime)
       {
@@ -49,7 +51,7 @@ namespace Lockpwn.Instrumentation
       if (ToolCommandLineOptions.Get().MeasureTime)
       {
         this.Timer.Stop();
-        Console.WriteLine("..... [{0}]", this.Timer.Result());
+        Output.PrintLine("..... [{0}]", this.Timer.Result());
       }
     }
 
@@ -111,7 +113,7 @@ namespace Lockpwn.Instrumentation
         if (ToolCommandLineOptions.Get().SuperVerboseMode)
         {
           var p = asserts.Count == 1 ? "" : "s";
-          Console.WriteLine("..... Instrumented '{0}' assertion" + p + " for '{1}'",
+          Output.PrintLine("..... Instrumented '{0}' assertion" + p + " for '{1}'",
             asserts.Count, mr.Name);
         }
       }

@@ -16,6 +16,8 @@ using System.Linq;
 using Microsoft.Boogie;
 using Microsoft.Basetypes;
 
+using Lockpwn.IO;
+
 namespace Lockpwn.Instrumentation
 {
   internal class LoopSummaryInstrumentation : IPass
@@ -37,7 +39,7 @@ namespace Lockpwn.Instrumentation
     public void Run()
     {
       if (ToolCommandLineOptions.Get().VerboseMode)
-        Console.WriteLine("... LoopSummaryInstrumentation");
+        Output.PrintLine("... LoopSummaryInstrumentation");
 
       if (ToolCommandLineOptions.Get().MeasureTime)
       {
@@ -54,7 +56,7 @@ namespace Lockpwn.Instrumentation
         if (ToolCommandLineOptions.Get().SuperVerboseMode)
         {
           var suffix = this.CandidateCounter[thread] == 1 ? "" : "s";
-          Console.WriteLine("..... Instrumented '{0}' loop invariant candidate" + suffix +
+          Output.PrintLine("..... Instrumented '{0}' loop invariant candidate" + suffix +
             " in '{1}'", this.CandidateCounter[thread], thread.Name);
         }
       }
@@ -64,7 +66,7 @@ namespace Lockpwn.Instrumentation
       if (ToolCommandLineOptions.Get().MeasureTime)
       {
         this.Timer.Stop();
-        Console.WriteLine("..... [{0}]", this.Timer.Result());
+        Output.PrintLine("..... [{0}]", this.Timer.Result());
       }
     }
 

@@ -16,6 +16,8 @@ using System.Linq;
 
 using Microsoft.Boogie;
 
+using Lockpwn.IO;
+
 namespace Lockpwn
 {
   internal class AnalysisContextParser
@@ -61,14 +63,14 @@ namespace Lockpwn
       program.Resolve(rc);
       if (rc.ErrorCount != 0)
       {
-        Console.WriteLine("{0} name resolution errors detected", rc.ErrorCount);
+        Output.PrintLine("{0} name resolution errors detected", rc.ErrorCount);
         return false;
       }
 
       int errorCount = program.Typecheck();
       if (errorCount != 0)
       {
-        Console.WriteLine("{0} type checking errors detected", errorCount);
+        Output.PrintLine("{0} type checking errors detected", errorCount);
         return false;
       }
 
