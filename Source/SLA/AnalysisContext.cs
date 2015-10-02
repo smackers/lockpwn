@@ -19,8 +19,20 @@ using Microsoft.Boogie.GraphUtil;
 
 namespace Lockpwn
 {
+  /// <summary>
+  /// Class implementing an analysis context.
+  /// </summary>
   internal class AnalysisContext : CheckingContext
   {
+    #region static fields
+
+    /// <summary>
+    /// The error reporter associated with the analysis context.
+    /// </summary>
+    private static ErrorReporter ErrorReporter;
+
+    #endregion
+
     #region fields
 
     internal Microsoft.Boogie.Program Program;
@@ -37,8 +49,6 @@ namespace Lockpwn
     internal HashSet<GlobalVariable> SharedMemoryRegions;
     internal Dictionary<Thread, HashSet<GlobalVariable>> ThreadMemoryRegions;
 
-    internal ErrorReporter ErrorReporter;
-
     internal Microsoft.Boogie.Type MemoryModelType;
 
     internal Implementation EntryPoint
@@ -51,6 +61,19 @@ namespace Lockpwn
 
     #region internal API
 
+    /// <summary>
+    /// Static constructor.
+    /// </summary>
+    static AnalysisContext()
+    {
+      AnalysisContext.ErrorReporter = new ErrorReporter();
+    }
+
+    /// <summary>
+    /// Constructor.
+    /// </summary>
+    /// <param name="program">Program</param>
+    /// <param name="rc">ResolutionContext</param>
     internal AnalysisContext(Microsoft.Boogie.Program program, ResolutionContext rc)
       : base((IErrorSink)null)
     {
@@ -71,10 +94,17 @@ namespace Lockpwn
 
       this.MemoryModelType = Microsoft.Boogie.Type.Int;
 
-      this.ErrorReporter = new ErrorReporter();
-
       this.ResetToProgramTopLevelDeclarations();
       this.DetectEntryPoint();
+    }
+
+    /// <summary>
+    /// Returns the error reporter associated with this analysis context.
+    /// </summary>
+    /// <returns>ErrorReporter</returns>
+    internal ErrorReporter GetErrorReporter()
+    {
+      return AnalysisContext.ErrorReporter;
     }
 
     internal void EliminateDeadVariables()

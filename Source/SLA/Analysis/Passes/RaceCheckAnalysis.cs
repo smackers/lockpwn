@@ -185,7 +185,7 @@ namespace Lockpwn.Analysis
           int errorCount = 0;
 
           foreach (Counterexample error in errors)
-            errorCount += this.AC.ErrorReporter.ReportCounterexample(error);
+            errorCount += this.AC.GetErrorReporter().ReportCounterexample(error);
 
           if (errorCount == 0)
           {

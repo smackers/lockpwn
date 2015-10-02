@@ -156,7 +156,7 @@ namespace Lockpwn.Instrumentation
 
           if (!writeAccessFound && !readAccessFound)
             continue;
-          if (!this.AC.ErrorReporter.UnprotectedResources.Contains(resource))
+          if (!this.AC.GetErrorReporter().UnprotectedResources.Contains(resource))
             continue;
 
           if (idx + 1 == block.Cmds.Count)

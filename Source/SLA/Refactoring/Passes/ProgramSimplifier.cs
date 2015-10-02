@@ -60,7 +60,6 @@ namespace Lockpwn.Refactoring
     {
       foreach (var block in impl.Blocks)
       {
-        block.Cmds.RemoveAll(val => val is AssertCmd);
         foreach (var call in block.cmds.OfType<CallCmd>().Where(val => val.IsAsync))
         {
           call.IsAsync = false;
