@@ -78,7 +78,7 @@ namespace Lockpwn
         var ac = new ParsingEngine(fileList).Run();
 
         new ThreadAnalysisEngine(ac).Run();
-        new LocksetInstrumentationEngine(ac).Run();
+        new ThreadInstrumentationEngine(ac).Run();
 
         AnalysisContext postAc = null;
         new AnalysisContextParser(fileList[fileList.Count - 1], "bpl").TryParseNew(ref ac,

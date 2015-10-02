@@ -14,12 +14,12 @@ using System.Diagnostics.Contracts;
 
 namespace Lockpwn
 {
-  internal sealed class LocksetInstrumentationEngine
+  internal sealed class ThreadInstrumentationEngine
   {
     private AnalysisContext AC;
     private ExecutionTimer Timer;
 
-    internal LocksetInstrumentationEngine(AnalysisContext ac)
+    internal ThreadInstrumentationEngine(AnalysisContext ac)
     {
       Contract.Requires(ac != null);
       this.AC = ac;
@@ -28,7 +28,7 @@ namespace Lockpwn
     internal void Run()
     {
       if (ToolCommandLineOptions.Get().VerboseMode)
-        Console.WriteLine(". StaticLocksetInstrumentation");
+        Console.WriteLine(". ThreadInstrumentation");
 
       if (ToolCommandLineOptions.Get().MeasureTime)
       {
@@ -60,7 +60,7 @@ namespace Lockpwn
       if (ToolCommandLineOptions.Get().MeasureTime)
       {
         this.Timer.Stop();
-        Console.WriteLine("... StaticLocksetInstrumentation done [{0}]", this.Timer.Result());
+        Console.WriteLine("... ThreadInstrumentation done [{0}]", this.Timer.Result());
       }
 
       Lockpwn.IO.BoogieProgramEmitter.Emit(this.AC.TopLevelDeclarations, ToolCommandLineOptions.Get().

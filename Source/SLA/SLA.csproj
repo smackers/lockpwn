@@ -93,7 +93,6 @@
     <Compile Include="DataStructures\Lock.cs" />
     <Compile Include="DataStructures\Lockset.cs" />
     <Compile Include="DataStructures\Thread.cs" />
-    <Compile Include="LocksetInstrumentationEngine.cs" />
     <Compile Include="Instrumentation\Factory.cs" />
     <Compile Include="Instrumentation\Passes\LocksetInstrumentation.cs" />
     <Compile Include="Instrumentation\Passes\YieldInstrumentation.cs" />
@@ -112,6 +111,7 @@
     <Compile Include="Refactoring\Passes\ProgramSimplifier.cs" />
     <Compile Include="Instrumentation\Passes\LoopSummaryInstrumentation.cs" />
     <Compile Include="Cruncher.cs" />
+    <Compile Include="ThreadInstrumentationEngine.cs" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Utilities\" />

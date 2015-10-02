@@ -81,6 +81,12 @@ namespace Lockpwn.Analysis
           this.AC.Locks.Add(newLock);
         }
       }
+
+      if (ToolCommandLineOptions.Get().SuperVerboseMode &&
+        this.AC.Locks.Count == 0)
+      {
+        Console.WriteLine("..... No locks detected");
+      }
     }
   }
 }
