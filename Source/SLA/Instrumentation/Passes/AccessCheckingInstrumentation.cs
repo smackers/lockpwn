@@ -227,7 +227,7 @@ namespace Lockpwn.Instrumentation
       Block block = null;
       var index = -1;
 
-      if (thread.IsMain)
+      if (thread.IsMain || thread.Joiner == null)
       {
         foreach (var b in thread.Function.Blocks)
         {

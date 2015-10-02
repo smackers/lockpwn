@@ -71,7 +71,9 @@ namespace Lockpwn.Analysis
     /// </summary>
     private void IdentifyThreadCreation()
     {
-      foreach (var block in this.AC.EntryPoint.Blocks)
+      var currentThread = this.AC.EntryPoint;
+
+      foreach (var block in currentThread.Blocks)
       {
         for (int idx = 0; idx < block.Cmds.Count; idx++)
         {
@@ -82,12 +84,12 @@ namespace Lockpwn.Analysis
           if (!(block.Cmds[idx] as CallCmd).callee.Contains("pthread_create"))
             continue;
 
-          var thread = new Thread(this.AC, call.Ins[0], call.Ins[2], call.Ins[3], this.AC.EntryPoint);
+          var thread = new Thread(this.AC, call.Ins[0], call.Ins[2], call.Ins[3], currentThread);
           this.AC.Threads.Add(thread);
 
           if (ToolCommandLineOptions.Get().SuperVerboseMode)
             Console.WriteLine("..... '{0}' spawns new thread '{1}'",
-              this.AC.EntryPoint.Name, thread.Name);
+              currentThread.Name, thread.Name);
         }
       }
     }
@@ -97,7 +99,9 @@ namespace Lockpwn.Analysis
     /// </summary>
     private void IdentifyThreadJoin()
     {
-      foreach (var block in this.AC.EntryPoint.Blocks)
+      var currentThread = this.AC.EntryPoint;
+
+      foreach (var block in currentThread.Blocks)
       {
         for (int idx = 0; idx < block.Cmds.Count; idx++)
         {
@@ -109,7 +113,7 @@ namespace Lockpwn.Analysis
             continue;
 
           var threadIdExpr = PointerArithmeticAnalyser.ComputeRootPointer(
-            this.AC.EntryPoint, block.Label, call.Ins[0], true);
+            currentThread, block.Label, call.Ins[0], true);
           if (threadIdExpr is NAryExpr)
           {
             var nary = threadIdExpr as NAryExpr;
@@ -124,10 +128,14 @@ namespace Lockpwn.Analysis
 
           var thread = this.AC.Threads.First(val => !val.IsMain &&
             val.Id.Name.Equals((threadIdExpr as IdentifierExpr).Name));
-          if (!thread.Creator.Equals(this.AC.EntryPoint))
+          if (!thread.Creator.Equals(currentThread))
             continue;
 
-          thread.Joiner = new Tuple<Implementation, Block, CallCmd>(this.AC.EntryPoint, block, call);
+          thread.Joiner = new Tuple<Implementation, Block, CallCmd>(currentThread, block, call);
+
+          if (ToolCommandLineOptions.Get().SuperVerboseMode)
+            Console.WriteLine("..... '{0}' blocks on thread '{1}'",
+              currentThread.Name, thread.Name);
         }
       }
     }
