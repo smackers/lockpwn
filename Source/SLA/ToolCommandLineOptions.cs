@@ -43,7 +43,15 @@ namespace Lockpwn
 
     internal bool ShowErrorModel = false;
 
-    internal bool NoInstrumentation = false;
+    /// <summary>
+    /// Skip the instrumentation phase.
+    /// </summary>
+    internal bool SkipInstrumentation = false;
+
+    /// <summary>
+    /// Skip the crunching phase.
+    /// </summary>
+    internal bool SkipCrunching = false;
 
     internal ToolCommandLineOptions() : base("lockpwn", "lockpwn static lockset analyser")
     {
@@ -111,7 +119,12 @@ namespace Lockpwn
       }
       else if (option == "noInstrument")
       {
-        this.NoInstrumentation = true;
+        this.SkipInstrumentation = true;
+        return true;
+      }
+      else if (option == "noCrunch")
+      {
+        this.SkipCrunching = true;
         return true;
       }
 

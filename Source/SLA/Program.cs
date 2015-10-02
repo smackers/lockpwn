@@ -22,6 +22,27 @@ namespace Lockpwn
 {
   internal class Program
   {
+    #region static fields
+
+    /// <summary>
+    /// List of files to analyze.
+    /// </summary>
+    private static List<string> FileList;
+
+    /// <summary>
+    /// The analysis context.
+    /// </summary>
+    private static AnalysisContext AC;
+
+    /// <summary>
+    /// The post analysis context.
+    /// </summary>
+    private static AnalysisContext PostAC;
+
+    #endregion
+
+    #region methods
+
     internal static void Main(string[] args)
     {
       Contract.Requires(cce.NonNullElements(args));
@@ -29,7 +50,7 @@ namespace Lockpwn
 
       Program.EnableBoogieOptions();
 
-      var fileList = new List<string>();
+      Program.FileList = new List<string>();
 
       try
       {
@@ -54,10 +75,10 @@ namespace Lockpwn
           {
             extension = extension.ToLower();
           }
-          fileList.Add(file);
+          Program.FileList.Add(file);
         }
 
-        foreach (string file in fileList)
+        foreach (string file in Program.FileList)
         {
           Contract.Assert(file != null);
           string extension = Path.GetExtension(file);
@@ -72,27 +93,9 @@ namespace Lockpwn
           }
         }
 
-        if (ToolCommandLineOptions.Get().NoInstrumentation)
-        {
-          Program.CheckAndSpitProgram(fileList);
-        }
-
-        var ac = new ParsingEngine(fileList).Run();
-
-        new ThreadAnalysisEngine(ac).Run();
-        new ThreadInstrumentationEngine(ac).Run();
-
-        AnalysisContext postAc = null;
-        new AnalysisContextParser(fileList[fileList.Count - 1], "bpl").TryParseNew(ref ac,
-          new List<string> { "instrumented" });
-        new AnalysisContextParser(fileList[fileList.Count - 1], "bpl").TryParseNew(ref postAc,
-          new List<string> { "instrumented" });
-        new Cruncher(ac, postAc).Run();
-
-        new AnalysisContextParser(fileList[fileList.Count - 1], "bpl").TryParseNew(ref ac,
-          new List<string> { "summarised" });
-        new AnalysisContextParser(fileList[fileList.Count - 1], "bpl").TryParseNew(ref postAc);
-        new StaticLocksetAnalyser(ac, postAc).Run();
+        Program.ParseAnalyzeAndInstrument();
+        Program.RunCruncher();
+        Program.RunStaticAnalyzer();
 
         if (ToolCommandLineOptions.Get().VerboseMode)
           Output.PrintLine(". Done");
@@ -107,6 +110,49 @@ namespace Lockpwn
       }
     }
 
+    /// <summary>
+    /// Parses, analyzes and instruments the program.
+    /// </summary>
+    internal static void ParseAnalyzeAndInstrument()
+    {
+      if (!ToolCommandLineOptions.Get().SkipInstrumentation)
+      {
+        Program.AC = new ParsingEngine(Program.FileList).Run();
+
+        new ThreadAnalysisEngine(Program.AC).Run();
+        new ThreadInstrumentationEngine(Program.AC).Run();
+      }
+
+      new AnalysisContextParser(Program.FileList[Program.FileList.Count - 1], "bpl")
+        .TryParseNew(ref Program.AC, new List<string> { "instrumented" });
+      new AnalysisContextParser(Program.FileList[Program.FileList.Count - 1], "bpl")
+        .TryParseNew(ref Program.PostAC, new List<string> { "instrumented" });
+    }
+
+    /// <summary>
+    /// Runs the cruncher on the program.
+    /// </summary>
+    internal static void RunCruncher()
+    {
+      if (ToolCommandLineOptions.Get().SkipCrunching)
+        return;
+
+      new Cruncher(Program.AC, Program.PostAC).Run();
+
+      new AnalysisContextParser(Program.FileList[Program.FileList.Count - 1], "bpl")
+        .TryParseNew(ref Program.AC, new List<string> { "summarised" });
+      new AnalysisContextParser(Program.FileList[Program.FileList.Count - 1], "bpl")
+        .TryParseNew(ref Program.PostAC);
+    }
+
+    /// <summary>
+    /// Runs the static analyzer on the program.
+    /// </summary>
+    internal static void RunStaticAnalyzer()
+    {
+      new StaticLocksetAnalyser(Program.AC, Program.PostAC).Run();
+    }
+
     internal static void EnableBoogieOptions()
     {
       CommandLineOptions.Clo.DoModSetAnalysis = true;
@@ -118,19 +164,6 @@ namespace Lockpwn
       CommandLineOptions.Clo.ContractInfer = true;
     }
 
-    internal static void CheckAndSpitProgram(List<string> fileList)
-    {
-      AnalysisContext ac = null;
-      AnalysisContext postAc = null;
-      new AnalysisContextParser(fileList[fileList.Count - 1], "bpl").TryParseNew(ref ac,
-        new List<string> { "instrumented" });
-      new AnalysisContextParser(fileList[fileList.Count - 1], "bpl").TryParseNew(ref postAc);
-      new StaticLocksetAnalyser(ac, postAc).Run();
-
-      if (ToolCommandLineOptions.Get().VerboseMode)
-        Output.PrintLine(". Done");
-
-      Environment.Exit((int)Outcome.Done);
-    }
+    #endregion
   }
 }
