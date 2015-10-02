@@ -1,6 +1,6 @@
 ﻿//===-----------------------------------------------------------------------==//
 //
-//                Lockpwn - a Static Lockset Analyser for Boogie
+// Lockpwn - blazing fast symbolic analysis for concurrent Boogie programs
 //
 // Copyright (c) 2015 Pantazis Deligiannis (pdeligia@me.com)
 //
@@ -39,9 +39,9 @@ namespace Lockpwn.Analysis
       return new RaceCheckAnalysis(ac);
     }
 
-//    internal static IPass CreateWatchdogInformationAnalysis(AnalysisContext ac, EntryPoint ep)
-//    {
-//      return new WatchdogInformationAnalysis(ac, ep);
-//    }
+    internal static IPass CreateInvariantInference(AnalysisContext ac, AnalysisContext postAc)
+    {
+      return new InvariantInference(ac, postAc);
+    }
   }
 }

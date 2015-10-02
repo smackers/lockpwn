@@ -1,6 +1,6 @@
 ﻿//===-----------------------------------------------------------------------==//
 //
-//                Lockpwn - a Static Lockset Analyser for Boogie
+// Lockpwn - blazing fast symbolic analysis for concurrent Boogie programs
 //
 // Copyright (c) 2015 Pantazis Deligiannis (pdeligia@me.com)
 //
@@ -49,9 +49,9 @@ namespace Lockpwn
     internal bool SkipInstrumentation = false;
 
     /// <summary>
-    /// Skip the crunching phase.
+    /// Skip the summarization phase.
     /// </summary>
-    internal bool SkipCrunching = false;
+    internal bool SkipSummarization = false;
 
     internal ToolCommandLineOptions() : base("lockpwn", "lockpwn static lockset analyser")
     {
@@ -122,9 +122,9 @@ namespace Lockpwn
         this.SkipInstrumentation = true;
         return true;
       }
-      else if (option == "noCrunch")
+      else if (option == "noSummary")
       {
-        this.SkipCrunching = true;
+        this.SkipSummarization = true;
         return true;
       }
 

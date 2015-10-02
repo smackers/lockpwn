@@ -1,6 +1,6 @@
 ﻿//===-----------------------------------------------------------------------==//
 //
-//                Lockpwn - a Static Lockset Analyser for Boogie
+// Lockpwn - blazing fast symbolic analysis for concurrent Boogie programs
 //
 // Copyright (c) 2015 Pantazis Deligiannis (pdeligia@me.com)
 //
@@ -23,7 +23,7 @@ namespace Lockpwn.Analysis
   internal class RaceCheckAnalysis : IPass
   {
     private AnalysisContext AC;
-    PipelineStatistics Stats;
+    private PipelineStatistics Stats;
     private ExecutionTimer Timer;
 
     internal RaceCheckAnalysis(AnalysisContext ac)

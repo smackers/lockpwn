@@ -1,6 +1,6 @@
 ﻿//===-----------------------------------------------------------------------==//
 //
-//                Lockpwn - a Static Lockset Analyser for Boogie
+// Lockpwn - blazing fast symbolic analysis for concurrent Boogie programs
 //
 // Copyright (c) 2015 Pantazis Deligiannis (pdeligia@me.com)
 //
@@ -45,7 +45,10 @@ namespace Lockpwn
 
       Analysis.Factory.CreateSharedStateAbstraction(this.AC).Run();
 
-      Instrumentation.Factory.CreateLoopSummaryInstrumentation(this.AC).Run();
+      if (!ToolCommandLineOptions.Get().SkipSummarization)
+      {
+        Instrumentation.Factory.CreateLoopSummaryInstrumentation(this.AC).Run();
+      }
 
       Instrumentation.Factory.CreateErrorReportingInstrumentation(this.AC).Run();
       Instrumentation.Factory.CreateAccessCheckingInstrumentation(this.AC).Run();

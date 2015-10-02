@@ -1,6 +1,6 @@
 ﻿//===-----------------------------------------------------------------------==//
 //
-//                Lockpwn - a Static Lockset Analyser for Boogie
+// Lockpwn - blazing fast symbolic analysis for concurrent Boogie programs
 //
 // Copyright (c) 2015 Pantazis Deligiannis (pdeligia@me.com)
 //
@@ -17,12 +17,11 @@ using Microsoft.Boogie;
 using Microsoft.Basetypes;
 using Microsoft.Boogie.Houdini;
 
-using Lockpwn.Analysis;
 using Lockpwn.IO;
 
-namespace Lockpwn
+namespace Lockpwn.Analysis
 {
-  internal sealed class Cruncher
+  internal class InvariantInference : IPass
   {
     private AnalysisContext AC;
     private AnalysisContext PostAC;
@@ -30,17 +29,20 @@ namespace Lockpwn
     private HoudiniOutcome Outcome;
     private ExecutionTimer Timer;
 
-    internal Cruncher(AnalysisContext ac, AnalysisContext postAc)
+    internal InvariantInference(AnalysisContext ac, AnalysisContext postAc)
     {
       Contract.Requires(ac != null && postAc != null);
       this.AC = ac;
       this.PostAC = postAc;
     }
 
-    internal void Run()
+    /// <summary>
+    /// Runs an invariant inference analysis pass.
+    /// </summary>
+    void IPass.Run()
     {
       if (ToolCommandLineOptions.Get().VerboseMode)
-        Output.PrintLine(". Cruncher");
+        Output.PrintLine("... InvariantInference");
 
       if (ToolCommandLineOptions.Get().MeasureTime)
       {
@@ -48,25 +50,14 @@ namespace Lockpwn
         this.Timer.Start();
       }
 
-      this.AC.EliminateDeadVariables();
-      this.AC.Inline();
-
       this.PerformHoudini();
       this.ApplyInvariants();
-
-      //      ModelCleaner.RemoveGenericTopLevelDeclerations(this.PostAC, this.EP);
-      //      ModelCleaner.RemoveUnusedTopLevelDeclerations(this.AC);
-      //      ModelCleaner.RemoveGlobalLocksets(this.PostAC);
-      ModelCleaner.RemoveExistentials(this.PostAC);
 
       if (ToolCommandLineOptions.Get().MeasureTime)
       {
         this.Timer.Stop();
-        Output.PrintLine("... Cruncher done [{0}]", this.Timer.Result());
+        Output.PrintLine("..... [{0}]", this.Timer.Result());
       }
-
-      Lockpwn.IO.BoogieProgramEmitter.Emit(this.PostAC.TopLevelDeclarations, ToolCommandLineOptions.Get().
-        Files[ToolCommandLineOptions.Get().Files.Count - 1], "summarised", "bpl");
     }
 
     private void PerformHoudini()
@@ -112,18 +103,6 @@ namespace Lockpwn
         this.Houdini.Close();
         ToolCommandLineOptions.Get().TheProverFactory.Close();
       }
-    }
-
-    private bool AllImplementationsValid(HoudiniOutcome outcome)
-    {
-      foreach (var vcgenOutcome in outcome.implementationOutcomes.Values.Select(i => i.outcome))
-      {
-        if (vcgenOutcome != VC.VCGen.Outcome.Correct)
-        {
-          return false;
-        }
-      }
-      return true;
     }
   }
 }

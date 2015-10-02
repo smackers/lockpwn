@@ -1,6 +1,6 @@
 ﻿//===-----------------------------------------------------------------------==//
 //
-//                Lockpwn - a Static Lockset Analyser for Boogie
+// Lockpwn - blazing fast symbolic analysis for concurrent Boogie programs
 //
 // Copyright (c) 2015 Pantazis Deligiannis (pdeligia@me.com)
 //
@@ -94,7 +94,7 @@ namespace Lockpwn
         }
 
         Program.ParseAnalyzeAndInstrument();
-        Program.RunCruncher();
+        Program.Summarize();
         Program.RunStaticAnalyzer();
 
         if (ToolCommandLineOptions.Get().VerboseMode)
@@ -130,14 +130,14 @@ namespace Lockpwn
     }
 
     /// <summary>
-    /// Runs the cruncher on the program.
+    /// Summarizes the program.
     /// </summary>
-    internal static void RunCruncher()
+    internal static void Summarize()
     {
-      if (ToolCommandLineOptions.Get().SkipCrunching)
+      if (ToolCommandLineOptions.Get().SkipSummarization)
         return;
 
-      new Cruncher(Program.AC, Program.PostAC).Run();
+      new SummarizationEngine(Program.AC, Program.PostAC).Run();
 
       new AnalysisContextParser(Program.FileList[Program.FileList.Count - 1], "bpl")
         .TryParseNew(ref Program.AC, new List<string> { "summarised" });

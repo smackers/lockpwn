@@ -110,9 +110,10 @@
     <Compile Include="Analysis\Passes\ThreadUsageAnalysis.cs" />
     <Compile Include="Refactoring\Passes\ProgramSimplifier.cs" />
     <Compile Include="Instrumentation\Passes\LoopSummaryInstrumentation.cs" />
-    <Compile Include="Cruncher.cs" />
     <Compile Include="ThreadInstrumentationEngine.cs" />
     <Compile Include="IO\Output.cs" />
+    <Compile Include="SummarizationEngine.cs" />
+    <Compile Include="Analysis\Passes\InvariantInference.cs" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Utilities\" />
