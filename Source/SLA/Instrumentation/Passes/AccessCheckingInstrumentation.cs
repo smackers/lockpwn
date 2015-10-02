@@ -110,10 +110,9 @@ namespace Lockpwn.Instrumentation
 
         if (ToolCommandLineOptions.Get().SuperVerboseMode)
         {
-          if (asserts.Count > 0)
-            Console.WriteLine("..... Instrumented assertions for '{0}'", mr.Name);
-          else
-            Console.WriteLine("..... Instrumented assertion for '{0}'", mr.Name);
+          var p = asserts.Count == 1 ? "" : "s";
+          Console.WriteLine("..... Instrumented '{0}' assertion" + p + " for '{1}'",
+            asserts.Count, mr.Name);
         }
       }
     }
@@ -227,9 +226,19 @@ namespace Lockpwn.Instrumentation
       Block block = null;
       var index = -1;
 
+      Implementation targetFunction = null;
+      if (thread.IsMain)
+      {
+        targetFunction = thread.Function;
+      }
+      else
+      {
+        targetFunction = thread.SpawnFunction;
+      }
+
       if (thread.IsMain || thread.Joiner == null)
       {
-        foreach (var b in thread.Function.Blocks)
+        foreach (var b in targetFunction.Blocks)
         {
           if (b.TransferCmd is ReturnCmd)
           {

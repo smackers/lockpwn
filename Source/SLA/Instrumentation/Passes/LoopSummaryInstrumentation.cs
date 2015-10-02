@@ -21,7 +21,6 @@ namespace Lockpwn.Instrumentation
   internal class LoopSummaryInstrumentation : IPass
   {
     private AnalysisContext AC;
-//    private Thread Thread;
     private ExecutionTimer Timer;
 
     private HashSet<Constant> ExistentialBooleans;

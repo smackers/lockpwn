@@ -16,14 +16,40 @@ namespace Lockpwn
 {
   internal class ToolCommandLineOptions : CommandLineOptions
   {
+    /// <summary>
+    /// The input file.
+    /// </summary>
     internal string InputFile = "";
+
+    /// <summary>
+    /// The output file.
+    /// </summary>
     internal string OutputFile = "";
 
+    /// <summary>
+    /// Measure time.
+    /// </summary>
     internal bool MeasureTime = false;
 
+    /// <summary>
+    /// Print verbose information.
+    /// </summary>
     internal bool VerboseMode = false;
+
+    /// <summary>
+    /// Print even more verbose information.
+    /// </summary>
     internal bool SuperVerboseMode = false;
+
+    /// <summary>
+    /// Print debugging information.
+    /// </summary>
     internal bool DebugMode = false;
+
+    /// <summary>
+    /// Disables the user provided assertions.
+    /// </summary>
+    internal bool DisableUserAssertions = false;
 
     internal bool ShowErrorModel = false;
 
@@ -84,6 +110,11 @@ namespace Lockpwn
       else if (option == "debug" || option == "d")
       {
         this.DebugMode = true;
+        return true;
+      }
+      else if (option == "noUserAssertions")
+      {
+        this.DisableUserAssertions = true;
         return true;
       }
       else if (option == "showErrorModel")

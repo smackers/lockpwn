@@ -59,8 +59,7 @@ namespace Lockpwn.Analysis
     /// </summary>
     private void CreateMainThread()
     {
-      var thread = new Thread(this.AC);
-      this.AC.Threads.Add(thread);
+      var thread = Thread.CreateMain(this.AC);
 
       if (ToolCommandLineOptions.Get().SuperVerboseMode)
         Console.WriteLine("..... '{0}' is the main thread", thread.Name);
@@ -84,8 +83,7 @@ namespace Lockpwn.Analysis
           if (!(block.Cmds[idx] as CallCmd).callee.Contains("pthread_create"))
             continue;
 
-          var thread = new Thread(this.AC, call.Ins[0], call.Ins[2], call.Ins[3], currentThread);
-          this.AC.Threads.Add(thread);
+          var thread = Thread.Create(this.AC, call.Ins[0], call.Ins[2], call.Ins[3], currentThread);
 
           if (ToolCommandLineOptions.Get().SuperVerboseMode)
             Console.WriteLine("..... '{0}' spawns new thread '{1}'",
@@ -128,7 +126,7 @@ namespace Lockpwn.Analysis
 
           var thread = this.AC.Threads.First(val => !val.IsMain &&
             val.Id.Name.Equals((threadIdExpr as IdentifierExpr).Name));
-          if (!thread.Creator.Equals(currentThread))
+          if (!thread.SpawnFunction.Equals(currentThread))
             continue;
 
           thread.Joiner = new Tuple<Implementation, Block, CallCmd>(currentThread, block, call);

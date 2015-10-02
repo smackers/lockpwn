@@ -60,11 +60,30 @@ namespace Lockpwn.Refactoring
     {
       foreach (var block in impl.Blocks)
       {
+        if (ToolCommandLineOptions.Get().DisableUserAssertions)
+        {
+          block.Cmds.RemoveAll(val => val is AssertCmd);
+        }
+
+        this.RemoveDomainSpecificFunctions(block);
+
         foreach (var call in block.cmds.OfType<CallCmd>().Where(val => val.IsAsync))
         {
           call.IsAsync = false;
         }
       }
+    }
+
+    private void RemoveDomainSpecificFunctions(Block block)
+    {
+      var toRemove = new List<Cmd>();
+      foreach (var call in block.cmds.OfType<CallCmd>())
+      {
+        if (call.callee.Equals("pthread_exit"))
+          toRemove.Add(call);
+      }
+
+      block.Cmds.RemoveAll(val => toRemove.Contains(val));
     }
   }
 }

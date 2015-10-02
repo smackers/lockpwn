@@ -40,6 +40,7 @@ namespace Lockpwn
 
     internal List<Declaration> TopLevelDeclarations;
 
+    internal Thread MainThread;
     internal HashSet<Thread> Threads;
 
     internal List<Lock> Locks;
@@ -83,6 +84,7 @@ namespace Lockpwn
       this.Program = program;
       this.ResContext = rc;
 
+      this.MainThread = null;
       this.Threads = new HashSet<Thread>();
 
       this.Locks = new List<Lock>();
