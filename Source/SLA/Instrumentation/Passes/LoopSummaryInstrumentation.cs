@@ -21,18 +21,18 @@ namespace Lockpwn.Instrumentation
   internal class LoopSummaryInstrumentation : IPass
   {
     private AnalysisContext AC;
-    private Thread Thread;
+//    private Thread Thread;
     private ExecutionTimer Timer;
 
     private HashSet<Constant> ExistentialBooleans;
-    private int CandidateCounter;
+    private Dictionary<Thread, int> CandidateCounter;
 
     public LoopSummaryInstrumentation(AnalysisContext ac)
     {
       Contract.Requires(ac != null);
       this.AC = ac;
       this.ExistentialBooleans = new HashSet<Constant>();
-      this.CandidateCounter = 0;
+      this.CandidateCounter = new Dictionary<Thread, int>();
     }
 
     public void Run()
@@ -48,13 +48,15 @@ namespace Lockpwn.Instrumentation
 
       foreach (var thread in this.AC.Threads)
       {
+        this.CandidateCounter.Add(thread, 0);
+
         this.InstrumentThread(thread);
 
         if (ToolCommandLineOptions.Get().SuperVerboseMode)
         {
-          var suffix = this.CandidateCounter == 1 ? "" : "s";
+          var suffix = this.CandidateCounter[thread] == 1 ? "" : "s";
           Console.WriteLine("..... Instrumented '{0}' loop invariant candidate" + suffix +
-            " in '{1}'", this.CandidateCounter, thread.Name);
+            " in '{1}'", this.CandidateCounter[thread], thread.Name);
         }
       }
 
@@ -69,47 +71,45 @@ namespace Lockpwn.Instrumentation
 
     private void InstrumentThread(Thread thread)
     {
-      this.Thread = thread;
-
       foreach (var impl in this.AC.GetThreadSpecificFunctions(thread))
       {
-        this.IdentifyAndInstrumentLoopsInImplementation(impl);
+        this.IdentifyAndInstrumentLoopsInImplementation(thread, impl);
       }
     }
 
-    private void IdentifyAndInstrumentLoopsInImplementation(Implementation impl)
+    private void IdentifyAndInstrumentLoopsInImplementation(Thread thread, Implementation impl)
     {
       var loopHeaders = this.ComputeLoopHeaders(impl);
       if (loopHeaders.Count == 0)
         return;
 
-      var curLockSets = this.AC.CurrentLocksets.Where(val => val.Thread.Equals(this.Thread));
-      var memLockSets = this.AC.MemoryLocksets.Where(val => val.Thread.Equals(this.Thread));
+      var curLockSets = this.AC.CurrentLocksets.Where(val => val.Thread.Equals(thread));
+      var memLockSets = this.AC.MemoryLocksets.Where(val => val.Thread.Equals(thread));
       var writeSets = this.AC.GetWriteAccessCheckingVariables().
-        Where(val => val.Name.EndsWith(this.Thread.Name));
+        Where(val => val.Name.EndsWith(thread.Name));
       var readSets = this.AC.GetReadAccessCheckingVariables().
-        Where(val => val.Name.EndsWith(this.Thread.Name));
+        Where(val => val.Name.EndsWith(thread.Name));
 
       foreach (var header in loopHeaders)
       {
         foreach (var read in readSets)
         {
-          this.InstrumentAssertCandidate(header, read, false);
+          this.InstrumentAssertCandidate(thread, header, read, false);
         }
 
         foreach (var write in writeSets)
         {
-          this.InstrumentAssertCandidate(header, write, false);
+          this.InstrumentAssertCandidate(thread, header, write, false);
         }
 
         foreach (var mls in memLockSets)
         {
-          this.InstrumentAssertCandidate(header, mls.Id, true);
+          this.InstrumentAssertCandidate(thread, header, mls.Id, true);
         }
 
         foreach (var cls in curLockSets)
         {
-          this.InstrumentAssertCandidate(header, cls.Id, true);
+          this.InstrumentAssertCandidate(thread, header, cls.Id, true);
         }
       }
     }
@@ -130,9 +130,9 @@ namespace Lockpwn.Instrumentation
       }
     }
 
-    private void InstrumentAssertCandidate(Block block, Variable variable, bool value)
+    private void InstrumentAssertCandidate(Thread thread, Block block, Variable variable, bool value)
     {
-      var cons = this.CreateConstant();
+      var cons = this.CreateConstant(thread);
       Expr expr = this.CreateImplExpr(cons, variable, value);
       block.Cmds.Insert(0, new AssertCmd(Token.NoToken, expr));
     }
@@ -156,12 +156,12 @@ namespace Lockpwn.Instrumentation
       return expr;
     }
 
-    private Constant CreateConstant()
+    private Constant CreateConstant(Thread thread)
     {
       Constant cons = new Constant(Token.NoToken, new TypedIdent(Token.NoToken, "_b$" +
-        this.Thread.Name + "$" + this.CandidateCounter, Microsoft.Boogie.Type.Bool), false);
+        thread.Name + "$" + this.CandidateCounter[thread], Microsoft.Boogie.Type.Bool), false);
       this.ExistentialBooleans.Add(cons);
-      this.CandidateCounter++;
+      this.CandidateCounter[thread]++;
       return cons;
     }
   }
