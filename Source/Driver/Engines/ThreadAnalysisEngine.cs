@@ -19,13 +19,13 @@ namespace Lockpwn
 {
   internal sealed class ThreadAnalysisEngine
   {
-    private AnalysisContext AC;
+    private Program Program;
     private ExecutionTimer Timer;
 
-    internal ThreadAnalysisEngine(AnalysisContext ac)
+    internal ThreadAnalysisEngine(Program program)
     {
-      Contract.Requires(ac != null);
-      this.AC = ac;
+      Contract.Requires(program != null);
+      this.Program = program;
     }
 
     internal void Run()
@@ -39,17 +39,17 @@ namespace Lockpwn
         this.Timer.Start();
       }
 
-      Analysis.Factory.CreateThreadCreationAnalysis(this.AC).Run();
-      Analysis.Factory.CreateLockAbstraction(this.AC).Run();
+      Analysis.Factory.CreateThreadCreationAnalysis(this.Program.AC).Run();
+      Analysis.Factory.CreateLockAbstraction(this.Program.AC).Run();
 
-      if (this.AC.Locks.Count > 0)
+      if (this.Program.AC.Locks.Count > 0)
       {
-        Refactoring.Factory.CreateLockRefactoring(this.AC).Run();
+        Refactoring.Factory.CreateLockRefactoring(this.Program.AC).Run();
       }
 
-      Refactoring.Factory.CreateThreadRefactoring(this.AC).Run();
+      Refactoring.Factory.CreateThreadRefactoring(this.Program.AC).Run();
 
-      Analysis.Factory.CreateSharedStateAnalysis(this.AC).Run();
+      Analysis.Factory.CreateSharedStateAnalysis(this.Program.AC).Run();
 
       if (ToolCommandLineOptions.Get().MeasureTime)
       {

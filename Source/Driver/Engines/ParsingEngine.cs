@@ -18,13 +18,13 @@ namespace Lockpwn
 {
   internal sealed class ParsingEngine
   {
-    private List<string> FileList;
+    private Program Program;
     private ExecutionTimer Timer;
 
-    internal ParsingEngine(List<string> fileList)
+    internal ParsingEngine(Program program)
     {
-      Contract.Requires(fileList != null && fileList.Count > 0);
-      this.FileList = fileList;
+      Contract.Requires(program != null);
+      this.Program = program;
     }
 
     internal AnalysisContext Run()
@@ -39,7 +39,7 @@ namespace Lockpwn
       }
 
       AnalysisContext ac = null;
-      new AnalysisContextParser(this.FileList[this.FileList.Count - 1],
+      new AnalysisContextParser(this.Program.FileList[this.Program.FileList.Count - 1],
         "bpl").TryParseNew(ref ac);
 
       Refactoring.Factory.CreateProgramSimplifier(ac).Run();

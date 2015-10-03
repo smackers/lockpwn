@@ -22,15 +22,13 @@ namespace Lockpwn
 {
   internal sealed class ReachabilityAnalysisEngine
   {
-    private AnalysisContext AC;
-    private AnalysisContext PostAC;
+    private Program Program;
     private ExecutionTimer Timer;
 
-    public ReachabilityAnalysisEngine(AnalysisContext ac, AnalysisContext postAc)
+    public ReachabilityAnalysisEngine(Program program)
     {
-      Contract.Requires(ac != null && postAc != null);
-      this.AC = ac;
-      this.PostAC = postAc;
+      Contract.Requires(program != null);
+      this.Program = program;
     }
 
     public void Run()
@@ -44,8 +42,8 @@ namespace Lockpwn
         this.Timer.Start();
       }
 
-      Analysis.Factory.CreateRaceCheckAnalysis(this.AC).Run();
-      Instrumentation.Factory.CreateYieldInstrumentation(this.PostAC).Run();
+      Analysis.Factory.CreateRaceCheckAnalysis(this.Program.AC).Run();
+      Instrumentation.Factory.CreateYieldInstrumentation(this.Program.PostAC).Run();
 
       if (ToolCommandLineOptions.Get().MeasureTime)
       {
@@ -53,8 +51,8 @@ namespace Lockpwn
         Output.PrintLine("... ReachabilityAnalysis done [{0}]", this.Timer.Result());
       }
 
-      Lockpwn.IO.BoogieProgramEmitter.EmitOutput(this.PostAC.TopLevelDeclarations, ToolCommandLineOptions.
-        Get().Files[ToolCommandLineOptions.Get().Files.Count - 1]);
+      Lockpwn.IO.BoogieProgramEmitter.EmitOutput(this.Program.PostAC.TopLevelDeclarations,
+        ToolCommandLineOptions.Get().Files[ToolCommandLineOptions.Get().Files.Count - 1]);
     }
   }
 }

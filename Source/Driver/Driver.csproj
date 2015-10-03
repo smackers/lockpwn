@@ -114,6 +114,7 @@
     <Compile Include="Core\IPass.cs" />
     <Compile Include="Core\Outcome.cs" />
     <Compile Include="Engines\ReachabilityAnalysisEngine.cs" />
+    <Compile Include="Core\Program.cs" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Utilities\" />

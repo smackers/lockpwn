@@ -23,15 +23,13 @@ namespace Lockpwn
 {
   internal sealed class SummarizationEngine
   {
-    private AnalysisContext AC;
-    private AnalysisContext PostAC;
+    private Program Program;
     private ExecutionTimer Timer;
 
-    internal SummarizationEngine(AnalysisContext ac, AnalysisContext postAc)
+    internal SummarizationEngine(Program program)
     {
-      Contract.Requires(ac != null && postAc != null);
-      this.AC = ac;
-      this.PostAC = postAc;
+      Contract.Requires(program != null);
+      this.Program = program;
     }
 
     internal void Run()
@@ -45,15 +43,15 @@ namespace Lockpwn
         this.Timer.Start();
       }
 
-      this.AC.EliminateDeadVariables();
-      this.AC.Inline();
+      this.Program.AC.EliminateDeadVariables();
+      this.Program.AC.Inline();
 
-      Analysis.Factory.CreateInvariantInference(this.AC, this.PostAC).Run();
+      Analysis.Factory.CreateInvariantInference(this.Program.AC, this.Program.PostAC).Run();
 
-      //      ModelCleaner.RemoveGenericTopLevelDeclerations(this.PostAC, this.EP);
-      //      ModelCleaner.RemoveUnusedTopLevelDeclerations(this.AC);
-      //      ModelCleaner.RemoveGlobalLocksets(this.PostAC);
-      ModelCleaner.RemoveExistentials(this.PostAC);
+      //      ModelCleaner.RemoveGenericTopLevelDeclerations(this.Program.PostAC, this.EP);
+      //      ModelCleaner.RemoveUnusedTopLevelDeclerations(this.Program.AC);
+      //      ModelCleaner.RemoveGlobalLocksets(this.Program.PostAC);
+      ModelCleaner.RemoveExistentials(this.Program.PostAC);
 
       if (ToolCommandLineOptions.Get().MeasureTime)
       {
@@ -61,7 +59,7 @@ namespace Lockpwn
         Output.PrintLine("... Summarization done [{0}]", this.Timer.Result());
       }
 
-      Lockpwn.IO.BoogieProgramEmitter.Emit(this.PostAC.TopLevelDeclarations, ToolCommandLineOptions
+      Lockpwn.IO.BoogieProgramEmitter.Emit(this.Program.PostAC.TopLevelDeclarations, ToolCommandLineOptions
         .Get().Files[ToolCommandLineOptions.Get().Files.Count - 1], "summarised", "bpl");
     }
   }

@@ -18,13 +18,13 @@ namespace Lockpwn
 {
   internal sealed class ThreadInstrumentationEngine
   {
-    private AnalysisContext AC;
+    private Program Program;
     private ExecutionTimer Timer;
 
-    internal ThreadInstrumentationEngine(AnalysisContext ac)
+    internal ThreadInstrumentationEngine(Program program)
     {
-      Contract.Requires(ac != null);
-      this.AC = ac;
+      Contract.Requires(program != null);
+      this.Program = program;
     }
 
     internal void Run()
@@ -38,24 +38,24 @@ namespace Lockpwn
         this.Timer.Start();
       }
 
-      Instrumentation.Factory.CreateGlobalRaceCheckingInstrumentation(this.AC).Run();
+      Instrumentation.Factory.CreateGlobalRaceCheckingInstrumentation(this.Program.AC).Run();
 
-      Instrumentation.Factory.CreateLocksetInstrumentation(this.AC).Run();
-      Instrumentation.Factory.CreateRaceCheckingInstrumentation(this.AC).Run();
+      Instrumentation.Factory.CreateLocksetInstrumentation(this.Program.AC).Run();
+      Instrumentation.Factory.CreateRaceCheckingInstrumentation(this.Program.AC).Run();
 
-      Analysis.Factory.CreateSharedStateAbstraction(this.AC).Run();
+      Analysis.Factory.CreateSharedStateAbstraction(this.Program.AC).Run();
 
       if (!ToolCommandLineOptions.Get().SkipSummarization)
       {
-        Instrumentation.Factory.CreateLoopSummaryInstrumentation(this.AC).Run();
+        Instrumentation.Factory.CreateLoopSummaryInstrumentation(this.Program.AC).Run();
       }
 
-      Instrumentation.Factory.CreateErrorReportingInstrumentation(this.AC).Run();
-      Instrumentation.Factory.CreateAccessCheckingInstrumentation(this.AC).Run();
+      Instrumentation.Factory.CreateErrorReportingInstrumentation(this.Program.AC).Run();
+      Instrumentation.Factory.CreateAccessCheckingInstrumentation(this.Program.AC).Run();
 
-      foreach (var thread in this.AC.Threads)
-        this.AC.InlineThread(thread);
-      this.AC.InlineThreadHelpers();
+      foreach (var thread in this.Program.AC.Threads)
+        this.Program.AC.InlineThread(thread);
+      this.Program.AC.InlineThreadHelpers();
 
 //        ModelCleaner.RemoveInlineFromHelperFunctions(this.AC, this.EP);
 //      ModelCleaner.RemoveUnecesseryInfoFromSpecialFunctions(this.AC);
@@ -68,7 +68,7 @@ namespace Lockpwn
         Output.PrintLine("... ThreadInstrumentation done [{0}]", this.Timer.Result());
       }
 
-      Lockpwn.IO.BoogieProgramEmitter.Emit(this.AC.TopLevelDeclarations, ToolCommandLineOptions
+      Lockpwn.IO.BoogieProgramEmitter.Emit(this.Program.AC.TopLevelDeclarations, ToolCommandLineOptions
         .Get().Files[ToolCommandLineOptions.Get().Files.Count - 1], "instrumented", "bpl");
     }
   }
