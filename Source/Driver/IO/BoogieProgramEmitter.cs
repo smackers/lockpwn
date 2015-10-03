@@ -40,7 +40,7 @@ namespace Lockpwn.IO
       }
     }
 
-    internal static void Emit(List<Declaration> declarations, string file, string extension = "bpl")
+    internal static void Emit(List<Declaration> declarations, string file, string extension)
     {
       string directoryContainingFile = Path.GetDirectoryName(file);
       if (string.IsNullOrEmpty(directoryContainingFile))
@@ -55,7 +55,7 @@ namespace Lockpwn.IO
       }
     }
 
-    internal static void Emit(List<Declaration> declarations, string file, string suffix, string extension = "bpl")
+    internal static void Emit(List<Declaration> declarations, string file, string suffix, string extension)
     {
       string directoryContainingFile = Path.GetDirectoryName(file);
       if (string.IsNullOrEmpty(directoryContainingFile))
@@ -68,6 +68,18 @@ namespace Lockpwn.IO
       {
         declarations.Emit(writer);
       }
+    }
+
+    internal static void Remove(string file, string suffix, string extension)
+    {
+      string directoryContainingFile = Path.GetDirectoryName(file);
+      if (string.IsNullOrEmpty(directoryContainingFile))
+        directoryContainingFile = Directory.GetCurrentDirectory();
+
+      var fileName = directoryContainingFile + Path.DirectorySeparatorChar +
+        Path.GetFileNameWithoutExtension(file) + "_" + suffix;
+
+      File.Delete(fileName + "." + extension);
     }
   }
 }

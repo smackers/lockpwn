@@ -72,48 +72,48 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Program.cs" />
     <Compile Include="Utilities\Utilities.cs" />
     <Compile Include="Utilities\AnalysisContextParser.cs" />
     <Compile Include="Utilities\ExecutionTimer.cs" />
     <Compile Include="IO\BoogieProgramEmitter.cs" />
     <Compile Include="IO\Reporter.cs" />
-    <Compile Include="AnalysisContext.cs" />
-    <Compile Include="AccessType.cs" />
-    <Compile Include="Outcome.cs" />
     <Compile Include="Analysis\ModelCleaner.cs" />
     <Compile Include="Analysis\PointerArithmeticAnalyser.cs" />
     <Compile Include="Analysis\Factory.cs" />
     <Compile Include="Analysis\Passes\LockAbstraction.cs" />
     <Compile Include="Analysis\Passes\SharedStateAbstraction.cs" />
-    <Compile Include="IPass.cs" />
-    <Compile Include="ToolCommandLineOptions.cs" />
     <Compile Include="Refactoring\Passes\LockRefactoring.cs" />
     <Compile Include="Refactoring\Factory.cs" />
-    <Compile Include="DataStructures\Lock.cs" />
-    <Compile Include="DataStructures\Lockset.cs" />
-    <Compile Include="DataStructures\Thread.cs" />
     <Compile Include="Instrumentation\Factory.cs" />
     <Compile Include="Instrumentation\Passes\LocksetInstrumentation.cs" />
     <Compile Include="Instrumentation\Passes\YieldInstrumentation.cs" />
     <Compile Include="Instrumentation\Passes\GlobalRaceCheckingInstrumentation.cs" />
     <Compile Include="Analysis\Passes\SharedStateAnalysis.cs" />
-    <Compile Include="ParsingEngine.cs" />
     <Compile Include="Instrumentation\Passes\RaceCheckingInstrumentation.cs" />
     <Compile Include="Instrumentation\Passes\ErrorReportingInstrumentation.cs" />
-    <Compile Include="ThreadAnalysisEngine.cs" />
     <Compile Include="Refactoring\Passes\ThreadRefactoring.cs" />
     <Compile Include="Instrumentation\Passes\AccessCheckingInstrumentation.cs" />
-    <Compile Include="StaticLocksetAnalyser.cs" />
     <Compile Include="ErrorReporter.cs" />
     <Compile Include="Analysis\Passes\RaceCheckAnalysis.cs" />
     <Compile Include="Analysis\Passes\ThreadUsageAnalysis.cs" />
     <Compile Include="Refactoring\Passes\ProgramSimplifier.cs" />
     <Compile Include="Instrumentation\Passes\LoopSummaryInstrumentation.cs" />
-    <Compile Include="ThreadInstrumentationEngine.cs" />
     <Compile Include="IO\Output.cs" />
-    <Compile Include="SummarizationEngine.cs" />
     <Compile Include="Analysis\Passes\InvariantInference.cs" />
+    <Compile Include="Engines\ParsingEngine.cs" />
+    <Compile Include="Engines\SummarizationEngine.cs" />
+    <Compile Include="Engines\ThreadAnalysisEngine.cs" />
+    <Compile Include="Engines\ThreadInstrumentationEngine.cs" />
+    <Compile Include="Driver.cs" />
+    <Compile Include="Utilities\ToolCommandLineOptions.cs" />
+    <Compile Include="Core\Lock.cs" />
+    <Compile Include="Core\Lockset.cs" />
+    <Compile Include="Core\Thread.cs" />
+    <Compile Include="Core\AnalysisContext.cs" />
+    <Compile Include="Core\AccessType.cs" />
+    <Compile Include="Core\IPass.cs" />
+    <Compile Include="Core\Outcome.cs" />
+    <Compile Include="Engines\ReachabilityAnalysisEngine.cs" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Utilities\" />
@@ -124,6 +124,7 @@
     <Folder Include="Analysis\Passes\" />
     <Folder Include="Instrumentation\Passes\" />
     <Folder Include="Refactoring\Passes\" />
-    <Folder Include="DataStructures\" />
+    <Folder Include="Engines\" />
+    <Folder Include="Core\" />
   </ItemGroup>
 </Project>

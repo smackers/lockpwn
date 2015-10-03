@@ -9,34 +9,35 @@
 //===----------------------------------------------------------------------===//
 
 using System;
-using System.IO;
 using System.Collections.Generic;
 using System.Diagnostics.Contracts;
 using System.Linq;
 
 using Microsoft.Boogie;
+using Microsoft.Basetypes;
 
+using Lockpwn.Analysis;
 using Lockpwn.IO;
 
 namespace Lockpwn
 {
-  internal sealed class StaticLocksetAnalyser
+  internal sealed class SummarizationEngine
   {
     private AnalysisContext AC;
     private AnalysisContext PostAC;
     private ExecutionTimer Timer;
 
-    public StaticLocksetAnalyser(AnalysisContext ac, AnalysisContext postAc)
+    internal SummarizationEngine(AnalysisContext ac, AnalysisContext postAc)
     {
       Contract.Requires(ac != null && postAc != null);
       this.AC = ac;
       this.PostAC = postAc;
     }
 
-    public void Run()
+    internal void Run()
     {
       if (ToolCommandLineOptions.Get().VerboseMode)
-        Output.PrintLine(". StaticLocksetAnalysis");
+        Output.PrintLine(". Summarization");
 
       if (ToolCommandLineOptions.Get().MeasureTime)
       {
@@ -44,17 +45,24 @@ namespace Lockpwn
         this.Timer.Start();
       }
 
-      Analysis.Factory.CreateRaceCheckAnalysis(this.AC).Run();
-      Instrumentation.Factory.CreateYieldInstrumentation(this.PostAC).Run();
+      this.AC.EliminateDeadVariables();
+      this.AC.Inline();
+
+      Analysis.Factory.CreateInvariantInference(this.AC, this.PostAC).Run();
+
+      //      ModelCleaner.RemoveGenericTopLevelDeclerations(this.PostAC, this.EP);
+      //      ModelCleaner.RemoveUnusedTopLevelDeclerations(this.AC);
+      //      ModelCleaner.RemoveGlobalLocksets(this.PostAC);
+      ModelCleaner.RemoveExistentials(this.PostAC);
 
       if (ToolCommandLineOptions.Get().MeasureTime)
       {
         this.Timer.Stop();
-        Output.PrintLine("... StaticLocksetAnalysis done [{0}]", this.Timer.Result());
+        Output.PrintLine("... Summarization done [{0}]", this.Timer.Result());
       }
 
-      Lockpwn.IO.BoogieProgramEmitter.EmitOutput(this.PostAC.TopLevelDeclarations, ToolCommandLineOptions.
-        Get().Files[ToolCommandLineOptions.Get().Files.Count - 1]);
+      Lockpwn.IO.BoogieProgramEmitter.Emit(this.PostAC.TopLevelDeclarations, ToolCommandLineOptions
+        .Get().Files[ToolCommandLineOptions.Get().Files.Count - 1], "summarised", "bpl");
     }
   }
 }

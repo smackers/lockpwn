@@ -20,7 +20,7 @@ using Lockpwn.IO;
 
 namespace Lockpwn
 {
-  internal class Program
+  internal class Driver
   {
     #region static fields
 
@@ -48,9 +48,9 @@ namespace Lockpwn
       Contract.Requires(cce.NonNullElements(args));
       CommandLineOptions.Install(new ToolCommandLineOptions());
 
-      Program.EnableBoogieOptions();
+      Driver.EnableBoogieOptions();
 
-      Program.FileList = new List<string>();
+      Driver.FileList = new List<string>();
 
       try
       {
@@ -75,10 +75,10 @@ namespace Lockpwn
           {
             extension = extension.ToLower();
           }
-          Program.FileList.Add(file);
+          Driver.FileList.Add(file);
         }
 
-        foreach (string file in Program.FileList)
+        foreach (string file in Driver.FileList)
         {
           Contract.Assert(file != null);
           string extension = Path.GetExtension(file);
@@ -93,19 +93,21 @@ namespace Lockpwn
           }
         }
 
-        Program.ParseAnalyzeAndInstrument();
-        Program.Summarize();
-        Program.RunStaticAnalyzer();
+        Driver.ParseAnalyzeAndInstrument();
+        Driver.RunSummarizationEngine();
+        Driver.RunReachabilityAnalysisEngine();
 
         if (ToolCommandLineOptions.Get().VerboseMode)
           Output.PrintLine(". Done");
 
+        Driver.CleanUpTemporaryFiles();
         Environment.Exit((int)Outcome.Done);
       }
       catch (Exception e)
       {
         Console.Error.Write("Exception thrown in lockpwn: ");
         Console.Error.WriteLine(e);
+        Driver.CleanUpTemporaryFiles();
         Environment.Exit((int)Outcome.FatalError);
       }
     }
@@ -113,47 +115,50 @@ namespace Lockpwn
     /// <summary>
     /// Parses, analyzes and instruments the program.
     /// </summary>
-    internal static void ParseAnalyzeAndInstrument()
+    private static void ParseAnalyzeAndInstrument()
     {
       if (!ToolCommandLineOptions.Get().SkipInstrumentation)
       {
-        Program.AC = new ParsingEngine(Program.FileList).Run();
+        Driver.AC = new ParsingEngine(Driver.FileList).Run();
 
-        new ThreadAnalysisEngine(Program.AC).Run();
-        new ThreadInstrumentationEngine(Program.AC).Run();
+        new ThreadAnalysisEngine(Driver.AC).Run();
+        new ThreadInstrumentationEngine(Driver.AC).Run();
       }
 
-      new AnalysisContextParser(Program.FileList[Program.FileList.Count - 1], "bpl")
-        .TryParseNew(ref Program.AC, new List<string> { "instrumented" });
-      new AnalysisContextParser(Program.FileList[Program.FileList.Count - 1], "bpl")
-        .TryParseNew(ref Program.PostAC, new List<string> { "instrumented" });
+      new AnalysisContextParser(Driver.FileList[Driver.FileList.Count - 1], "bpl")
+        .TryParseNew(ref Driver.AC, new List<string> { "instrumented" });
+      new AnalysisContextParser(Driver.FileList[Driver.FileList.Count - 1], "bpl")
+        .TryParseNew(ref Driver.PostAC, new List<string> { "instrumented" });
     }
 
     /// <summary>
-    /// Summarizes the program.
+    /// Runs the summarization engine on the program.
     /// </summary>
-    internal static void Summarize()
+    private static void RunSummarizationEngine()
     {
       if (ToolCommandLineOptions.Get().SkipSummarization)
         return;
 
-      new SummarizationEngine(Program.AC, Program.PostAC).Run();
+      new SummarizationEngine(Driver.AC, Driver.PostAC).Run();
 
-      new AnalysisContextParser(Program.FileList[Program.FileList.Count - 1], "bpl")
-        .TryParseNew(ref Program.AC, new List<string> { "summarised" });
-      new AnalysisContextParser(Program.FileList[Program.FileList.Count - 1], "bpl")
-        .TryParseNew(ref Program.PostAC);
+      new AnalysisContextParser(Driver.FileList[Driver.FileList.Count - 1], "bpl")
+        .TryParseNew(ref Driver.AC, new List<string> { "summarised" });
+      new AnalysisContextParser(Driver.FileList[Driver.FileList.Count - 1], "bpl")
+        .TryParseNew(ref Driver.PostAC);
     }
 
     /// <summary>
-    /// Runs the static analyzer on the program.
+    /// Runs the reachability analysis engine on the program.
     /// </summary>
-    internal static void RunStaticAnalyzer()
+    private static void RunReachabilityAnalysisEngine()
     {
-      new StaticLocksetAnalyser(Program.AC, Program.PostAC).Run();
+      new ReachabilityAnalysisEngine(Driver.AC, Driver.PostAC).Run();
     }
 
-    internal static void EnableBoogieOptions()
+    /// <summary>
+    /// Enables the boogie options.
+    /// </summary>
+    private static void EnableBoogieOptions()
     {
       CommandLineOptions.Clo.DoModSetAnalysis = true;
       CommandLineOptions.Clo.DontShowLogo = true;
@@ -162,6 +167,20 @@ namespace Lockpwn
       CommandLineOptions.Clo.UseLabels = false;
       CommandLineOptions.Clo.EnhancedErrorMessages = 1;
       CommandLineOptions.Clo.ContractInfer = true;
+    }
+
+    /// <summary>
+    /// Cleans up temporary files.
+    /// </summary>
+    private static void CleanUpTemporaryFiles()
+    {
+      if (ToolCommandLineOptions.Get().KeepTemporaryFiles)
+        return;
+
+      Lockpwn.IO.BoogieProgramEmitter.Remove(Driver.FileList[Driver.FileList.Count - 1],
+        "instrumented", "bpl");
+      Lockpwn.IO.BoogieProgramEmitter.Remove(Driver.FileList[Driver.FileList.Count - 1],
+        "summarised", "bpl");
     }
 
     #endregion

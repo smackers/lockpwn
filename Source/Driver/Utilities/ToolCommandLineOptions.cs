@@ -22,11 +22,6 @@ namespace Lockpwn
     internal string OutputFile = "";
 
     /// <summary>
-    /// Measure time.
-    /// </summary>
-    internal bool MeasureTime = false;
-
-    /// <summary>
     /// Print verbose information.
     /// </summary>
     internal bool VerboseMode = false;
@@ -35,6 +30,16 @@ namespace Lockpwn
     /// Print even more verbose information.
     /// </summary>
     internal bool SuperVerboseMode = false;
+
+    /// <summary>
+    /// Keep temporary files.
+    /// </summary>
+    internal bool KeepTemporaryFiles = false;
+
+    /// <summary>
+    /// Measure time.
+    /// </summary>
+    internal bool MeasureTime = false;
 
     /// <summary>
     /// Disables the user provided assertions.
@@ -100,6 +105,11 @@ namespace Lockpwn
       else if (option == "debug")
       {
         Output.Debugging = true;
+        return true;
+      }
+      else if (option == "temp")
+      {
+        this.KeepTemporaryFiles = true;
         return true;
       }
       else if (option == "time")
