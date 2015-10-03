@@ -27,62 +27,34 @@ namespace Lockpwn
     internal static void Main(string[] args)
     {
       Contract.Requires(cce.NonNullElements(args));
-      CommandLineOptions.Install(new ToolCommandLineOptions());
-
-      Driver.EnableBoogieOptions();
+      Driver.InstallCommandLineOptions(args);
 
       var program = new Program();
 
       try
       {
-        ToolCommandLineOptions.Get().RunningBoogieFromCommandLine = true;
-        ToolCommandLineOptions.Get().PrintUnstructured = 2;
-
-        if (!ToolCommandLineOptions.Get().Parse(args))
+        ExecutionTimer timer = null;
+        if (ToolCommandLineOptions.Get().MeasureTime)
         {
-          Environment.Exit((int)Outcome.FatalError);
+          timer = new ExecutionTimer();
+          timer.Start();
         }
 
-        if (ToolCommandLineOptions.Get().Files.Count == 0)
-        {
-          Lockpwn.IO.Reporter.ErrorWriteLine("lockpwn: error: no input files were specified");
-          Environment.Exit((int)Outcome.FatalError);
-        }
+        Driver.ParseFiles(program);
 
-        foreach (string file in ToolCommandLineOptions.Get().Files)
-        {
-          string extension = Path.GetExtension(file);
-          if (extension != null)
-          {
-            extension = extension.ToLower();
-          }
-
-          program.FileList.Add(file);
-        }
-
-        foreach (string file in program.FileList)
-        {
-          Contract.Assert(file != null);
-          string extension = Path.GetExtension(file);
-          if (extension != null)
-          {
-            extension = extension.ToLower();
-          }
-          if (extension != ".bpl")
-          {
-            Lockpwn.IO.Reporter.ErrorWriteLine("lockpwn: error: {0} is not a .bpl file", file);
-            Environment.Exit((int)Outcome.FatalError);
-          }
-        }
-
-        Driver.SanityCheck(program);
-
-        Driver.ParseAnalyzeAndInstrument(program);
+        Driver.ParseAnalyzeAndSequentialize(program);
         Driver.RunSummarizationEngine(program);
         Driver.RunReachabilityAnalysisEngine(program);
 
-        if (ToolCommandLineOptions.Get().VerboseMode)
+        if (ToolCommandLineOptions.Get().MeasureTime)
+        {
+          timer.Stop();
+          Output.PrintLine(". Done [{0}]", timer.Result());
+        }
+        else if (ToolCommandLineOptions.Get().VerboseMode)
+        {
           Output.PrintLine(". Done");
+        }
 
         Driver.CleanUpTemporaryFiles(program);
         Environment.Exit((int)Outcome.Done);
@@ -97,10 +69,10 @@ namespace Lockpwn
     }
 
     /// <summary>
-    /// Parses, analyzes and instruments the program.
+    /// Parses, analyzes and sequentializes the program.
     /// </summary>
     /// <param name="program">Program</param>
-    private static void ParseAnalyzeAndInstrument(Program program)
+    private static void ParseAnalyzeAndSequentialize(Program program)
     {
       if (ToolCommandLineOptions.Get().SkipInstrumentation)
         return;
@@ -108,7 +80,7 @@ namespace Lockpwn
       program.AC = new ParsingEngine(program).Run();
 
       new ThreadAnalysisEngine(program).Run();
-      new ThreadInstrumentationEngine(program).Run();
+      new SequentializationEngine(program).Run();
     }
 
     /// <summary>
@@ -133,10 +105,13 @@ namespace Lockpwn
     }
 
     /// <summary>
-    /// Enables the boogie options.
+    /// Installs the command line options.
     /// </summary>
-    private static void EnableBoogieOptions()
+    /// <param name="args">Arguments</param>
+    private static void InstallCommandLineOptions(string[] args)
     {
+      CommandLineOptions.Install(new ToolCommandLineOptions());
+
       CommandLineOptions.Clo.DoModSetAnalysis = true;
       CommandLineOptions.Clo.DontShowLogo = true;
       CommandLineOptions.Clo.TypeEncodingMethod = CommandLineOptions.TypeEncoding.Monomorphic;
@@ -144,14 +119,54 @@ namespace Lockpwn
       CommandLineOptions.Clo.UseLabels = false;
       CommandLineOptions.Clo.EnhancedErrorMessages = 1;
       CommandLineOptions.Clo.ContractInfer = true;
+
+      ToolCommandLineOptions.Get().RunningBoogieFromCommandLine = true;
+      ToolCommandLineOptions.Get().PrintUnstructured = 2;
+
+      if (!ToolCommandLineOptions.Get().Parse(args))
+      {
+        Environment.Exit((int)Outcome.FatalError);
+      }
     }
 
     /// <summary>
-    /// Performs sanity checking to make sure everything is in place.
+    /// Parses the input files.
     /// </summary>
     /// <param name="program">Program</param>
-    private static void SanityCheck(Program program)
+    private static void ParseFiles(Program program)
     {
+      if (ToolCommandLineOptions.Get().Files.Count == 0)
+      {
+        Lockpwn.IO.Reporter.ErrorWriteLine("lockpwn: error: no input files were specified");
+        Environment.Exit((int)Outcome.FatalError);
+      }
+
+      foreach (string file in ToolCommandLineOptions.Get().Files)
+      {
+        string extension = Path.GetExtension(file);
+        if (extension != null)
+        {
+          extension = extension.ToLower();
+        }
+
+        program.FileList.Add(file);
+      }
+
+      foreach (string file in program.FileList)
+      {
+        Contract.Assert(file != null);
+        string extension = Path.GetExtension(file);
+        if (extension != null)
+        {
+          extension = extension.ToLower();
+        }
+        if (extension != ".bpl")
+        {
+          Lockpwn.IO.Reporter.ErrorWriteLine("lockpwn: error: {0} is not a .bpl file", file);
+          Environment.Exit((int)Outcome.FatalError);
+        }
+      }
+
       if (ToolCommandLineOptions.Get().SkipInstrumentation &&
         ToolCommandLineOptions.Get().SkipSummarization)
       {

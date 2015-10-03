@@ -16,12 +16,12 @@ using Lockpwn.IO;
 
 namespace Lockpwn
 {
-  internal sealed class ThreadInstrumentationEngine
+  internal sealed class SequentializationEngine
   {
     private Program Program;
     private ExecutionTimer Timer;
 
-    internal ThreadInstrumentationEngine(Program program)
+    internal SequentializationEngine(Program program)
     {
       Contract.Requires(program != null);
       this.Program = program;
@@ -30,7 +30,7 @@ namespace Lockpwn
     internal void Run()
     {
       if (ToolCommandLineOptions.Get().VerboseMode)
-        Output.PrintLine(". ThreadInstrumentation");
+        Output.PrintLine(". Sequentialization");
 
       if (ToolCommandLineOptions.Get().MeasureTime)
       {
@@ -44,11 +44,6 @@ namespace Lockpwn
       Instrumentation.Factory.CreateRaceCheckingInstrumentation(this.Program.AC).Run();
 
       Analysis.Factory.CreateSharedStateAbstraction(this.Program.AC).Run();
-
-      if (!ToolCommandLineOptions.Get().SkipSummarization)
-      {
-        Instrumentation.Factory.CreateLoopSummaryInstrumentation(this.Program.AC).Run();
-      }
 
       Instrumentation.Factory.CreateErrorReportingInstrumentation(this.Program.AC).Run();
       Instrumentation.Factory.CreateAccessCheckingInstrumentation(this.Program.AC).Run();
@@ -65,11 +60,22 @@ namespace Lockpwn
       if (ToolCommandLineOptions.Get().MeasureTime)
       {
         this.Timer.Stop();
-        Output.PrintLine("... ThreadInstrumentation done [{0}]", this.Timer.Result());
+        Output.PrintLine("... Sequentialization done [{0}]", this.Timer.Result());
       }
 
-      Lockpwn.IO.BoogieProgramEmitter.Emit(this.Program.AC.TopLevelDeclarations, ToolCommandLineOptions
-        .Get().Files[ToolCommandLineOptions.Get().Files.Count - 1], "instrumented", "bpl");
+      if (ToolCommandLineOptions.Get().SkipSummarization)
+        this.EmitProgramContext(this.Program.AC, "instrumented");
+    }
+
+    /// <summary>
+    /// Emits the given analysis context.
+    /// </summary>
+    /// <param name="ac">AnalysisContext</param>
+    /// <param name="suffix">Suffix</param>
+    private void EmitProgramContext(AnalysisContext ac, string suffix)
+    {
+      Lockpwn.IO.BoogieProgramEmitter.Emit(ac.TopLevelDeclarations, ToolCommandLineOptions
+        .Get().Files[ToolCommandLineOptions.Get().Files.Count - 1], suffix, "bpl");
     }
   }
 }

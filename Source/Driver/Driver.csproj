@@ -97,13 +97,11 @@
     <Compile Include="Analysis\Passes\RaceCheckAnalysis.cs" />
     <Compile Include="Analysis\Passes\ThreadUsageAnalysis.cs" />
     <Compile Include="Refactoring\Passes\ProgramSimplifier.cs" />
-    <Compile Include="Instrumentation\Passes\LoopSummaryInstrumentation.cs" />
     <Compile Include="IO\Output.cs" />
     <Compile Include="Analysis\Passes\InvariantInference.cs" />
     <Compile Include="Engines\ParsingEngine.cs" />
     <Compile Include="Engines\SummarizationEngine.cs" />
     <Compile Include="Engines\ThreadAnalysisEngine.cs" />
-    <Compile Include="Engines\ThreadInstrumentationEngine.cs" />
     <Compile Include="Driver.cs" />
     <Compile Include="Utilities\ToolCommandLineOptions.cs" />
     <Compile Include="Core\Lock.cs" />
@@ -115,6 +113,8 @@
     <Compile Include="Core\Outcome.cs" />
     <Compile Include="Engines\ReachabilityAnalysisEngine.cs" />
     <Compile Include="Core\Program.cs" />
+    <Compile Include="Engines\SequentializationEngine.cs" />
+    <Compile Include="Instrumentation\Passes\LoopInvariantInstrumentation.cs" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Utilities\" />

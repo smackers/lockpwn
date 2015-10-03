@@ -44,11 +44,11 @@ namespace Lockpwn
 
       if (ToolCommandLineOptions.Get().SkipSummarization)
       {
-        this.ParseNewProgramContext("instrumented");
+        this.ParseFreshProgram("instrumented");
       }
       else
       {
-        this.ParseNewProgramContext("summarised");
+        this.ParseFreshProgram("summarised");
       }
 
       Analysis.Factory.CreateRaceCheckAnalysis(this.Program.AC).Run();
@@ -65,10 +65,10 @@ namespace Lockpwn
     }
 
     /// <summary>
-    /// Parses a new program context.
+    /// Parses a fresh program.
     /// </summary>
-    /// <param name="suffix">Suffix.</param>
-    private void ParseNewProgramContext(string suffix)
+    /// <param name="suffix">Suffix</param>
+    private void ParseFreshProgram(string suffix)
     {
       new AnalysisContextParser(this.Program.FileList[this.Program.FileList.Count - 1], "bpl")
         .TryParseNew(ref this.Program.AC, new List<string> { suffix });

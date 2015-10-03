@@ -39,9 +39,9 @@ namespace Lockpwn.Instrumentation
       return new AccessCheckingInstrumentation(ac);
     }
 
-    public static IPass CreateLoopSummaryInstrumentation(AnalysisContext ac)
+    public static IPass CreateLoopInvariantInstrumentation(AnalysisContext ac)
     {
-      return new LoopSummaryInstrumentation(ac);
+      return new LoopInvariantInstrumentation(ac);
     }
 
     public static IPass CreateYieldInstrumentation(AnalysisContext ac)

@@ -20,7 +20,7 @@ using Lockpwn.IO;
 
 namespace Lockpwn.Instrumentation
 {
-  internal class LoopSummaryInstrumentation : IPass
+  internal class LoopInvariantInstrumentation : IPass
   {
     private AnalysisContext AC;
     private ExecutionTimer Timer;
@@ -28,7 +28,7 @@ namespace Lockpwn.Instrumentation
     private HashSet<Constant> ExistentialBooleans;
     private Dictionary<Thread, int> CandidateCounter;
 
-    public LoopSummaryInstrumentation(AnalysisContext ac)
+    public LoopInvariantInstrumentation(AnalysisContext ac)
     {
       Contract.Requires(ac != null);
       this.AC = ac;
@@ -39,7 +39,7 @@ namespace Lockpwn.Instrumentation
     public void Run()
     {
       if (ToolCommandLineOptions.Get().VerboseMode)
-        Output.PrintLine("... LoopSummaryInstrumentation");
+        Output.PrintLine("... LoopInvariantInstrumentation");
 
       if (ToolCommandLineOptions.Get().MeasureTime)
       {

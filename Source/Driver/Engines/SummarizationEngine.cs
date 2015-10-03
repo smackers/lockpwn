@@ -43,7 +43,10 @@ namespace Lockpwn
         this.Timer.Start();
       }
 
-      this.ParseNewProgramContext("instrumented");
+      Instrumentation.Factory.CreateLoopInvariantInstrumentation(this.Program.AC).Run();
+
+      this.EmitProgramContext(this.Program.AC, "instrumented");
+      this.ParseFreshProgram("instrumented");
 
       this.Program.AC.EliminateDeadVariables();
       this.Program.AC.Inline();
@@ -61,20 +64,30 @@ namespace Lockpwn
         Output.PrintLine("... Summarization done [{0}]", this.Timer.Result());
       }
 
-      Lockpwn.IO.BoogieProgramEmitter.Emit(this.Program.PostAC.TopLevelDeclarations, ToolCommandLineOptions
-        .Get().Files[ToolCommandLineOptions.Get().Files.Count - 1], "summarised", "bpl");
+      this.EmitProgramContext(this.Program.PostAC, "summarised");
     }
 
     /// <summary>
-    /// Parses a new program context.
+    /// Parses a fresh program.
     /// </summary>
-    /// <param name="suffix">Suffix.</param>
-    private void ParseNewProgramContext(string suffix)
+    /// <param name="suffix">Suffix</param>
+    private void ParseFreshProgram(string suffix)
     {
       new AnalysisContextParser(this.Program.FileList[this.Program.FileList.Count - 1], "bpl")
         .TryParseNew(ref this.Program.AC, new List<string> { suffix });
       new AnalysisContextParser(this.Program.FileList[this.Program.FileList.Count - 1], "bpl")
         .TryParseNew(ref this.Program.PostAC, new List<string> { suffix });
+    }
+
+    /// <summary>
+    /// Emits the given analysis context.
+    /// </summary>
+    /// <param name="ac">AnalysisContext</param>
+    /// <param name="suffix">Suffix</param>
+    private void EmitProgramContext(AnalysisContext ac, string suffix)
+    {
+      Lockpwn.IO.BoogieProgramEmitter.Emit(ac.TopLevelDeclarations, ToolCommandLineOptions
+        .Get().Files[ToolCommandLineOptions.Get().Files.Count - 1], suffix, "bpl");
     }
   }
 }
