@@ -43,6 +43,8 @@ namespace Lockpwn
         this.Timer.Start();
       }
 
+      this.ParseNewProgramContext("instrumented");
+
       this.Program.AC.EliminateDeadVariables();
       this.Program.AC.Inline();
 
@@ -61,6 +63,18 @@ namespace Lockpwn
 
       Lockpwn.IO.BoogieProgramEmitter.Emit(this.Program.PostAC.TopLevelDeclarations, ToolCommandLineOptions
         .Get().Files[ToolCommandLineOptions.Get().Files.Count - 1], "summarised", "bpl");
+    }
+
+    /// <summary>
+    /// Parses a new program context.
+    /// </summary>
+    /// <param name="suffix">Suffix.</param>
+    private void ParseNewProgramContext(string suffix)
+    {
+      new AnalysisContextParser(this.Program.FileList[this.Program.FileList.Count - 1], "bpl")
+        .TryParseNew(ref this.Program.AC, new List<string> { suffix });
+      new AnalysisContextParser(this.Program.FileList[this.Program.FileList.Count - 1], "bpl")
+        .TryParseNew(ref this.Program.PostAC, new List<string> { suffix });
     }
   }
 }

@@ -75,6 +75,8 @@ namespace Lockpwn
           }
         }
 
+        Driver.SanityCheck(program);
+
         Driver.ParseAnalyzeAndInstrument(program);
         Driver.RunSummarizationEngine(program);
         Driver.RunReachabilityAnalysisEngine(program);
@@ -100,18 +102,13 @@ namespace Lockpwn
     /// <param name="program">Program</param>
     private static void ParseAnalyzeAndInstrument(Program program)
     {
-      if (!ToolCommandLineOptions.Get().SkipInstrumentation)
-      {
-        program.AC = new ParsingEngine(program).Run();
+      if (ToolCommandLineOptions.Get().SkipInstrumentation)
+        return;
 
-        new ThreadAnalysisEngine(program).Run();
-        new ThreadInstrumentationEngine(program).Run();
-      }
+      program.AC = new ParsingEngine(program).Run();
 
-      new AnalysisContextParser(program.FileList[program.FileList.Count - 1], "bpl")
-        .TryParseNew(ref program.AC, new List<string> { "instrumented" });
-      new AnalysisContextParser(program.FileList[program.FileList.Count - 1], "bpl")
-        .TryParseNew(ref program.PostAC, new List<string> { "instrumented" });
+      new ThreadAnalysisEngine(program).Run();
+      new ThreadInstrumentationEngine(program).Run();
     }
 
     /// <summary>
@@ -124,11 +121,6 @@ namespace Lockpwn
         return;
 
       new SummarizationEngine(program).Run();
-
-      new AnalysisContextParser(program.FileList[program.FileList.Count - 1], "bpl")
-        .TryParseNew(ref program.AC, new List<string> { "summarised" });
-      new AnalysisContextParser(program.FileList[program.FileList.Count - 1], "bpl")
-        .TryParseNew(ref program.PostAC);
     }
 
     /// <summary>
@@ -152,6 +144,27 @@ namespace Lockpwn
       CommandLineOptions.Clo.UseLabels = false;
       CommandLineOptions.Clo.EnhancedErrorMessages = 1;
       CommandLineOptions.Clo.ContractInfer = true;
+    }
+
+    /// <summary>
+    /// Performs sanity checking to make sure everything is in place.
+    /// </summary>
+    /// <param name="program">Program</param>
+    private static void SanityCheck(Program program)
+    {
+      if (ToolCommandLineOptions.Get().SkipInstrumentation &&
+        ToolCommandLineOptions.Get().SkipSummarization)
+      {
+        string fileName;
+        var exists = Lockpwn.IO.BoogieProgramEmitter.Exists(program
+          .FileList[program.FileList.Count - 1], "instrumented", "bpl", out fileName);
+        if (!exists)
+        {
+          Console.Error.WriteLine("Error: File '{0}' not found.", fileName);
+          Driver.CleanUpTemporaryFiles(program);
+          Environment.Exit((int)Outcome.FatalError);
+        }
+      }
     }
 
     /// <summary>

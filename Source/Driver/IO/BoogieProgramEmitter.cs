@@ -24,17 +24,15 @@ namespace Lockpwn.IO
   {
     internal static void EmitOutput(List<Declaration> declarations, string file)
     {
-      string directoryContainingFile = Path.GetDirectoryName(file);
-      if (string.IsNullOrEmpty(directoryContainingFile))
-        directoryContainingFile = Directory.GetCurrentDirectory();
+      string directory = BoogieProgramEmitter.GetDirectoryWithFile(file);
 
       var output = Path.GetFileNameWithoutExtension(file) + "_pwned";
       if (ToolCommandLineOptions.Get().OutputFile.Length > 0)
         output = ToolCommandLineOptions.Get().OutputFile;
 
-      var fileName = directoryContainingFile + Path.DirectorySeparatorChar + output;
+      var fileName = directory + Path.DirectorySeparatorChar + output + ".bpl";
 
-      using(TokenTextWriter writer = new TokenTextWriter(fileName + ".bpl", true))
+      using(TokenTextWriter writer = new TokenTextWriter(fileName, true))
       {
         declarations.Emit(writer);
       }
@@ -42,14 +40,11 @@ namespace Lockpwn.IO
 
     internal static void Emit(List<Declaration> declarations, string file, string extension)
     {
-      string directoryContainingFile = Path.GetDirectoryName(file);
-      if (string.IsNullOrEmpty(directoryContainingFile))
-        directoryContainingFile = Directory.GetCurrentDirectory();
+      string directory = BoogieProgramEmitter.GetDirectoryWithFile(file);
+      var fileName = directory + Path.DirectorySeparatorChar + Path.GetFileNameWithoutExtension(file) +
+        "." + extension;
 
-      var fileName = directoryContainingFile + Path.DirectorySeparatorChar +
-                     Path.GetFileNameWithoutExtension(file);
-
-      using(TokenTextWriter writer = new TokenTextWriter(fileName + "." + extension, true))
+      using(TokenTextWriter writer = new TokenTextWriter(fileName, true))
       {
         declarations.Emit(writer);
       }
@@ -57,29 +52,56 @@ namespace Lockpwn.IO
 
     internal static void Emit(List<Declaration> declarations, string file, string suffix, string extension)
     {
-      string directoryContainingFile = Path.GetDirectoryName(file);
-      if (string.IsNullOrEmpty(directoryContainingFile))
-        directoryContainingFile = Directory.GetCurrentDirectory();
+      string directory = BoogieProgramEmitter.GetDirectoryWithFile(file);
+      var fileName = directory + Path.DirectorySeparatorChar + Path.GetFileNameWithoutExtension(file) +
+        "_" + suffix + "." + extension;
 
-      var fileName = directoryContainingFile + Path.DirectorySeparatorChar +
-        Path.GetFileNameWithoutExtension(file) + "_" + suffix;
-
-      using(TokenTextWriter writer = new TokenTextWriter(fileName + "." + extension, true))
+      using(TokenTextWriter writer = new TokenTextWriter(fileName, true))
       {
         declarations.Emit(writer);
       }
     }
 
+    /// <summary>
+    /// Checks if the file with the given suffix and extension exists.
+    /// </summary>
+    /// <param name="file">File</param>
+    /// <param name="suffix">Suffix</param>
+    /// <param name="extension">Extension</param>
+    /// <param name="fileName">Name</param>
+    internal static bool Exists(string file, string suffix, string extension, out string fileName)
+    {
+      string directory = BoogieProgramEmitter.GetDirectoryWithFile(file);
+      fileName = directory + Path.DirectorySeparatorChar + Path.GetFileNameWithoutExtension(file) +
+        "_" + suffix + "." + extension;
+      return File.Exists(fileName);
+    }
+
+    /// <summary>
+    /// Removes the file with the given suffix and extension.
+    /// </summary>
+    /// <param name="file">File</param>
+    /// <param name="suffix">Suffix</param>
+    /// <param name="extension">Extension</param>
     internal static void Remove(string file, string suffix, string extension)
+    {
+      string directory = BoogieProgramEmitter.GetDirectoryWithFile(file);
+      var fileName = directory + Path.DirectorySeparatorChar +
+        Path.GetFileNameWithoutExtension(file) + "_" + suffix;
+      File.Delete(fileName + "." + extension);
+    }
+
+    /// <summary>
+    /// Returns the directory that contains the given file.
+    /// </summary>
+    /// <param name="file">File</param>
+    /// <returns>Directory</returns>
+    private static string GetDirectoryWithFile(string file)
     {
       string directoryContainingFile = Path.GetDirectoryName(file);
       if (string.IsNullOrEmpty(directoryContainingFile))
         directoryContainingFile = Directory.GetCurrentDirectory();
-
-      var fileName = directoryContainingFile + Path.DirectorySeparatorChar +
-        Path.GetFileNameWithoutExtension(file) + "_" + suffix;
-
-      File.Delete(fileName + "." + extension);
+      return directoryContainingFile;
     }
   }
 }

@@ -42,6 +42,15 @@ namespace Lockpwn
         this.Timer.Start();
       }
 
+      if (ToolCommandLineOptions.Get().SkipSummarization)
+      {
+        this.ParseNewProgramContext("instrumented");
+      }
+      else
+      {
+        this.ParseNewProgramContext("summarised");
+      }
+
       Analysis.Factory.CreateRaceCheckAnalysis(this.Program.AC).Run();
       Instrumentation.Factory.CreateYieldInstrumentation(this.Program.PostAC).Run();
 
@@ -53,6 +62,18 @@ namespace Lockpwn
 
       Lockpwn.IO.BoogieProgramEmitter.EmitOutput(this.Program.PostAC.TopLevelDeclarations,
         ToolCommandLineOptions.Get().Files[ToolCommandLineOptions.Get().Files.Count - 1]);
+    }
+
+    /// <summary>
+    /// Parses a new program context.
+    /// </summary>
+    /// <param name="suffix">Suffix.</param>
+    private void ParseNewProgramContext(string suffix)
+    {
+      new AnalysisContextParser(this.Program.FileList[this.Program.FileList.Count - 1], "bpl")
+        .TryParseNew(ref this.Program.AC, new List<string> { suffix });
+      new AnalysisContextParser(this.Program.FileList[this.Program.FileList.Count - 1], "bpl")
+        .TryParseNew(ref this.Program.PostAC, new List<string> { suffix });
     }
   }
 }

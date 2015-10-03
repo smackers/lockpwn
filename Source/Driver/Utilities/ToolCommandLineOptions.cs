@@ -162,6 +162,7 @@ namespace Lockpwn
       help += "\nAdvanced options:";
       help += "\n-----------------";
       help += "\n  /noAssert\t Disables user-provided assertions";
+      help += "\n  /temp\t\t Do not delete temporary files";
 
       help += "\n";
 
