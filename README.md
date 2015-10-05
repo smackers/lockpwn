@@ -13,14 +13,20 @@ The input to lockpwn is a concurrent C program translated to the Boogie intermed
 Given an input ${PROGRAM} in Boogie, do the following:
 
 ```
-.\lockpwn.exe ${PROGRAM}.bpl /o ${OUTPUT}.bpl
+.\lockpwn.exe ${PROGRAM}.bpl
 ```
 
-The output, ${OUTPUT}.bpl, is an instrumented with context switches Boogie program. This can be directly fed to the Corral bug-finder using the /cooperative option (so Corral does not automatically instrument yield statements).
+lockpwn can also easily integrate with Microsoft's Corral bounded bugfinder. This can be achieved as follows:
+
+```
+.\lockpwn.exe ${PROGRAM}.bpl /corral
+```
+
+The output, ${OUTPUT}.bpl, is an instrumented with context-switches (yields) Boogie program. This can be directly fed to the Corral bug-finder using the `/cooperative` option (so Corral does not automatically instrument `yield` statements).
 
 ## Tool options
 
-Use /v for verbose mode or /v2 for super verbose mode. Use /time for timing information.
+Use `/v` for verbose mode or `/v2` for super verbose mode. Use `/time` for timing information.
 
 ## Publications
 - **[Fast and Precise Symbolic Analysis of Concurrency Bugs in Device Drivers](http://multicore.doc.ic.ac.uk/publications/ase-15.html)**. Pantazis Deligiannis, Alastair F. Donaldson, Zvonimir Rakamarić. In the *30th IEEE/ACM International Conference on Automated Software Engineering* (ASE), 2015.
