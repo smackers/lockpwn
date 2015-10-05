@@ -40,7 +40,7 @@ namespace Lockpwn
         base.Timer.Start();
       }
 
-      Analysis.Factory.CreateThreadCreationAnalysis(base.Program.AC).Run();
+      Analysis.Factory.CreateThreadUsageAnalysis(base.Program.AC).Run();
       Analysis.Factory.CreateLockAbstraction(base.Program.AC).Run();
 
       if (base.Program.AC.Locks.Count > 0)

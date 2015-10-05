@@ -47,7 +47,7 @@ namespace Lockpwn.Refactoring
         this.Timer.Start();
       }
 
-      foreach (var thread in this.AC.Threads)
+      foreach (var thread in this.AC.ThreadTemplates)
       {
         if (thread.IsMain)
           continue;

@@ -51,8 +51,8 @@ namespace Lockpwn.Refactoring
         this.Timer.Start();
       }
 
-      this.AnalyseAndInstrumentLocks(this.AC.EntryPoint);
-      foreach (var thread in this.AC.Threads)
+      this.AnalyseAndInstrumentLocks(this.AC.MainThread.Function);
+      foreach (var thread in this.AC.ThreadTemplates)
       {
         this.AnalyseAndInstrumentLocks(thread.Function);
       }

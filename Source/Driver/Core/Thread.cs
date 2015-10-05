@@ -9,6 +9,7 @@
 //===----------------------------------------------------------------------===//
 
 using System;
+using System.Collections.Generic;
 using System.Diagnostics.Contracts;
 using System.Linq;
 
@@ -24,9 +25,10 @@ namespace Lockpwn
     internal string Name;
     internal Expr Arg;
 
-    internal Implementation Function;
-    internal Implementation SpawnFunction;
+    internal Thread Parent;
+    internal HashSet<Thread> Children;
 
+    internal Implementation Function;
     internal Tuple<Implementation, Block, CallCmd> Joiner;
 
     internal bool IsMain;
@@ -39,7 +41,13 @@ namespace Lockpwn
     /// <summary>
     /// Constructor.
     /// </summary>
-    private Thread() { }
+    private Thread()
+    {
+      this.Parent = null;
+      this.Children = new HashSet<Thread>();
+
+      this.Joiner = null;
+    }
 
     /// <summary>
     /// Constructor.
@@ -48,9 +56,10 @@ namespace Lockpwn
     private Thread(AnalysisContext ac)
     {
       this.Name = ac.EntryPoint.Name;
-      this.Function = ac.EntryPoint;
-      this.SpawnFunction = null;
+      this.Parent = null;
+      this.Children = new HashSet<Thread>();
 
+      this.Function = ac.EntryPoint;
       this.Joiner = null;
 
       this.IsMain = true;
@@ -61,23 +70,24 @@ namespace Lockpwn
     /// Constructor.
     /// </summary>
     /// <param name="ac">AnalysisContext</param>
+    /// <param name="name">String</param>
     /// <param name="id">Identifier</param>
-    /// <param name="func">Func</param>
     /// <param name="arg">Argument</param>
-    /// <param name="creator">Creator</param>
-    private Thread(AnalysisContext ac, Expr id, Expr arg, Expr func, Implementation creator)
+    /// <param name="parent">Parent</param>
+    private Thread(AnalysisContext ac, string name, Expr id, Expr arg, Thread parent)
     {
       this.Id = id as IdentifierExpr;
-      this.Name = (func as IdentifierExpr).Name;
+      this.Name = name;
       this.Arg = arg;
 
-      this.Function = ac.GetImplementation(this.Name);
-      this.SpawnFunction = creator;
+      this.Parent = parent;
+      this.Children = new HashSet<Thread>();
 
+      this.Function = ac.GetImplementation(this.Name);
       this.Joiner = null;
 
       this.IsMain = false;
-      if (ac.EntryPoint.Equals(creator))
+      if (ac.MainThread.Name.Equals(parent.Name))
       {
         this.CreatedAtRoot = true;
       }
@@ -95,14 +105,14 @@ namespace Lockpwn
     {
       var thread = new Thread(ac);
       ac.MainThread = thread;
-      ac.Threads.Add(thread);
+      ac.RegisterThreadTemplate(thread);
       return thread;
     }
 
-    internal static Thread Create(AnalysisContext ac, Expr id, Expr arg, Expr func, Implementation creator)
+    internal static Thread Create(AnalysisContext ac, string name, Expr id, Expr arg, Thread parent)
     {
-      var thread = new Thread(ac, id, arg, func, creator);
-      ac.Threads.Add(thread);
+      var thread = new Thread(ac, name, id, arg, parent);
+      ac.RegisterThreadTemplate(thread);
       return thread;
     }
 
@@ -111,13 +121,22 @@ namespace Lockpwn
     #region methods
 
     /// <summary>
+    /// Adds a child thread.
+    /// </summary>
+    /// <param name="thread">Thread</param>
+    internal void AddChild(Thread thread)
+    {
+      this.Children.Add(thread);
+    }
+
+    /// <summary>
     /// Clones the thread in the given analysis context.
     /// </summary>
     /// <param name="ac">AnalysisContext</param>
     /// <returns>Cloned thread</returns>
     internal Thread Clone(AnalysisContext ac)
     {
-      var thread = new Thread();
+      var thread = new Thread(ac);
 
       thread.Id = this.Id;
       thread.Name = this.Name;
@@ -128,11 +147,6 @@ namespace Lockpwn
 
       thread.Function = ac.GetImplementation(this.Function.Name);
 
-      if (this.SpawnFunction != null)
-      {
-        thread.SpawnFunction = ac.GetImplementation(this.SpawnFunction.Name);
-      }
-
       if (this.Joiner != null)
       {
         var jImpl = ac.GetImplementation(this.Joiner.Item1.Name);
@@ -142,6 +156,15 @@ namespace Lockpwn
 
         thread.Joiner = Tuple.Create(jImpl, jBlock, jCall);
       }
+
+      foreach (var child in this.Children)
+      {
+        var clonedChild = child.Clone(ac);
+        clonedChild.Parent = thread;
+        thread.Children.Add(clonedChild);
+      }
+
+      ac.RegisterThreadTemplate(thread);
 
       return thread;
     }

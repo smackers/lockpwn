@@ -51,7 +51,7 @@ namespace Lockpwn.Instrumentation
       this.InstrumentMainFunction();
       this.AddNonCheckedFunc();
 
-      foreach (var thread in this.AC.Threads)
+      foreach (var thread in this.AC.ThreadTemplates)
       {
         this.InstrumentThread(thread);
       }

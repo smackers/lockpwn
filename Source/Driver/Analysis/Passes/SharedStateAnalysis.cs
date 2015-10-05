@@ -50,7 +50,7 @@ namespace Lockpwn.Analysis
         this.Timer.Start();
       }
 
-      foreach (var thread in this.AC.Threads)
+      foreach (var thread in this.AC.ThreadTemplates)
       {
         this.AnalyseThread(thread);
       }

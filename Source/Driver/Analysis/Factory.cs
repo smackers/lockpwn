@@ -19,7 +19,7 @@ namespace Lockpwn.Analysis
       return new LockAbstraction(ac);
     }
 
-    internal static IPass CreateThreadCreationAnalysis(AnalysisContext ac)
+    internal static IPass CreateThreadUsageAnalysis(AnalysisContext ac)
     {
       return new ThreadUsageAnalysis(ac);
     }

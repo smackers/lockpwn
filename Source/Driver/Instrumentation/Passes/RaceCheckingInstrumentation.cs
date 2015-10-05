@@ -48,7 +48,7 @@ namespace Lockpwn.Instrumentation
         this.Timer.Start();
       }
 
-      foreach (var thread in this.AC.Threads)
+      foreach (var thread in this.AC.ThreadTemplates)
       {
         this.InstrumentThread(thread);
       }

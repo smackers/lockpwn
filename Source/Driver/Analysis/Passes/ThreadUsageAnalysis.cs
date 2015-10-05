@@ -72,9 +72,9 @@ namespace Lockpwn.Analysis
     /// </summary>
     private void IdentifyThreadCreation()
     {
-      var currentThread = this.AC.EntryPoint;
+      var currentThread = this.AC.MainThread;
 
-      foreach (var block in currentThread.Blocks)
+      foreach (var block in currentThread.Function.Blocks)
       {
         for (int idx = 0; idx < block.Cmds.Count; idx++)
         {
@@ -85,11 +85,18 @@ namespace Lockpwn.Analysis
           if (!(block.Cmds[idx] as CallCmd).callee.Contains("pthread_create"))
             continue;
 
-          var thread = Thread.Create(this.AC, call.Ins[0], call.Ins[3], call.Ins[2], currentThread);
+          var threadName = (call.Ins[2] as IdentifierExpr).Name;
+          var thread = Thread.Create(this.AC, threadName, call.Ins[0], call.Ins[3], currentThread);
 
-          if (ToolCommandLineOptions.Get().SuperVerboseMode)
-            Output.PrintLine("..... '{0}' spawns new thread '{1}'",
-              currentThread.Name, thread.Name);
+          currentThread.AddChild(thread);
+        }
+      }
+
+      if (ToolCommandLineOptions.Get().SuperVerboseMode)
+      {
+        foreach (var child in currentThread.Children)
+        {
+          Output.PrintLine("..... '{0}' spawns thread '{1}'", currentThread.Name, child.Name);
         }
       }
     }
@@ -99,9 +106,9 @@ namespace Lockpwn.Analysis
     /// </summary>
     private void IdentifyThreadJoin()
     {
-      var currentThread = this.AC.EntryPoint;
+      var currentThread = this.AC.MainThread;
 
-      foreach (var block in currentThread.Blocks)
+      foreach (var block in currentThread.Function.Blocks)
       {
         for (int idx = 0; idx < block.Cmds.Count; idx++)
         {
@@ -113,7 +120,7 @@ namespace Lockpwn.Analysis
             continue;
 
           var threadIdExpr = PointerArithmeticAnalyser.ComputeRootPointer(
-            currentThread, block.Label, call.Ins[0], true);
+            currentThread.Function, block.Label, call.Ins[0], true);
           if (threadIdExpr is NAryExpr)
           {
             var nary = threadIdExpr as NAryExpr;
@@ -126,12 +133,12 @@ namespace Lockpwn.Analysis
           if (!(threadIdExpr is IdentifierExpr))
             continue;
 
-          var thread = this.AC.Threads.First(val => !val.IsMain &&
+          var thread = currentThread.Children.FirstOrDefault(val =>
             val.Id.Name.Equals((threadIdExpr as IdentifierExpr).Name));
-          if (!thread.SpawnFunction.Equals(currentThread))
+          if (thread == null)
             continue;
 
-          thread.Joiner = new Tuple<Implementation, Block, CallCmd>(currentThread, block, call);
+          thread.Joiner = new Tuple<Implementation, Block, CallCmd>(currentThread.Function, block, call);
 
           if (ToolCommandLineOptions.Get().SuperVerboseMode)
             Output.PrintLine("..... '{0}' blocks on thread '{1}'",

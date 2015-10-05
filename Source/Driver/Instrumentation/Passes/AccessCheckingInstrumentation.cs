@@ -59,10 +59,12 @@ namespace Lockpwn.Instrumentation
 
     private void InstrumentMain()
     {
+      var currentThread = this.AC.MainThread;
+
       int enableCounter = 0;
       foreach (var mr in this.AC.SharedMemoryRegions)
       {
-        var asserts = this.CreateRaceCheckingAssertions(mr);
+        var asserts = this.CreateRaceCheckingAssertions(currentThread, mr);
         if (asserts.Count == 0)
           continue;
         
@@ -119,7 +121,13 @@ namespace Lockpwn.Instrumentation
       }
     }
 
-    private List<Tuple<Thread, Thread, AssertCmd>> CreateRaceCheckingAssertions(Variable mr)
+    /// <summary>
+    /// Creates race-checking assertions for the given thread.
+    /// </summary>
+    /// <param name="thread">Thread</param>
+    /// <param name="mr">MemoryRegion</param>
+    /// <returns>Race-checking assertions</returns>
+    private List<Tuple<Thread, Thread, AssertCmd>> CreateRaceCheckingAssertions(Thread thread, Variable mr)
     {
       var asserts = new List<Tuple<Thread, Thread, AssertCmd>>();
       var threads = new List<Thread>();
@@ -128,7 +136,15 @@ namespace Lockpwn.Instrumentation
       {
         if (!pair.Value.Contains(mr))
           continue;
-        threads.Add(pair.Key);
+        if (thread.Children.Count(val => val.Name.Equals(pair.Key.Name)) > 1)
+        {
+          threads.Add(pair.Key);
+          threads.Add(pair.Key);
+        }
+        else
+        {
+          threads.Add(pair.Key);
+        }
       }
 
       if (threads.Count < 2)
@@ -235,7 +251,7 @@ namespace Lockpwn.Instrumentation
       }
       else
       {
-        targetFunction = thread.SpawnFunction;
+        targetFunction = thread.Parent.Function;
       }
 
       if (thread.IsMain || thread.Joiner == null)

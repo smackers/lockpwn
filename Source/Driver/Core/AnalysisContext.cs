@@ -41,7 +41,7 @@ namespace Lockpwn
     internal List<Declaration> TopLevelDeclarations;
 
     internal Thread MainThread;
-    internal HashSet<Thread> Threads;
+    internal HashSet<Thread> ThreadTemplates;
 
     internal List<Lock> Locks;
     internal List<Lockset> CurrentLocksets;
@@ -85,7 +85,7 @@ namespace Lockpwn
       this.ResContext = rc;
 
       this.MainThread = null;
-      this.Threads = new HashSet<Thread>();
+      this.ThreadTemplates = new HashSet<Thread>();
 
       this.Locks = new List<Lock>();
       this.CurrentLocksets = new List<Lockset>();
@@ -124,10 +124,6 @@ namespace Lockpwn
       var newAc = new AnalysisContext(program, rc);
 
       newAc.MainThread = ac.MainThread.Clone(newAc);
-      foreach (var thread in ac.Threads)
-      {
-        newAc.Threads.Add(thread.Clone(newAc));
-      }
 
       newAc.Locks = ac.Locks;
       newAc.CurrentLocksets = ac.CurrentLocksets;
@@ -385,11 +381,12 @@ namespace Lockpwn
     }
 
     /// <summary>
-    /// Resets to program's top level declarations.
+    /// Registers a new thread template.
     /// </summary>
-    internal void ResetToProgramTopLevelDeclarations()
+    internal void RegisterThreadTemplate(Thread thread)
     {
-      this.TopLevelDeclarations = this.BoogieProgram.TopLevelDeclarations.ToArray().ToList();
+      if (!this.ThreadTemplates.Any(val => val.Name.Equals(thread.Name)))
+        this.ThreadTemplates.Add(thread);
     }
 
     /// <summary>
@@ -413,6 +410,14 @@ namespace Lockpwn
         this.EntryPoint.Attributes = new QKeyValue(Token.NoToken, "entrypoint",
           new List<object>() { }, this.EntryPoint.Attributes);
       }
+    }
+
+    /// <summary>
+    /// Resets to program's top level declarations.
+    /// </summary>
+    internal void ResetToProgramTopLevelDeclarations()
+    {
+      this.TopLevelDeclarations = this.BoogieProgram.TopLevelDeclarations.ToArray().ToList();
     }
 
     #endregion
