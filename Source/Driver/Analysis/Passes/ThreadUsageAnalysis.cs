@@ -46,7 +46,7 @@ namespace Lockpwn.Analysis
       }
 
       this.CreateMainThread();
-      this.IdentifyThreadCreation();
+      this.IdentifyThreadCreationInThread(this.AC.MainThread);
       this.IdentifyThreadJoin();
 
       if (ToolCommandLineOptions.Get().MeasureTime)
@@ -70,11 +70,28 @@ namespace Lockpwn.Analysis
     /// <summary>
     /// Performs an analysis to identify thread creation.
     /// </summary>
-    private void IdentifyThreadCreation()
+    /// <param name="parent">Thread</param>
+    private void IdentifyThreadCreationInThread(Thread parent)
     {
-      var currentThread = this.AC.MainThread;
+      this.IdentifyThreadCreationInImplementation(parent, parent.Function);
 
-      foreach (var block in currentThread.Function.Blocks)
+      if (ToolCommandLineOptions.Get().SuperVerboseMode)
+      {
+        foreach (var child in parent.Children)
+        {
+          Output.PrintLine("..... '{0}' spawns thread '{1}'", parent.Name, child.Name);
+        }
+      }
+    }
+
+    /// <summary>
+    /// Performs an analysis to identify thread creation.
+    /// </summary>
+    /// <param name="parent">Thread</param>
+    /// <param name="impl">Implementation</param>
+    private void IdentifyThreadCreationInImplementation(Thread parent, Implementation impl)
+    {
+      foreach (var block in impl.Blocks)
       {
         for (int idx = 0; idx < block.Cmds.Count; idx++)
         {
@@ -82,21 +99,21 @@ namespace Lockpwn.Analysis
             continue;
 
           var call = block.Cmds[idx] as CallCmd;
-          if (!(block.Cmds[idx] as CallCmd).callee.Contains("pthread_create"))
-            continue;
+          if ((block.Cmds[idx] as CallCmd).callee.Contains("pthread_create"))
+          {
+            var threadName = (call.Ins[2] as IdentifierExpr).Name;
+            var thread = Thread.Create(this.AC, threadName, call.Ins[0], call.Ins[3], parent);
 
-          var threadName = (call.Ins[2] as IdentifierExpr).Name;
-          var thread = Thread.Create(this.AC, threadName, call.Ins[0], call.Ins[3], currentThread);
+            parent.AddChild(thread);
+          }
+          else if (!Utilities.ShouldSkipFromAnalysis(call.callee))
+          {
+            var calleeImpl = this.AC.GetImplementation(call.callee);
+            if (calleeImpl == null)
+              continue;
 
-          currentThread.AddChild(thread);
-        }
-      }
-
-      if (ToolCommandLineOptions.Get().SuperVerboseMode)
-      {
-        foreach (var child in currentThread.Children)
-        {
-          Output.PrintLine("..... '{0}' spawns thread '{1}'", currentThread.Name, child.Name);
+            this.IdentifyThreadCreationInImplementation(parent, calleeImpl);
+          }
         }
       }
     }
