@@ -16,13 +16,13 @@ Given an input ${PROGRAM} in Boogie, do the following:
 .\lockpwn.exe ${PROGRAM}.bpl
 ```
 
-lockpwn can also easily integrate with Microsoft's Corral bounded bugfinder. This can be achieved as follows:
+lockpwn can also easily integrate with Microsoft's [Corral](http://corral.codeplex.com) bounded bugfinder. This can be achieved as follows:
 
 ```
 .\lockpwn.exe ${PROGRAM}.bpl /corral
 ```
 
-The output, ${OUTPUT}.bpl, is an instrumented with context-switches (yields) Boogie program. This can be directly fed to the Corral bug-finder using the `/cooperative` option (so Corral does not automatically instrument `yield` statements).
+The output, ${OUTPUT}.bpl, is an instrumented with context-switches (yields) Boogie program. This can be directly fed to Corral using the `/cooperative` option (so Corral does not automatically instrument `yield` statements).
 
 ## Tool options
 
