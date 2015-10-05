@@ -20,64 +20,109 @@ using Lockpwn.IO;
 
 namespace Lockpwn
 {
-  internal class AnalysisContextParser
+  internal static class AnalysisContextParser
   {
-    private string File;
-    private string Extension;
-
-    internal AnalysisContextParser(string file, string ext)
+    /// <summary>
+    /// Parses the analysis context from the given file.
+    /// </summary>
+    /// <param name="file">File</param>
+    /// <param name="extension">Extension</param>
+    /// <param name="additional">Additional files</param>
+    internal static AnalysisContext Parse(string file, string extension, List<string> additional = null)
     {
-      this.File = file;
-      this.Extension = ext;
+      Microsoft.Boogie.Program program = null;
+      ResolutionContext rc = null;
+
+      var filesToParse = AnalysisContextParser.GetFilesToParse(file, extension, additional);
+      AnalysisContextParser.CreateProgramFromFiles(filesToParse, out program, out rc);
+
+      var parsedAc = AnalysisContext.Create(program, rc);
+      if (parsedAc == null) Environment.Exit((int)Outcome.ParsingError);
+
+      return parsedAc;
     }
 
-    internal bool TryParseNew(ref AnalysisContext ac, List<string> additional = null)
+    /// <summary>
+    /// Parses the analysis context from the given file using the given analysis context.
+    /// </summary>
+    /// <param name="file">File</param>
+    /// <param name="extension">Extension</param>
+    /// <param name="additional">Additional files</param>
+    internal static AnalysisContext ParseWithContext(AnalysisContext ac, string file, string extension,
+      List<string> additional = null)
+    {
+      Microsoft.Boogie.Program program = null;
+      ResolutionContext rc = null;
+
+      var filesToParse = AnalysisContextParser.GetFilesToParse(file, extension, additional);
+      AnalysisContextParser.CreateProgramFromFiles(filesToParse, out program, out rc);
+
+      var parsedAc = AnalysisContext.CreateWithContext(program, rc, ac);
+      if (parsedAc == null) Environment.Exit((int)Outcome.ParsingError);
+
+      return parsedAc;
+    }
+
+    /// <summary>
+    /// Returns the files to parse.
+    /// </summary>
+    /// <param name="file">File</param>
+    /// <param name="extension">Extension</param>
+    /// <param name="additional">Additional files</param>
+    /// <returns>List of files</returns>
+    private static List<string> GetFilesToParse(string file, string extension, List<string> additional)
     {
       List<string> filesToParse = new List<string>();
-//      filesToParse.Add(ToolCommandLineOptions.Get().WhoopDeclFile);
 
       if (additional != null)
       {
         foreach (var str in additional)
         {
-          string file = this.File.Substring(0, this.File.IndexOf(Path.GetExtension(this.File))) +
-            "_" + str + "." + this.Extension;
-          if (!System.IO.File.Exists(file))
-            return false;
-          filesToParse.Add(file);
+          string f = file.Substring(0, file.IndexOf(Path.GetExtension(file))) +
+            "_" + str + "." + extension;
+          if (!System.IO.File.Exists(f))
+            Environment.Exit((int)Outcome.ParsingError);
+          filesToParse.Add(f);
         }
       }
       else
       {
-        string file = this.File.Substring(0, this.File.IndexOf(Path.GetExtension(this.File))) +
-          "." + this.Extension;
-        if (!System.IO.File.Exists(file))
-          return false;
-        filesToParse.Add(file);
+        string f = file.Substring(0, file.IndexOf(Path.GetExtension(file))) +
+          "." + extension;
+        if (!System.IO.File.Exists(f))
+          Environment.Exit((int)Outcome.ParsingError);
+        filesToParse.Add(f);
       }
 
-      Microsoft.Boogie.Program program = ExecutionEngine.ParseBoogieProgram(filesToParse, false);
-      if (program == null) return false;
+      return filesToParse;
+    }
 
-      ResolutionContext rc = new ResolutionContext(null);
+    /// <summary>
+    /// Creates a program from the given files.
+    /// </summary>
+    /// <param name="filesToParse">Files to parse</param>
+    /// <param name="program">Program</param>
+    /// <param name="rc">ResolutionContext</param>
+    private static void CreateProgramFromFiles(List<string> filesToParse,
+      out Microsoft.Boogie.Program program, out ResolutionContext rc)
+    {
+      program = ExecutionEngine.ParseBoogieProgram(filesToParse, false);
+      if (program == null) Environment.Exit((int)Outcome.ParsingError);
+
+      rc = new ResolutionContext(null);
       program.Resolve(rc);
       if (rc.ErrorCount != 0)
       {
         Output.PrintLine("{0} name resolution errors detected", rc.ErrorCount);
-        return false;
+        Environment.Exit((int)Outcome.ParsingError);
       }
 
       int errorCount = program.Typecheck();
       if (errorCount != 0)
       {
         Output.PrintLine("{0} type checking errors detected", errorCount);
-        return false;
+        Environment.Exit((int)Outcome.ParsingError);
       }
-
-      ac = new AnalysisContext(program, rc);
-      if (ac == null) Environment.Exit((int)Outcome.ParsingError);
-
-      return true;
     }
   }
 }

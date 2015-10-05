@@ -62,7 +62,8 @@ namespace Lockpwn.Refactoring
     {
       foreach (var block in impl.Blocks)
       {
-        if (ToolCommandLineOptions.Get().DisableUserAssertions)
+        if (ToolCommandLineOptions.Get().EnableCorralMode ||
+          ToolCommandLineOptions.Get().DisableUserAssertions)
         {
           block.Cmds.RemoveAll(val => val is AssertCmd);
         }

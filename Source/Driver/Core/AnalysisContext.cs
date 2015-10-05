@@ -75,7 +75,7 @@ namespace Lockpwn
     /// </summary>
     /// <param name="program">Program</param>
     /// <param name="rc">ResolutionContext</param>
-    internal AnalysisContext(Microsoft.Boogie.Program program, ResolutionContext rc)
+    private AnalysisContext(Microsoft.Boogie.Program program, ResolutionContext rc)
       : base((IErrorSink)null)
     {
       Contract.Requires(program != null);
@@ -101,6 +101,45 @@ namespace Lockpwn
     }
 
     /// <summary>
+    /// Creates an analysis context using information from the given analysis context.
+    /// </summary>
+    /// <param name="program">Program</param>
+    /// <param name="rc">ResolutionContext</param>
+    /// <returns>AnalysisContext</returns>
+    internal static AnalysisContext Create(Microsoft.Boogie.Program program, ResolutionContext rc)
+    {
+      return new AnalysisContext(program, rc);
+    }
+
+    /// <summary>
+    /// Creates an analysis context using information from the given analysis context.
+    /// </summary>
+    /// <param name="program">Program</param>
+    /// <param name="rc">ResolutionContext</param>
+    /// <param name="ac">AnalysisContext</param>
+    /// <returns>AnalysisContext</returns>
+    internal static AnalysisContext CreateWithContext(Microsoft.Boogie.Program program,
+      ResolutionContext rc, AnalysisContext ac)
+    {
+      var newAc = new AnalysisContext(program, rc);
+
+      newAc.MainThread = ac.MainThread.Clone(newAc);
+      foreach (var thread in ac.Threads)
+      {
+        newAc.Threads.Add(thread.Clone(newAc));
+      }
+
+      newAc.Locks = ac.Locks;
+      newAc.CurrentLocksets = ac.CurrentLocksets;
+      newAc.MemoryLocksets = ac.MemoryLocksets;
+
+      newAc.SharedMemoryRegions = ac.SharedMemoryRegions;
+      newAc.ThreadMemoryRegions = ac.ThreadMemoryRegions;
+
+      return newAc;
+    }
+
+    /// <summary>
     /// Returns the error reporter associated with this analysis context.
     /// </summary>
     /// <returns>ErrorReporter</returns>
@@ -109,11 +148,46 @@ namespace Lockpwn
       return AnalysisContext.ErrorReporter;
     }
 
+    /// <summary>
+    /// Eliminates the dead variables.
+    /// </summary>
     internal void EliminateDeadVariables()
     {
       ExecutionEngine.EliminateDeadVariables(this.Program);
     }
 
+    /// <summary>
+    /// Eliminates the assertions.
+    /// </summary>
+    internal void EliminateAssertions()
+    {
+      foreach (var impl in this.TopLevelDeclarations.OfType<Implementation>())
+      {
+        foreach (var block in impl.Blocks)
+        {
+          block.Cmds.RemoveAll(val => val is AssertCmd);
+        }
+      }
+    }
+
+    /// <summary>
+    /// Eliminates the non-candidate invariant inference assertions.
+    /// </summary>
+    internal void EliminateNonInvariantInferenceAssertions()
+    {
+      foreach (var impl in this.TopLevelDeclarations.OfType<Implementation>())
+      {
+        foreach (var block in impl.Blocks)
+        {
+          block.Cmds.RemoveAll(val => val is AssertCmd &&
+            !QKeyValue.FindBoolAttribute((val as AssertCmd).Attributes, "candidate"));
+        }
+      }
+    }
+
+    /// <summary>
+    /// Inlines the program.
+    /// </summary>
     internal void Inline()
     {
       ExecutionEngine.Inline(this.Program);
@@ -310,19 +384,17 @@ namespace Lockpwn
       return false;
     }
 
-    internal void ResetAnalysisContext()
-    {
-      this.Locks.Clear();
-      this.CurrentLocksets.Clear();
-      this.MemoryLocksets.Clear();
-      this.TopLevelDeclarations = this.Program.TopLevelDeclarations.ToArray().ToList();
-    }
-
+    /// <summary>
+    /// Resets to program's top level declarations.
+    /// </summary>
     internal void ResetToProgramTopLevelDeclarations()
     {
       this.TopLevelDeclarations = this.Program.TopLevelDeclarations.ToArray().ToList();
     }
 
+    /// <summary>
+    /// Detects the entry point of the program.
+    /// </summary>
     private void DetectEntryPoint()
     {
       this.EntryPoint = this.TopLevelDeclarations.OfType<Implementation>().ToList().

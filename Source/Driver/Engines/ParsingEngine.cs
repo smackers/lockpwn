@@ -16,41 +16,38 @@ using Lockpwn.IO;
 
 namespace Lockpwn
 {
-  internal sealed class ParsingEngine
+  internal sealed class ParsingEngine : AbstractEngine
   {
-    private Program Program;
-    private ExecutionTimer Timer;
-
+    /// <summary>
+    /// Constructor.
+    /// </summary>
+    /// <param name="program">Program</param>
     internal ParsingEngine(Program program)
-    {
-      Contract.Requires(program != null);
-      this.Program = program;
-    }
+      : base(program)
+    { }
 
-    internal AnalysisContext Run()
+    /// <summary>
+    /// Starts the engine.
+    /// </summary>
+    internal override void Start()
     {
       if (ToolCommandLineOptions.Get().VerboseMode)
         Output.PrintLine(". Parsing");
 
       if (ToolCommandLineOptions.Get().MeasureTime)
       {
-        this.Timer = new ExecutionTimer();
-        this.Timer.Start();
+        base.Timer.Start();
       }
 
-      AnalysisContext ac = null;
-      new AnalysisContextParser(this.Program.FileList[this.Program.FileList.Count - 1],
-        "bpl").TryParseNew(ref ac);
+      base.Program.AC = base.ParseContextFromInputFile();
 
-      Refactoring.Factory.CreateProgramSimplifier(ac).Run();
+      Refactoring.Factory.CreateProgramSimplifier(base.Program.AC).Run();
 
       if (ToolCommandLineOptions.Get().MeasureTime)
       {
-        this.Timer.Stop();
-        Output.PrintLine("... Parsing done [{0}]", this.Timer.Result());
+        base.Timer.Stop();
+        Output.PrintLine("... Parsing done [{0}]", base.Timer.Result());
       }
-
-      return ac;
     }
   }
 }

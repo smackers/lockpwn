@@ -16,66 +16,53 @@ using Lockpwn.IO;
 
 namespace Lockpwn
 {
-  internal sealed class SequentializationEngine
+  internal sealed class SequentializationEngine : AbstractEngine
   {
-    private Program Program;
-    private ExecutionTimer Timer;
-
+    /// <summary>
+    /// Constructor.
+    /// </summary>
+    /// <param name="program">Program</param>
     internal SequentializationEngine(Program program)
-    {
-      Contract.Requires(program != null);
-      this.Program = program;
-    }
+      : base(program)
+    { }
 
-    internal void Run()
+    /// <summary>
+    /// Starts the engine.
+    /// </summary>
+    internal override void Start()
     {
       if (ToolCommandLineOptions.Get().VerboseMode)
         Output.PrintLine(". Sequentialization");
 
       if (ToolCommandLineOptions.Get().MeasureTime)
       {
-        this.Timer = new ExecutionTimer();
-        this.Timer.Start();
+        base.Timer.Start();
       }
 
-      Instrumentation.Factory.CreateGlobalRaceCheckingInstrumentation(this.Program.AC).Run();
+      Instrumentation.Factory.CreateGlobalRaceCheckingInstrumentation(base.Program.AC).Run();
 
-      Instrumentation.Factory.CreateLocksetInstrumentation(this.Program.AC).Run();
-      Instrumentation.Factory.CreateRaceCheckingInstrumentation(this.Program.AC).Run();
+      Instrumentation.Factory.CreateLocksetInstrumentation(base.Program.AC).Run();
+      Instrumentation.Factory.CreateRaceCheckingInstrumentation(base.Program.AC).Run();
 
-      Analysis.Factory.CreateSharedStateAbstraction(this.Program.AC).Run();
+      Analysis.Factory.CreateSharedStateAbstraction(base.Program.AC).Run();
 
-      Instrumentation.Factory.CreateErrorReportingInstrumentation(this.Program.AC).Run();
-      Instrumentation.Factory.CreateAccessCheckingInstrumentation(this.Program.AC).Run();
+      Instrumentation.Factory.CreateErrorReportingInstrumentation(base.Program.AC).Run();
+      Instrumentation.Factory.CreateAccessCheckingInstrumentation(base.Program.AC).Run();
 
-      foreach (var thread in this.Program.AC.Threads)
-        this.Program.AC.InlineThread(thread);
-      this.Program.AC.InlineThreadHelpers();
+      foreach (var thread in base.Program.AC.Threads)
+        base.Program.AC.InlineThread(thread);
+      base.Program.AC.InlineThreadHelpers();
 
-//        ModelCleaner.RemoveInlineFromHelperFunctions(this.AC, this.EP);
-//      ModelCleaner.RemoveUnecesseryInfoFromSpecialFunctions(this.AC);
-//      ModelCleaner.RemoveCorralFunctions(this.AC);
-      //      ModelCleaner.RemoveModelledProcedureBodies(this.AC);
+      if (ToolCommandLineOptions.Get().SkipSummarization)
+      {
+        base.EmitProgramContext(base.Program.AC, "sequentialized");
+      }
 
       if (ToolCommandLineOptions.Get().MeasureTime)
       {
-        this.Timer.Stop();
-        Output.PrintLine("... Sequentialization done [{0}]", this.Timer.Result());
+        base.Timer.Stop();
+        Output.PrintLine("... Sequentialization done [{0}]", base.Timer.Result());
       }
-
-      if (ToolCommandLineOptions.Get().SkipSummarization)
-        this.EmitProgramContext(this.Program.AC, "instrumented");
-    }
-
-    /// <summary>
-    /// Emits the given analysis context.
-    /// </summary>
-    /// <param name="ac">AnalysisContext</param>
-    /// <param name="suffix">Suffix</param>
-    private void EmitProgramContext(AnalysisContext ac, string suffix)
-    {
-      Lockpwn.IO.BoogieProgramEmitter.Emit(ac.TopLevelDeclarations, ToolCommandLineOptions
-        .Get().Files[ToolCommandLineOptions.Get().Files.Count - 1], suffix, "bpl");
     }
   }
 }

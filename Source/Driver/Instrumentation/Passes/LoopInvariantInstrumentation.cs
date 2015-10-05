@@ -135,13 +135,10 @@ namespace Lockpwn.Instrumentation
     {
       var cons = this.CreateConstant(thread);
       Expr expr = this.CreateImplExpr(cons, variable, value);
-      block.Cmds.Insert(0, new AssertCmd(Token.NoToken, expr));
-    }
-
-    private void InstrumentAssert(Block block, Variable variable, bool value)
-    {
-      Expr expr = this.CreateExpr(variable, value);
-      block.Cmds.Insert(0, new AssertCmd(Token.NoToken, expr));
+      var assert = new AssertCmd(Token.NoToken, expr);
+      assert.Attributes = new QKeyValue(Token.NoToken, "candidate",
+        new List<object>(), assert.Attributes);
+      block.Cmds.Insert(0, assert);
     }
 
     private Expr CreateImplExpr(Constant cons, Variable v, bool value)

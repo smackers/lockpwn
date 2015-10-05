@@ -21,73 +21,51 @@ using Lockpwn.IO;
 
 namespace Lockpwn
 {
-  internal sealed class SummarizationEngine
+  internal sealed class SummarizationEngine : AbstractEngine
   {
-    private Program Program;
-    private ExecutionTimer Timer;
-
+    /// <summary>
+    /// Constructor.
+    /// </summary>
+    /// <param name="program">Program</param>
     internal SummarizationEngine(Program program)
-    {
-      Contract.Requires(program != null);
-      this.Program = program;
-    }
+      : base(program)
+    { }
 
-    internal void Run()
+    /// <summary>
+    /// Starts the engine.
+    /// </summary>
+    internal override void Start()
     {
       if (ToolCommandLineOptions.Get().VerboseMode)
         Output.PrintLine(". Summarization");
 
       if (ToolCommandLineOptions.Get().MeasureTime)
       {
-        this.Timer = new ExecutionTimer();
-        this.Timer.Start();
+        base.Timer.Start();
       }
 
-      Instrumentation.Factory.CreateLoopInvariantInstrumentation(this.Program.AC).Run();
+      Instrumentation.Factory.CreateLoopInvariantInstrumentation(base.Program.AC).Run();
 
-      this.EmitProgramContext(this.Program.AC, "instrumented");
-      this.ParseFreshProgram("instrumented");
+      base.EmitProgramContext(base.Program.AC, "sequentialized");
 
-      this.Program.AC.EliminateDeadVariables();
-      this.Program.AC.Inline();
+      base.Program.AC = base.ParseContextFromFile("sequentialized");
 
-      Analysis.Factory.CreateInvariantInference(this.Program.AC, this.Program.PostAC).Run();
+      base.Program.AC.EliminateNonInvariantInferenceAssertions();
+      base.Program.AC.EliminateDeadVariables();
+      base.Program.AC.Inline();
 
-      //      ModelCleaner.RemoveGenericTopLevelDeclerations(this.Program.PostAC, this.EP);
-      //      ModelCleaner.RemoveUnusedTopLevelDeclerations(this.Program.AC);
-      //      ModelCleaner.RemoveGlobalLocksets(this.Program.PostAC);
-      ModelCleaner.RemoveExistentials(this.Program.PostAC);
+      var summarizedAnalysisContext = base.ParseContextFromFile("sequentialized");
+      Analysis.Factory.CreateHoudiniInvariantInference(base.Program.AC, summarizedAnalysisContext).Run();
+
+      ModelCleaner.RemoveExistentials(summarizedAnalysisContext);
+
+      base.EmitProgramContext(summarizedAnalysisContext, "summarised");
 
       if (ToolCommandLineOptions.Get().MeasureTime)
       {
-        this.Timer.Stop();
-        Output.PrintLine("... Summarization done [{0}]", this.Timer.Result());
+        base.Timer.Stop();
+        Output.PrintLine("... Summarization done [{0}]", base.Timer.Result());
       }
-
-      this.EmitProgramContext(this.Program.PostAC, "summarised");
-    }
-
-    /// <summary>
-    /// Parses a fresh program.
-    /// </summary>
-    /// <param name="suffix">Suffix</param>
-    private void ParseFreshProgram(string suffix)
-    {
-      new AnalysisContextParser(this.Program.FileList[this.Program.FileList.Count - 1], "bpl")
-        .TryParseNew(ref this.Program.AC, new List<string> { suffix });
-      new AnalysisContextParser(this.Program.FileList[this.Program.FileList.Count - 1], "bpl")
-        .TryParseNew(ref this.Program.PostAC, new List<string> { suffix });
-    }
-
-    /// <summary>
-    /// Emits the given analysis context.
-    /// </summary>
-    /// <param name="ac">AnalysisContext</param>
-    /// <param name="suffix">Suffix</param>
-    private void EmitProgramContext(AnalysisContext ac, string suffix)
-    {
-      Lockpwn.IO.BoogieProgramEmitter.Emit(ac.TopLevelDeclarations, ToolCommandLineOptions
-        .Get().Files[ToolCommandLineOptions.Get().Files.Count - 1], suffix, "bpl");
     }
   }
 }

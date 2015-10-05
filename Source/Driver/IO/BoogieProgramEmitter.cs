@@ -22,22 +22,6 @@ namespace Lockpwn.IO
   /// </summary>
   internal static class BoogieProgramEmitter
   {
-    internal static void EmitOutput(List<Declaration> declarations, string file)
-    {
-      string directory = BoogieProgramEmitter.GetDirectoryWithFile(file);
-
-      var output = Path.GetFileNameWithoutExtension(file) + "_pwned";
-      if (ToolCommandLineOptions.Get().OutputFile.Length > 0)
-        output = ToolCommandLineOptions.Get().OutputFile;
-
-      var fileName = directory + Path.DirectorySeparatorChar + output + ".bpl";
-
-      using(TokenTextWriter writer = new TokenTextWriter(fileName, true))
-      {
-        declarations.Emit(writer);
-      }
-    }
-
     internal static void Emit(List<Declaration> declarations, string file, string extension)
     {
       string directory = BoogieProgramEmitter.GetDirectoryWithFile(file);

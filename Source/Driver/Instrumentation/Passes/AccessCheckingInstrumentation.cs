@@ -65,7 +65,7 @@ namespace Lockpwn.Instrumentation
         var asserts = this.CreateRaceCheckingAssertions(mr);
         if (asserts.Count == 0)
           continue;
-
+        
         foreach (var assert in asserts)
         {
           var enabler = new GlobalVariable(Token.NoToken, new TypedIdent(Token.NoToken,

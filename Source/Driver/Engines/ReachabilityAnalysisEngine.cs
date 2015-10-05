@@ -20,60 +20,53 @@ using Lockpwn.IO;
 
 namespace Lockpwn
 {
-  internal sealed class ReachabilityAnalysisEngine
+  internal sealed class ReachabilityAnalysisEngine : AbstractEngine
   {
-    private Program Program;
-    private ExecutionTimer Timer;
+    /// <summary>
+    /// Constructor.
+    /// </summary>
+    /// <param name="program">Program</param>
+    internal ReachabilityAnalysisEngine(Program program)
+      : base(program)
+    { }
 
-    public ReachabilityAnalysisEngine(Program program)
-    {
-      Contract.Requires(program != null);
-      this.Program = program;
-    }
-
-    public void Run()
+    /// <summary>
+    /// Starts the engine.
+    /// </summary>
+    internal override void Start()
     {
       if (ToolCommandLineOptions.Get().VerboseMode)
         Output.PrintLine(". ReachabilityAnalysis");
 
       if (ToolCommandLineOptions.Get().MeasureTime)
       {
-        this.Timer = new ExecutionTimer();
-        this.Timer.Start();
+        base.Timer.Start();
       }
 
       if (ToolCommandLineOptions.Get().SkipSummarization)
       {
-        this.ParseFreshProgram("instrumented");
+        base.Program.AC = base.ParseContextFromFile("sequentialized");
       }
       else
       {
-        this.ParseFreshProgram("summarised");
+        base.Program.AC = base.ParseContextFromFile("summarised");
       }
 
-      Analysis.Factory.CreateRaceCheckAnalysis(this.Program.AC).Run();
-      Instrumentation.Factory.CreateYieldInstrumentation(this.Program.PostAC).Run();
+      Analysis.Factory.CreateRaceCheckAnalysis(base.Program.AC).Run();
+
+      if (ToolCommandLineOptions.Get().EnableCorralMode)
+      {
+        var originalAnalysisContext = base.ParseContextFromInputFile();
+        Instrumentation.Factory.CreateYieldInstrumentation(originalAnalysisContext).Run();
+
+        base.EmitProgramContext(originalAnalysisContext, "corral");
+      }
 
       if (ToolCommandLineOptions.Get().MeasureTime)
       {
-        this.Timer.Stop();
-        Output.PrintLine("... ReachabilityAnalysis done [{0}]", this.Timer.Result());
+        base.Timer.Stop();
+        Output.PrintLine("... ReachabilityAnalysis done [{0}]", base.Timer.Result());
       }
-
-      Lockpwn.IO.BoogieProgramEmitter.EmitOutput(this.Program.PostAC.TopLevelDeclarations,
-        ToolCommandLineOptions.Get().Files[ToolCommandLineOptions.Get().Files.Count - 1]);
-    }
-
-    /// <summary>
-    /// Parses a fresh program.
-    /// </summary>
-    /// <param name="suffix">Suffix</param>
-    private void ParseFreshProgram(string suffix)
-    {
-      new AnalysisContextParser(this.Program.FileList[this.Program.FileList.Count - 1], "bpl")
-        .TryParseNew(ref this.Program.AC, new List<string> { suffix });
-      new AnalysisContextParser(this.Program.FileList[this.Program.FileList.Count - 1], "bpl")
-        .TryParseNew(ref this.Program.PostAC, new List<string> { suffix });
     }
   }
 }

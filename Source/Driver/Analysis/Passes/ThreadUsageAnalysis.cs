@@ -85,7 +85,7 @@ namespace Lockpwn.Analysis
           if (!(block.Cmds[idx] as CallCmd).callee.Contains("pthread_create"))
             continue;
 
-          var thread = Thread.Create(this.AC, call.Ins[0], call.Ins[2], call.Ins[3], currentThread);
+          var thread = Thread.Create(this.AC, call.Ins[0], call.Ins[3], call.Ins[2], currentThread);
 
           if (ToolCommandLineOptions.Get().SuperVerboseMode)
             Output.PrintLine("..... '{0}' spawns new thread '{1}'",

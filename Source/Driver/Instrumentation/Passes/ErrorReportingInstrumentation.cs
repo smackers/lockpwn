@@ -27,14 +27,12 @@ namespace Lockpwn.Instrumentation
     private ExecutionTimer Timer;
 
     private int LogCounter;
-    private int UpdateCounter;
 
     public ErrorReportingInstrumentation(AnalysisContext ac)
     {
       Contract.Requires(ac != null);
       this.AC = ac;
       this.LogCounter = 0;
-      this.UpdateCounter = 0;
     }
 
     public void Run()

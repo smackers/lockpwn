@@ -17,11 +17,6 @@ namespace Lockpwn
   internal class ToolCommandLineOptions : CommandLineOptions
   {
     /// <summary>
-    /// The output file.
-    /// </summary>
-    internal string OutputFile = "";
-
-    /// <summary>
     /// Print verbose information.
     /// </summary>
     internal bool VerboseMode = false;
@@ -49,14 +44,19 @@ namespace Lockpwn
     internal bool ShowErrorModel = false;
 
     /// <summary>
-    /// Skip the instrumentation phase.
+    /// Skip the sequentialization phase.
     /// </summary>
-    internal bool SkipInstrumentation = false;
+    internal bool SkipSequentialization = false;
 
     /// <summary>
     /// Skip the summarization phase.
     /// </summary>
     internal bool SkipSummarization = false;
+
+    /// <summary>
+    /// Enables integration with Corral.
+    /// </summary>
+    internal bool EnableCorralMode = false;
 
     internal ToolCommandLineOptions() : base("lockpwn", "lockpwn static lockset analyser")
     {
@@ -71,26 +71,27 @@ namespace Lockpwn
 
     protected override bool ParseOption(string option, CommandLineOptionEngine.CommandLineParseState ps)
     {
-      if (option == "?")
+      if (option == "help")
       {
         this.ShowHelp();
         System.Environment.Exit(1);
       }
-      else if (option == "o")
-      {
-        if (ps.ConfirmArgumentCount(1))
-        {
-          var split = ps.args[ps.i].Split('.');
-          if (split.Length != 2 || !split[1].Equals("bpl"))
-          {
-            Lockpwn.IO.Reporter.ErrorWriteLine("Extension of output must be '.bpl'");
-            System.Environment.Exit((int)Outcome.ParsingError);
-          }
-
-          this.OutputFile = split[0];
-        }
-        return true;
-      }
+//      else if (option == "o")
+//      {
+//        if (ps.ConfirmArgumentCount(1))
+//        {
+//          var split = ps.args[ps.i].Split('.');
+//          if (split.Length != 2 || !split[1].Equals("bpl"))
+//          {
+//            Lockpwn.IO.Reporter.ErrorWriteLine("Extension of output must be '.bpl'");
+//            System.Environment.Exit((int)Outcome.ParsingError);
+//          }
+//
+//          this.OutputFile = split[0];
+//        }
+//
+//        return true;
+//      }
       else if (option == "v")
       {
         this.VerboseMode = true;
@@ -127,15 +128,26 @@ namespace Lockpwn
         this.ShowErrorModel = true;
         return true;
       }
-      else if (option == "noInstrument")
+      else if (option == "noSeq")
       {
-        this.SkipInstrumentation = true;
+        this.SkipSequentialization = true;
         return true;
       }
-      else if (option == "noSummary")
+      else if (option == "noInv")
       {
         this.SkipSummarization = true;
         return true;
+      }
+      else if (option == "corral")
+      {
+        this.EnableCorralMode = true;
+        return true;
+      }
+      else
+      {
+        Lockpwn.IO.Reporter.ErrorWriteLine("lockpwn: error: command line option /{0} not available.", option);
+        this.ShowHelp();
+        System.Environment.Exit((int)Outcome.FatalError);
       }
 
       return base.ParseOption(option, ps);
@@ -146,24 +158,34 @@ namespace Lockpwn
     /// </summary>
     private void ShowHelp()
     {
-      string help = "\n";
+      string help = "=======================================================================";
+      help += "\nlockpwn - blazing fast symbolic analysis for concurrent Boogie programs";
+      help += "\n=======================================================================";
+      help += "\n";
 
-      help += "--------------";
+      help += "\nUsage: lockpwn.exe [OPTIONS]";
+      help += "\n";
+
+      help += "\n-----------------------------------------------------------------------";
       help += "\nBasic options:";
-      help += "\n--------------";
-      help += "\n  /?\t\t Show this help menu";
-      help += "\n  /o:[x]\t Name of the output file";
-      help += "\n  /v\t\t Enable verbose mode";
-      help += "\n  /v2\t\t Enable super verbose mode";
-      help += "\n  /debug\t Enable debugging";
-      help += "\n  /time\t\t Print timing information";
+      help += "\n-----------------------------------------------------------------------";
+      help += "\n /help\t\t Show this help menu.";
+      help += "\n /v\t\t Enable verbose mode.";
+      help += "\n /v2\t\t Enable super verbose mode.";
+      help += "\n /debug\t\t Enable debugging.";
+      help += "\n /time\t\t Print timing information.";
 
-      help += "\n\n-----------------";
+      help += "\n-----------------------------------------------------------------------";
       help += "\nAdvanced options:";
-      help += "\n-----------------";
-      help += "\n  /noAssert\t Disables user-provided assertions";
-      help += "\n  /temp\t\t Do not delete temporary files";
+      help += "\n-----------------------------------------------------------------------";
+      help += "\n /noAssert\t Disables user-provided assertions.";
+      help += "\n /temp\t\t Do not delete temporary files.";
 
+      help += "\n-----------------------------------------------------------------------";
+      help += "\nIntegration options:";
+      help += "\n-----------------------------------------------------------------------";
+      help += "\n /corral\t Enables Corral mode and emits an output file that can";
+      help += "\n \t\t be passed to Microsoft's Corral for bug finding.";
       help += "\n";
 
       Output.PrettyPrintLine(help);

@@ -34,11 +34,6 @@ namespace Lockpwn
     /// </summary>
     internal AnalysisContext AC;
 
-    /// <summary>
-    /// The post analysis context.
-    /// </summary>
-    internal AnalysisContext PostAC;
-
     #endregion
 
     #region methods

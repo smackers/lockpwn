@@ -17,44 +17,45 @@ using Lockpwn.IO;
 
 namespace Lockpwn
 {
-  internal sealed class ThreadAnalysisEngine
+  internal sealed class ThreadAnalysisEngine : AbstractEngine
   {
-    private Program Program;
-    private ExecutionTimer Timer;
-
+    /// <summary>
+    /// Constructor.
+    /// </summary>
+    /// <param name="program">Program</param>
     internal ThreadAnalysisEngine(Program program)
-    {
-      Contract.Requires(program != null);
-      this.Program = program;
-    }
+      : base(program)
+    { }
 
-    internal void Run()
+    /// <summary>
+    /// Starts the engine.
+    /// </summary>
+    internal override void Start()
     {
       if (ToolCommandLineOptions.Get().VerboseMode)
         Output.PrintLine(". ThreadAnalysis");
 
       if (ToolCommandLineOptions.Get().MeasureTime)
       {
-        this.Timer = new ExecutionTimer();
-        this.Timer.Start();
+        base.Timer.Start();
       }
 
-      Analysis.Factory.CreateThreadCreationAnalysis(this.Program.AC).Run();
-      Analysis.Factory.CreateLockAbstraction(this.Program.AC).Run();
+      Analysis.Factory.CreateThreadCreationAnalysis(base.Program.AC).Run();
+      Analysis.Factory.CreateLockAbstraction(base.Program.AC).Run();
 
-      if (this.Program.AC.Locks.Count > 0)
+      if (base.Program.AC.Locks.Count > 0)
       {
-        Refactoring.Factory.CreateLockRefactoring(this.Program.AC).Run();
+        Refactoring.Factory.CreateLockRefactoring(base.Program.AC).Run();
       }
 
-      Refactoring.Factory.CreateThreadRefactoring(this.Program.AC).Run();
+      Refactoring.Factory.CreateThreadRefactoring(base.Program.AC).Run();
 
-      Analysis.Factory.CreateSharedStateAnalysis(this.Program.AC).Run();
+      Analysis.Factory.CreateSharedStateAnalysis(base.Program.AC).Run();
 
       if (ToolCommandLineOptions.Get().MeasureTime)
       {
-        this.Timer.Stop();
-        Output.PrintLine("... ThreadAnalysis done [{0}]", this.Timer.Result());
+        base.Timer.Stop();
+        Output.PrintLine("... ThreadAnalysis done [{0}]", base.Timer.Result());
       }
     }
   }

@@ -74,13 +74,12 @@ namespace Lockpwn
     /// <param name="program">Program</param>
     private static void ParseAnalyzeAndSequentialize(Program program)
     {
-      if (ToolCommandLineOptions.Get().SkipInstrumentation)
+      if (ToolCommandLineOptions.Get().SkipSequentialization)
         return;
 
-      program.AC = new ParsingEngine(program).Run();
-
-      new ThreadAnalysisEngine(program).Run();
-      new SequentializationEngine(program).Run();
+      new ParsingEngine(program).Start();
+      new ThreadAnalysisEngine(program).Start();
+      new SequentializationEngine(program).Start();
     }
 
     /// <summary>
@@ -92,7 +91,7 @@ namespace Lockpwn
       if (ToolCommandLineOptions.Get().SkipSummarization)
         return;
 
-      new SummarizationEngine(program).Run();
+      new SummarizationEngine(program).Start();
     }
 
     /// <summary>
@@ -101,7 +100,7 @@ namespace Lockpwn
     /// <param name="program">Program</param>
     private static void RunReachabilityAnalysisEngine(Program program)
     {
-      new ReachabilityAnalysisEngine(program).Run();
+      new ReachabilityAnalysisEngine(program).Start();
     }
 
     /// <summary>
@@ -137,7 +136,7 @@ namespace Lockpwn
     {
       if (ToolCommandLineOptions.Get().Files.Count == 0)
       {
-        Lockpwn.IO.Reporter.ErrorWriteLine("lockpwn: error: no input files were specified");
+        Lockpwn.IO.Reporter.ErrorWriteLine("lockpwn: error: no input files were specified.");
         Environment.Exit((int)Outcome.FatalError);
       }
 
@@ -162,17 +161,17 @@ namespace Lockpwn
         }
         if (extension != ".bpl")
         {
-          Lockpwn.IO.Reporter.ErrorWriteLine("lockpwn: error: {0} is not a .bpl file", file);
+          Lockpwn.IO.Reporter.ErrorWriteLine("lockpwn: error: {0} is not a .bpl file.", file);
           Environment.Exit((int)Outcome.FatalError);
         }
       }
 
-      if (ToolCommandLineOptions.Get().SkipInstrumentation &&
+      if (ToolCommandLineOptions.Get().SkipSequentialization &&
         ToolCommandLineOptions.Get().SkipSummarization)
       {
         string fileName;
         var exists = Lockpwn.IO.BoogieProgramEmitter.Exists(program
-          .FileList[program.FileList.Count - 1], "instrumented", "bpl", out fileName);
+          .FileList[program.FileList.Count - 1], "sequentialized", "bpl", out fileName);
         if (!exists)
         {
           Console.Error.WriteLine("Error: File '{0}' not found.", fileName);
@@ -192,7 +191,7 @@ namespace Lockpwn
         return;
 
       Lockpwn.IO.BoogieProgramEmitter.Remove(program.FileList[program.FileList.Count - 1],
-        "instrumented", "bpl");
+        "sequentialized", "bpl");
       Lockpwn.IO.BoogieProgramEmitter.Remove(program.FileList[program.FileList.Count - 1],
         "summarised", "bpl");
     }

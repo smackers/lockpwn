@@ -39,9 +39,9 @@ namespace Lockpwn.Analysis
       return new RaceCheckAnalysis(ac);
     }
 
-    internal static IPass CreateInvariantInference(AnalysisContext ac, AnalysisContext postAc)
+    internal static IPass CreateHoudiniInvariantInference(AnalysisContext ac, AnalysisContext postAc)
     {
-      return new InvariantInference(ac, postAc);
+      return new HoudiniInvariantInference(ac, postAc);
     }
   }
 }
