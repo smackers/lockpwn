@@ -61,14 +61,14 @@ namespace Lockpwn.Analysis
       this.AC.EliminateDeadVariables();
       this.AC.Inline();
       if (ToolCommandLineOptions.Get().LoopUnrollCount != -1)
-        this.AC.Program.UnrollLoops(ToolCommandLineOptions.Get().LoopUnrollCount,
+        this.AC.BoogieProgram.UnrollLoops(ToolCommandLineOptions.Get().LoopUnrollCount,
           ToolCommandLineOptions.Get().SoundLoopUnrolling);
 
       VC.ConditionGeneration vcgen = null;
 
       try
       {
-        vcgen = new VC.VCGen(this.AC.Program, ToolCommandLineOptions.Get().SimplifyLogFilePath,
+        vcgen = new VC.VCGen(this.AC.BoogieProgram, ToolCommandLineOptions.Get().SimplifyLogFilePath,
           ToolCommandLineOptions.Get().SimplifyLogFileAppend, new List<Checker>());
       }
       catch (ProverException e)

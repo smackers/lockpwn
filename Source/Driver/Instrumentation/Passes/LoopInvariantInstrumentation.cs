@@ -124,6 +124,10 @@ namespace Lockpwn.Instrumentation
 
     private void InstrumentExistentialBooleans()
     {
+      if (this.ExistentialBooleans.Count == 0)
+        return;
+
+      ToolCommandLineOptions.Get().RequiresInvariantInference = true;
       foreach (var b in this.ExistentialBooleans)
       {
         b.Attributes = new QKeyValue(Token.NoToken, "existential", new List<object>() { Expr.True }, null);

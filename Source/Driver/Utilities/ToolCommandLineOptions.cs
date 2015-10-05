@@ -37,10 +37,18 @@ namespace Lockpwn
     internal bool MeasureTime = false;
 
     /// <summary>
+    /// True if the program requires invariant inference.
+    /// </summary>
+    internal bool RequiresInvariantInference = false;
+
+    /// <summary>
     /// Disables the user provided assertions.
     /// </summary>
     internal bool DisableUserAssertions = false;
 
+    /// <summary>
+    /// Shows the error model.
+    /// </summary>
     internal bool ShowErrorModel = false;
 
     /// <summary>

@@ -43,7 +43,8 @@ namespace Lockpwn
         base.Timer.Start();
       }
 
-      if (ToolCommandLineOptions.Get().SkipSummarization)
+      if (!ToolCommandLineOptions.Get().RequiresInvariantInference ||
+        ToolCommandLineOptions.Get().SkipSummarization)
       {
         base.Program.AC = base.ParseContextFromFile("sequentialized");
       }

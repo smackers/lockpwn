@@ -35,7 +35,7 @@ namespace Lockpwn
 
     #region fields
 
-    internal Microsoft.Boogie.Program Program;
+    internal Microsoft.Boogie.Program BoogieProgram;
     internal ResolutionContext ResContext;
 
     internal List<Declaration> TopLevelDeclarations;
@@ -81,7 +81,7 @@ namespace Lockpwn
       Contract.Requires(program != null);
       Contract.Requires(rc != null);
 
-      this.Program = program;
+      this.BoogieProgram = program;
       this.ResContext = rc;
 
       this.MainThread = null;
@@ -153,7 +153,7 @@ namespace Lockpwn
     /// </summary>
     internal void EliminateDeadVariables()
     {
-      ExecutionEngine.EliminateDeadVariables(this.Program);
+      ExecutionEngine.EliminateDeadVariables(this.BoogieProgram);
     }
 
     /// <summary>
@@ -190,7 +190,7 @@ namespace Lockpwn
     /// </summary>
     internal void Inline()
     {
-      ExecutionEngine.Inline(this.Program);
+      ExecutionEngine.Inline(this.BoogieProgram);
     }
 
     internal void InlineThread(Thread thread)
@@ -389,7 +389,7 @@ namespace Lockpwn
     /// </summary>
     internal void ResetToProgramTopLevelDeclarations()
     {
-      this.TopLevelDeclarations = this.Program.TopLevelDeclarations.ToArray().ToList();
+      this.TopLevelDeclarations = this.BoogieProgram.TopLevelDeclarations.ToArray().ToList();
     }
 
     /// <summary>

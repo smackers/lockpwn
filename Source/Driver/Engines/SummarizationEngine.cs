@@ -48,18 +48,21 @@ namespace Lockpwn
 
       base.EmitProgramContext(base.Program.AC, "sequentialized");
 
-      base.Program.AC = base.ParseContextFromFile("sequentialized");
+      if (ToolCommandLineOptions.Get().RequiresInvariantInference)
+      {
+        base.Program.AC = base.ParseContextFromFile("sequentialized");
 
-      base.Program.AC.EliminateNonInvariantInferenceAssertions();
-      base.Program.AC.EliminateDeadVariables();
-      base.Program.AC.Inline();
+        base.Program.AC.EliminateNonInvariantInferenceAssertions();
+        base.Program.AC.EliminateDeadVariables();
+        base.Program.AC.Inline();
 
-      var summarizedAnalysisContext = base.ParseContextFromFile("sequentialized");
-      Analysis.Factory.CreateHoudiniInvariantInference(base.Program.AC, summarizedAnalysisContext).Run();
+        var summarizedAnalysisContext = base.ParseContextFromFile("sequentialized");
+        Analysis.Factory.CreateHoudiniInvariantInference(base.Program.AC, summarizedAnalysisContext).Run();
 
-      ModelCleaner.RemoveExistentials(summarizedAnalysisContext);
+        ModelCleaner.RemoveExistentials(summarizedAnalysisContext);
 
-      base.EmitProgramContext(summarizedAnalysisContext, "summarised");
+        base.EmitProgramContext(summarizedAnalysisContext, "summarised");
+      }
 
       if (ToolCommandLineOptions.Get().MeasureTime)
       {

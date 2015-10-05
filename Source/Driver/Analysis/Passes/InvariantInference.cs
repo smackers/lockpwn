@@ -63,7 +63,7 @@ namespace Lockpwn.Analysis
     private void PerformHoudini()
     {
       var houdiniStats = new HoudiniSession.HoudiniStatistics();
-      this.Houdini = new Houdini(this.AC.Program, houdiniStats);
+      this.Houdini = new Houdini(this.AC.BoogieProgram, houdiniStats);
       this.Outcome = this.Houdini.PerformHoudiniInference();
 
       if (CommandLineOptions.Clo.PrintAssignment)
@@ -99,7 +99,7 @@ namespace Lockpwn.Analysis
     private void ApplyInvariants()
     {
       if (this.Houdini != null) {
-        Houdini.ApplyAssignment(this.SummarizedAC.Program, this.Outcome);
+        Houdini.ApplyAssignment(this.SummarizedAC.BoogieProgram, this.Outcome);
         this.Houdini.Close();
         ToolCommandLineOptions.Get().TheProverFactory.Close();
       }
