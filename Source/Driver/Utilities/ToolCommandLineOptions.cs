@@ -113,6 +113,8 @@ namespace Lockpwn
       }
       else if (option == "debug")
       {
+        this.VerboseMode = true;
+        this.SuperVerboseMode = true;
         Output.Debugging = true;
         return true;
       }

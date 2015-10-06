@@ -14,14 +14,14 @@ namespace Lockpwn.Analysis
 {
   internal static class Factory
   {
-    internal static IPass CreateLockAbstraction(AnalysisContext ac)
-    {
-      return new LockAbstraction(ac);
-    }
-
     internal static IPass CreateThreadUsageAnalysis(AnalysisContext ac)
     {
       return new ThreadUsageAnalysis(ac);
+    }
+
+    internal static IPass CreateLockUsageAnalysis(AnalysisContext ac)
+    {
+      return new LockUsageAnalysis(ac);
     }
 
     internal static IPass CreateSharedStateAnalysis(AnalysisContext ac)

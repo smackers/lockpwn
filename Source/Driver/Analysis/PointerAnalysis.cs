@@ -21,9 +21,9 @@ using Microsoft.Basetypes;
 namespace Lockpwn.Analysis
 {
   /// <summary>
-  /// Class implementing methods for pointer arithmetic analysis.
+  /// Class implementing methods for pointer analysis.
   /// </summary>
-  internal sealed class PointerArithmeticAnalyser
+  internal sealed class PointerAnalysis
   {
     #region fields
 
@@ -55,6 +55,7 @@ namespace Lockpwn.Analysis
       Literal,
       Axiom,
       Const,
+      Shared,
       Allocated
     }
 
@@ -62,7 +63,7 @@ namespace Lockpwn.Analysis
 
     #region internal API
 
-    internal PointerArithmeticAnalyser(AnalysisContext ac, Implementation impl, bool optimise = false)
+    internal PointerAnalysis(AnalysisContext ac, Implementation impl, bool optimise = false)
     {
       Contract.Requires(ac != null && impl != null);
       this.AC = ac;
@@ -75,18 +76,18 @@ namespace Lockpwn.Analysis
       this.AssignmentMap = new Dictionary<IdentifierExpr, HashSet<Expr>>();
       this.CallMap = new Dictionary<IdentifierExpr, HashSet<CallCmd>>();
 
-      if (!PointerArithmeticAnalyser.Cache.ContainsKey(impl))
-        PointerArithmeticAnalyser.Cache.Add(impl,
+      if (!PointerAnalysis.Cache.ContainsKey(impl))
+        PointerAnalysis.Cache.Add(impl,
           new Dictionary<IdentifierExpr, HashSet<Expr>>());
     }
 
     /// <summary>
-    /// Compute $pa(p, i, s) == p + i * s);
+    /// Returns the origins of the pointer.
     /// </summary>
     /// <returns>Result type</returns>
     /// <param name="id">Expression</param>
     /// <param name="ptrExprs">Computed ptr expressions</param>
-    internal ResultType TryComputeRootPointers(Expr id, out HashSet<Expr> ptrExprs)
+    internal ResultType GetPointerOrigins(Expr id, out HashSet<Expr> ptrExprs)
     {
       ptrExprs = new HashSet<Expr>();
 
@@ -124,9 +125,9 @@ namespace Lockpwn.Analysis
         return ResultType.Axiom;
       }
 
-      if (PointerArithmeticAnalyser.Cache[this.Implementation].ContainsKey(identifier))
+      if (PointerAnalysis.Cache[this.Implementation].ContainsKey(identifier))
       {
-        ptrExprs = PointerArithmeticAnalyser.Cache[this.Implementation][identifier];
+        ptrExprs = PointerAnalysis.Cache[this.Implementation][identifier];
         return ResultType.Pointer;
       }
 
@@ -136,18 +137,34 @@ namespace Lockpwn.Analysis
       identifiers.Add(identifier, false);
 
       this.ComputeExpressionMap(identifiers);
+
+      Expr shared = null;
+      if (this.TryGetSharedIdentifier(identifier, out shared))
+      {
+        ptrExprs.Add(shared);
+        return ResultType.Shared;
+      }
+
       this.ComputeAndCacheRootPointers();
       this.CacheMatchedPointers();
 
       if (this.CallMap.ContainsKey(identifier))
       {
-        if (this.CallMap[identifier].Any(val => val.callee.Equals("$alloca")))
+        Expr local = null;
+        if (this.TryGetAllocatedIdentifier(identifier, out local))
         {
+          ptrExprs.Add(local);
           return ResultType.Allocated;
         }
       }
 
-      ptrExprs = PointerArithmeticAnalyser.Cache[this.Implementation][identifier];
+      if (PointerAnalysis.Cache[this.Implementation][identifier].Count > 0)
+      {
+        ptrExprs = PointerAnalysis.Cache[this.Implementation][identifier];
+        return ResultType.Pointer;
+      }
+
+      ptrExprs.Add(identifier);
       return ResultType.Pointer;
     }
 
@@ -185,118 +202,7 @@ namespace Lockpwn.Analysis
       return id;
     }
 
-    #endregion
-
-    #region static internal API
-
-    /// <summary>
-    /// Compute $pa(p, i, s) == p + i * s);
-    /// </summary>
-    /// <returns>The root pointer.</returns>
-    /// <param name="impl">Implementation</param>
-    /// <param name="label">Root block label</param>
-    /// <param name="id">Identifier expression</param>
-    /// <param name="reportRegions">Report memory regions</param>
-    internal static Expr ComputeRootPointer(Implementation impl, string label, Expr id, bool reportRegions = false)
-    {
-      if (id is LiteralExpr) return id;
-      if (id is NAryExpr && (id as NAryExpr).Args.Count == 1 &&
-        (id as NAryExpr).Fun.FunctionName.Equals("-"))
-      {
-        return id;
-      }
-
-      NAryExpr root = PointerArithmeticAnalyser.GetPointerArithmeticExpr(impl, id) as NAryExpr;
-      if (root == null) return id;
-
-      Expr result = root;
-      Expr resolution = result;
-      int ixs = 0;
-
-      var alreadyVisited = new HashSet<Tuple<string, Expr>>();
-
-      do
-      {
-        if (result is NAryExpr)
-        {
-          if (((result as NAryExpr).Args[0] is IdentifierExpr) &&
-            ((result as NAryExpr).Args[0] as IdentifierExpr).Name.StartsWith("$M."))
-          {
-            if (reportRegions)
-              return result;
-            return id;
-          }
-
-          if (PointerArithmeticAnalyser.TryPerformCast(ref result))
-          {
-            continue;
-          }
-
-          if (PointerArithmeticAnalyser.ShouldSkipFromAnalysis(result as NAryExpr))
-          {
-            return id;
-          }
-
-          if (alreadyVisited.Any(v => v.Item1.Equals(label) && v.Item2.Equals(result)))
-            return id;
-
-          alreadyVisited.Add(new Tuple<string, Expr>(label, result));
-
-          if (PointerArithmeticAnalyser.IsArithmeticExpression(result as NAryExpr))
-            return id;
-
-          Expr p = (result as NAryExpr).Args[0];
-          Expr i = (result as NAryExpr).Args[1];
-          Expr s = (result as NAryExpr).Args[2];
-
-          if ((i is LiteralExpr) && (s is LiteralExpr))
-          {
-            ixs += (i as LiteralExpr).asBigNum.ToInt * (s as LiteralExpr).asBigNum.ToInt;
-          }
-          else
-          {
-            return id;
-          }
-
-          result = p;
-        }
-        else
-        {
-          resolution = PointerArithmeticAnalyser.GetPointerArithmeticExpr(impl, result);
-          if (resolution != null) result = resolution;
-        }
-      }
-      while (resolution != null);
-
-      return Expr.Add(result, new LiteralExpr(Token.NoToken, BigNum.FromInt(ixs)));
-    }
-
-    internal static Expr GetPointerArithmeticExpr(Implementation impl, Expr expr)
-    {
-      if (expr is LiteralExpr)
-        return null;
-
-      var identifier = expr as IdentifierExpr;
-      if (identifier == null)
-        return null;
-
-      for (int i = impl.Blocks.Count - 1; i >= 0; i--)
-      {
-        for (int j = impl.Blocks[i].Cmds.Count - 1; j >= 0; j--)
-        {
-          Cmd cmd = impl.Blocks[i].Cmds[j];
-          if (!(cmd is AssignCmd))
-            continue;
-          if (!((cmd as AssignCmd).Lhss[0].DeepAssignedIdentifier.Name.Equals(identifier.Name)))
-            continue;
-          return (cmd as AssignCmd).Rhss[0];
-        }
-      }
-
-      return null;
-    }
-
-    internal static Expr ComputeLiteralsInExpr(Expr expr)
+    internal Expr ComputeLiteralsInExpr(Expr expr)
     {
       if (!(expr is NAryExpr) || !((expr as NAryExpr).Args[0] is NAryExpr))
       {
@@ -311,13 +217,54 @@ namespace Lockpwn.Analysis
       return Expr.Add(result, new LiteralExpr(Token.NoToken, BigNum.FromInt(l1 + l2)));
     }
 
+    /// <summary>
+    /// Recomputes the expression from the given inparams.
+    /// </summary>
+    /// <param name="tid">Expression</param>
+    /// <param name="impl">Implementation</param>
+    /// <param name="inPtrs">List of expressions</param>
+    /// <returns>Expression</returns>
+    internal Expr RecomputeExprFromInParams(Expr tid, List<Expr> inPtrs)
+    {
+      if (inPtrs != null && (!(tid is LiteralExpr) || tid is NAryExpr))
+      {
+        if (tid is IdentifierExpr)
+        {
+          for (int i = 0; i < this.Implementation.InParams.Count; i++)
+          {
+            if (tid.ToString().Equals(this.Implementation.InParams[i].ToString()))
+            {
+              tid = inPtrs[i];
+            }
+          }
+        }
+        else if (tid is NAryExpr)
+        {
+          for (int i = 0; i < (tid as NAryExpr).Args.Count; i++)
+          {
+            for (int j = 0; j < this.Implementation.InParams.Count; j++)
+            {
+              if ((tid as NAryExpr).Args[i].ToString().Equals(this.Implementation.InParams[j].ToString()))
+              {
+                (tid as NAryExpr).Args[i] = inPtrs[j];
+              }
+            }
+          }
+        }
+
+        tid = this.ComputeLiteralsInExpr(tid);
+      }
+
+      return tid;
+    }
+
     #endregion
 
     #region pointer arithmetic analysis functions
 
     private void ComputeMapsForIdentifierExpr(IdentifierExpr id)
     {
-      if (PointerArithmeticAnalyser.Cache[this.Implementation].ContainsKey(id))
+      if (PointerAnalysis.Cache[this.Implementation].ContainsKey(id))
         return;
 
       if (!this.ExpressionMap.ContainsKey(id))
@@ -338,9 +285,9 @@ namespace Lockpwn.Analysis
               continue;
             if (this.AssignmentMap[id].Contains(assign.Rhss[0]))
               continue;
-
+            
             var expr = assign.Rhss[0];
-            PointerArithmeticAnalyser.TryPerformCast(ref expr);
+            PointerAnalysis.TryPerformCast(ref expr);
             this.AssignmentMap[id].Add(expr);
 
             if (expr.ToString().StartsWith("$pa("))
@@ -357,7 +304,7 @@ namespace Lockpwn.Analysis
           else if (block.Cmds[i] is CallCmd)
           {
             var call = block.Cmds[i] as CallCmd;
-            if (call.callee.Equals("$alloca"))
+            if (call.callee.Equals("$alloc"))
             {
               if (!call.Outs[0].Name.Equals(id.Name))
                 continue;
@@ -373,7 +320,7 @@ namespace Lockpwn.Analysis
     {
       foreach (var id in identifiers.Keys.ToList())
       {
-        if (PointerArithmeticAnalyser.Cache[this.Implementation].ContainsKey(id))
+        if (PointerAnalysis.Cache[this.Implementation].ContainsKey(id))
           continue;
         if (identifiers[id]) continue;
 
@@ -398,7 +345,7 @@ namespace Lockpwn.Analysis
             continue;
 
           this.ComputeMapsForIdentifierExpr(exprId);
-          if (PointerArithmeticAnalyser.Cache[this.Implementation].ContainsKey(exprId) &&
+          if (PointerAnalysis.Cache[this.Implementation].ContainsKey(exprId) &&
             !identifiers.ContainsKey(exprId))
           {
             identifiers.Add(exprId, true);
@@ -420,7 +367,7 @@ namespace Lockpwn.Analysis
             continue;
 
           this.ComputeMapsForIdentifierExpr(exprId);
-          if (PointerArithmeticAnalyser.Cache[this.Implementation].ContainsKey(exprId) &&
+          if (PointerAnalysis.Cache[this.Implementation].ContainsKey(exprId) &&
             !identifiers.ContainsKey(exprId))
           {
             identifiers.Add(exprId, true);
@@ -440,15 +387,15 @@ namespace Lockpwn.Analysis
     {
       foreach (var identifier in this.ExpressionMap)
       {
-        if (PointerArithmeticAnalyser.Cache[this.Implementation].ContainsKey(identifier.Key))
+        if (PointerAnalysis.Cache[this.Implementation].ContainsKey(identifier.Key))
           continue;
 
-        PointerArithmeticAnalyser.Cache[this.Implementation].Add(identifier.Key, new HashSet<Expr>());
+        PointerAnalysis.Cache[this.Implementation].Add(identifier.Key, new HashSet<Expr>());
         foreach (var pair in identifier.Value)
         {
           if (pair.Key is LiteralExpr)
           {
-            PointerArithmeticAnalyser.Cache[this.Implementation][identifier.Key].Add(
+            PointerAnalysis.Cache[this.Implementation][identifier.Key].Add(
               Expr.Add(pair.Key, new LiteralExpr(Token.NoToken, BigNum.FromInt(pair.Value))));
           }
           else if (pair.Key is IdentifierExpr)
@@ -456,7 +403,7 @@ namespace Lockpwn.Analysis
             var id = pair.Key as IdentifierExpr;
             if (this.InParams.Any(val => val.Name.Equals(id.Name)))
             {
-              PointerArithmeticAnalyser.Cache[this.Implementation][identifier.Key].Add(
+              PointerAnalysis.Cache[this.Implementation][identifier.Key].Add(
                 Expr.Add(id, new LiteralExpr(Token.NoToken, BigNum.FromInt(pair.Value))));
             }
             else
@@ -466,7 +413,7 @@ namespace Lockpwn.Analysis
               this.MatchExpressions(outcome, identifier.Key, id, pair.Value, alreadyMatched);
               foreach (var expr in outcome)
               {
-                PointerArithmeticAnalyser.Cache[this.Implementation][identifier.Key].Add(expr);
+                PointerAnalysis.Cache[this.Implementation][identifier.Key].Add(expr);
               }
             }
           }
@@ -478,7 +425,7 @@ namespace Lockpwn.Analysis
     {
       foreach (var identifier in this.AssignmentMap)
       {
-        if (!PointerArithmeticAnalyser.Cache[this.Implementation].ContainsKey(identifier.Key))
+        if (!PointerAnalysis.Cache[this.Implementation].ContainsKey(identifier.Key))
           continue;
 
         foreach (var expr in identifier.Value)
@@ -486,13 +433,13 @@ namespace Lockpwn.Analysis
           if (!(expr is IdentifierExpr))continue;
           var exprId = expr as IdentifierExpr;
           if (!exprId.Name.StartsWith("$p")) continue;
-          if (!PointerArithmeticAnalyser.Cache[this.Implementation].ContainsKey(exprId))
+          if (!PointerAnalysis.Cache[this.Implementation].ContainsKey(exprId))
             continue;
 
-          var results = PointerArithmeticAnalyser.Cache[this.Implementation][exprId];
+          var results = PointerAnalysis.Cache[this.Implementation][exprId];
           foreach (var res in results)
           {
-            PointerArithmeticAnalyser.Cache[this.Implementation][identifier.Key].Add(res);
+            PointerAnalysis.Cache[this.Implementation][identifier.Key].Add(res);
           }
         }
       }
@@ -506,9 +453,9 @@ namespace Lockpwn.Analysis
         return;
 
       alreadyMatched.Add(new Tuple<IdentifierExpr, IdentifierExpr>(lhs, rhs));
-      if (PointerArithmeticAnalyser.Cache[this.Implementation].ContainsKey(rhs))
+      if (PointerAnalysis.Cache[this.Implementation].ContainsKey(rhs))
       {
-        var results = PointerArithmeticAnalyser.Cache[this.Implementation][rhs];
+        var results = PointerAnalysis.Cache[this.Implementation][rhs];
         foreach (var r in results)
         {
           var arg = (r as NAryExpr).Args[0];
@@ -587,13 +534,13 @@ namespace Lockpwn.Analysis
           continue;
         }
 
-        if (PointerArithmeticAnalyser.ShouldSkipFromAnalysis(expr as NAryExpr))
+        if (PointerAnalysis.ShouldSkipFromAnalysis(expr as NAryExpr))
         {
           toRemove.Add(expr);
           continue;
         }
 
-        if (PointerArithmeticAnalyser.IsArithmeticExpression(expr as NAryExpr))
+        if (PointerAnalysis.IsArithmeticExpression(expr as NAryExpr))
         {
           toRemove.Add(expr);
           continue;
@@ -662,6 +609,44 @@ namespace Lockpwn.Analysis
       while (result is NAryExpr);
 
       return Expr.Add(result, new LiteralExpr(Token.NoToken, BigNum.FromInt(ixs)));
+    }
+
+    private bool TryGetAllocatedIdentifier(IdentifierExpr identifier, out Expr allocated)
+    {
+      var call = this.CallMap[identifier].FirstOrDefault(val => val.callee.Equals("$alloc"));
+      if (call != null)
+      {
+        var id = call.Outs[0] as IdentifierExpr;
+        var local = this.Implementation.LocVars.FirstOrDefault(val => val.Name.Equals(id.Name));
+
+        allocated = new IdentifierExpr(local.tok, local);
+        return true;
+      }
+
+      allocated = identifier;
+      return false;
+    }
+
+    private bool TryGetSharedIdentifier(IdentifierExpr identifier, out Expr shared)
+    {
+      if (this.AssignmentMap.ContainsKey(identifier))
+      {
+        foreach (var naryExpr in this.AssignmentMap[identifier].OfType<NAryExpr>())
+        {
+          if (naryExpr.Fun is MapSelect && naryExpr.Args.Count == 2 &&
+            (naryExpr.Args[0] as IdentifierExpr).Name.StartsWith("$M."))
+          {
+            var id = naryExpr.Args[1] as IdentifierExpr;
+            var local = this.Implementation.LocVars.FirstOrDefault(val => val.Name.Equals(id.Name));
+
+            shared = new IdentifierExpr(local.tok, local);
+            return true;
+          }
+        }
+      }
+
+      shared = identifier;
+      return false;
     }
 
     #endregion

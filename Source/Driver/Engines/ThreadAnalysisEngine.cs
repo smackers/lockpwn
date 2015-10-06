@@ -41,12 +41,7 @@ namespace Lockpwn
       }
 
       Analysis.Factory.CreateThreadUsageAnalysis(base.Program.AC).Run();
-      Analysis.Factory.CreateLockAbstraction(base.Program.AC).Run();
-
-      if (base.Program.AC.Locks.Count > 0)
-      {
-        Refactoring.Factory.CreateLockRefactoring(base.Program.AC).Run();
-      }
+      Analysis.Factory.CreateLockUsageAnalysis(base.Program.AC).Run();
 
       Refactoring.Factory.CreateThreadRefactoring(base.Program.AC).Run();
 

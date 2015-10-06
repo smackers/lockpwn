@@ -20,11 +20,6 @@ namespace Lockpwn.Refactoring
       return new ProgramSimplifier(ac);
     }
 
-    internal static IPass CreateLockRefactoring(AnalysisContext ac)
-    {
-      return new LockRefactoring(ac);
-    }
-
     internal static IPass CreateThreadRefactoring(AnalysisContext ac)
     {
       return new ThreadRefactoring(ac);

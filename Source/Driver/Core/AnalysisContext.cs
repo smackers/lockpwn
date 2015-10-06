@@ -43,6 +43,7 @@ namespace Lockpwn
     internal Thread MainThread;
     internal HashSet<Thread> ThreadTemplates;
 
+    internal List<ThreadId> ThreadIds;
     internal List<Lock> Locks;
     internal List<Lockset> CurrentLocksets;
     internal List<Lockset> MemoryLocksets;
@@ -87,6 +88,7 @@ namespace Lockpwn
       this.MainThread = null;
       this.ThreadTemplates = new HashSet<Thread>();
 
+      this.ThreadIds = new List<ThreadId>();
       this.Locks = new List<Lock>();
       this.CurrentLocksets = new List<Lockset>();
       this.MemoryLocksets = new List<Lockset>();
@@ -125,6 +127,7 @@ namespace Lockpwn
 
       newAc.MainThread = ac.MainThread.Clone(newAc);
 
+      newAc.ThreadIds = ac.ThreadIds;
       newAc.Locks = ac.Locks;
       newAc.CurrentLocksets = ac.CurrentLocksets;
       newAc.MemoryLocksets = ac.MemoryLocksets;

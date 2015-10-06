@@ -78,11 +78,8 @@
     <Compile Include="IO\BoogieProgramEmitter.cs" />
     <Compile Include="IO\Reporter.cs" />
     <Compile Include="Analysis\ModelCleaner.cs" />
-    <Compile Include="Analysis\PointerArithmeticAnalyser.cs" />
     <Compile Include="Analysis\Factory.cs" />
-    <Compile Include="Analysis\Passes\LockAbstraction.cs" />
     <Compile Include="Analysis\Passes\SharedStateAbstraction.cs" />
-    <Compile Include="Refactoring\Passes\LockRefactoring.cs" />
     <Compile Include="Refactoring\Factory.cs" />
     <Compile Include="Instrumentation\Factory.cs" />
     <Compile Include="Instrumentation\Passes\LocksetInstrumentation.cs" />
@@ -116,6 +113,9 @@
     <Compile Include="Instrumentation\Passes\LoopInvariantInstrumentation.cs" />
     <Compile Include="Core\IPass.cs" />
     <Compile Include="Engines\AbstractEngine.cs" />
+    <Compile Include="Core\ThreadId.cs" />
+    <Compile Include="Analysis\PointerAnalysis.cs" />
+    <Compile Include="Analysis\Passes\LockUsageAnalysis.cs" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Utilities\" />

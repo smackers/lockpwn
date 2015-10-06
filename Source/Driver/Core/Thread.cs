@@ -21,7 +21,8 @@ namespace Lockpwn
   {
     #region fields
 
-    internal IdentifierExpr Id;
+    internal ThreadId Id;
+
     internal string Name;
     internal Expr Arg;
 
@@ -74,9 +75,9 @@ namespace Lockpwn
     /// <param name="id">Identifier</param>
     /// <param name="arg">Argument</param>
     /// <param name="parent">Parent</param>
-    private Thread(AnalysisContext ac, string name, Expr id, Expr arg, Thread parent)
+    private Thread(AnalysisContext ac, ThreadId id, string name, Expr arg, Thread parent)
     {
-      this.Id = id as IdentifierExpr;
+      this.Id = id;
       this.Name = name;
       this.Arg = arg;
 
@@ -109,9 +110,9 @@ namespace Lockpwn
       return thread;
     }
 
-    internal static Thread Create(AnalysisContext ac, string name, Expr id, Expr arg, Thread parent)
+    internal static Thread Create(AnalysisContext ac, ThreadId id, string name, Expr arg, Thread parent)
     {
-      var thread = new Thread(ac, name, id, arg, parent);
+      var thread = new Thread(ac, id, name, arg, parent);
       ac.RegisterThreadTemplate(thread);
       return thread;
     }

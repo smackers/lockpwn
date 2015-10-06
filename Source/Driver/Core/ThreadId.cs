@@ -15,7 +15,7 @@ using Microsoft.Boogie;
 
 namespace Lockpwn
 {
-  internal class Lock
+  internal class ThreadId
   {
     private IdentifierExpr Ptr;
     private int Ixs;
@@ -23,49 +23,54 @@ namespace Lockpwn
     internal readonly Constant Id;
     internal readonly string Name;
 
-    internal Lock(Constant id)
+    internal ThreadId(Constant id)
     {
       this.Id = id;
       this.Name = id.Name;
     }
 
-    internal Lock(Constant id, Expr lockExpr)
+    internal ThreadId(Constant id, Expr tidExpr)
     {
       this.Id = id;
       this.Name = id.Name;
 
-      if (lockExpr is NAryExpr)
+      if (tidExpr is NAryExpr)
       {
-        this.Ptr = (lockExpr as NAryExpr).Args[0] as IdentifierExpr;
-        this.Ixs = ((lockExpr as NAryExpr).Args[1] as LiteralExpr).asBigNum.ToInt;
+        this.Ptr = (tidExpr as NAryExpr).Args[0] as IdentifierExpr;
+        this.Ixs = ((tidExpr as NAryExpr).Args[1] as LiteralExpr).asBigNum.ToInt;
       }
-      else if (lockExpr is IdentifierExpr)
+      else if (tidExpr is IdentifierExpr)
       {
-        this.Ptr = lockExpr as IdentifierExpr;
+        this.Ptr = tidExpr as IdentifierExpr;
       }
     }
 
-    internal bool IsEqual(AnalysisContext ac, Implementation impl, Expr lockExpr)
+    internal bool IsEqual(AnalysisContext ac, Implementation impl, Expr tidExpr)
     {
       if (this.Ptr == null)
         return false;
-      if (lockExpr == null)
+      if (tidExpr == null)
         return false;
 
+      if (tidExpr.ToString() == this.Ptr.ToString() &&
+        tidExpr.Line == this.Ptr.Line &&
+        tidExpr.Col == this.Ptr.Col)
+        return true;
+
       IdentifierExpr ptr = null;
-      if (lockExpr is NAryExpr)
+      if (tidExpr is NAryExpr)
       {
-        ptr = (lockExpr as NAryExpr).Args[0] as IdentifierExpr;
-        int ixs = ((lockExpr as NAryExpr).Args[1] as LiteralExpr).asBigNum.ToInt;
+        ptr = (tidExpr as NAryExpr).Args[0] as IdentifierExpr;
+        int ixs = ((tidExpr as NAryExpr).Args[1] as LiteralExpr).asBigNum.ToInt;
         if (this.Ixs != ixs)
           return false;
       }
       else
       {
-        ptr = lockExpr as IdentifierExpr;
-        if (lockExpr is IdentifierExpr &&
-          ac.GetConstant((lockExpr as IdentifierExpr).Name) != null &&
-          this.Ptr.Name.Equals((lockExpr as IdentifierExpr).Name))
+        ptr = tidExpr as IdentifierExpr;
+        if (tidExpr is IdentifierExpr &&
+          ac.GetConstant((tidExpr as IdentifierExpr).Name) != null &&
+          this.Ptr.Name.Equals((tidExpr as IdentifierExpr).Name))
         {
           return true;
         }
