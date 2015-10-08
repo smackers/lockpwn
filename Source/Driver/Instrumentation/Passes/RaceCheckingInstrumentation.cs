@@ -48,7 +48,7 @@ namespace Lockpwn.Instrumentation
         this.Timer.Start();
       }
 
-      foreach (var thread in this.AC.ThreadTemplates)
+      foreach (var thread in this.AC.Threads)
       {
         this.InstrumentThread(thread);
       }
@@ -77,9 +77,9 @@ namespace Lockpwn.Instrumentation
       {
         var p1 = this.ReadCounter == 1 ? "" : "es";
         var p2 = this.WriteCounter == 1 ? "" : "es";
-        Output.PrintLine("..... Instrumented '{0}' read access" + p1 + " in '{1}'",
+        Output.PrintLine("..... Instrumented '{0}' read access" + p1 + " in {1}",
           this.ReadCounter, thread.Name);
-        Output.PrintLine("..... Instrumented '{0}' write access" + p2 + " in '{1}'",
+        Output.PrintLine("..... Instrumented '{0}' write access" + p2 + " in {1}",
           this.WriteCounter, thread.Name);
       }
 
@@ -138,7 +138,7 @@ namespace Lockpwn.Instrumentation
         if (access == AccessType.WRITE)
         {
           foreach (var acv in this.AC.GetWriteAccessCheckingVariables().
-            Where(val => val.Name.EndsWith(this.Thread.Name)))
+            Where(val => val.Name.EndsWith(this.Thread.Name + "_$" + this.Thread.Id)))
           {
             if (!acv.Name.Split('_')[1].Equals(mr.Name))
               continue;
@@ -158,7 +158,7 @@ namespace Lockpwn.Instrumentation
         else if (access == AccessType.READ)
         {
           foreach (var acv in this.AC.GetReadAccessCheckingVariables().
-            Where(val => val.Name.EndsWith(this.Thread.Name)))
+            Where(val => val.Name.EndsWith(this.Thread.Name + "_$" + this.Thread.Id)))
           {
             if (!acv.Name.Split('_')[1].Equals(mr.Name))
               continue;
@@ -359,7 +359,7 @@ namespace Lockpwn.Instrumentation
         return;
 
       foreach (var acv in this.AC.GetWriteAccessCheckingVariables().
-        Where(val => val.Name.EndsWith(this.Thread.Name)))
+        Where(val => val.Name.EndsWith(this.Thread.Name + "_$" + this.Thread.Id)))
       {
         string targetName = acv.Name.Split('_')[1];
         if (!this.AC.ThreadMemoryRegions[this.Thread].Any(val => val.Name.Equals(targetName)))
@@ -370,7 +370,7 @@ namespace Lockpwn.Instrumentation
       }
 
       foreach (var acv in this.AC.GetReadAccessCheckingVariables().
-        Where(val => val.Name.EndsWith(this.Thread.Name)))
+        Where(val => val.Name.EndsWith(this.Thread.Name + "_$" + this.Thread.Id)))
       {
         string targetName = acv.Name.Split('_')[1];
         if (!this.AC.ThreadMemoryRegions[this.Thread].Any(val => val.Name.Equals(targetName)))
@@ -387,7 +387,8 @@ namespace Lockpwn.Instrumentation
 
     private string MakeAccessFuncName(AccessType access, string name)
     {
-      return "_" + access.ToString() + "_LS_" + name + "_$" + this.Thread.Name;
+      return "_" + access.ToString() + "_LS_" + name + "_$" +
+        this.Thread.Name + "_$" + this.Thread.Id;
     }
 
     #endregion

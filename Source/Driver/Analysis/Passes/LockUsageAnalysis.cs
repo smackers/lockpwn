@@ -92,6 +92,7 @@ namespace Lockpwn.Analysis
     /// Performs an analysis to identify lock creation.
     /// </summary>
     /// <param name="parent">Thread</param>
+    /// <param name="child">Thread</param>
     /// <param name="impl">Implementation</param>
     /// <param name="ins">Optional list of expressions</param>
     private void IdentifyLockCreationInImplementation(Thread parent, Implementation impl, List<Expr> inPtrs = null)
@@ -107,7 +108,6 @@ namespace Lockpwn.Analysis
           if (cmd is CallCmd)
           {
             CallCmd call = cmd as CallCmd;
-
             if (call.callee.Equals("pthread_mutex_init"))
             {
               var exprs = new HashSet<Expr>();
@@ -125,7 +125,7 @@ namespace Lockpwn.Analysis
             }
 
             if (!Utilities.ShouldSkipFromAnalysis(call.callee) ||
-              call.callee.Equals("pthread_create"))
+              call.callee.StartsWith("pthread_create$"))
             {
               List<Expr> computedRootPointers = new List<Expr>();
               foreach (var inParam in call.Ins)
@@ -191,10 +191,15 @@ namespace Lockpwn.Analysis
                 if (l.IsEqual(this.AC, impl, lockExpr))
                 {
                   if (ToolCommandLineOptions.Get().SuperVerboseMode)
-                    Output.PrintLine("..... '{0}' uses lock '{1}'", impl.Name, l.Name);
+                  {
+                    Output.PrintLine("..... {0} uses lock '{1}'", parent, l.Name);
+                  }
+
                   if (Output.Debugging)
+                  {
                     Output.PrintLine("....... replacing lock '{0}' in call '{1}', line {2}",
                       call.Ins[0], call.callee, call.Line);
+                  }
 
                   call.Ins[0] = new IdentifierExpr(l.Id.tok, l.Id);
                   matched = true;
@@ -208,10 +213,15 @@ namespace Lockpwn.Analysis
                 var l = this.AC.Locks[0];
 
                 if (ToolCommandLineOptions.Get().SuperVerboseMode)
-                  Output.PrintLine("..... '{0}' uses lock '{1}'", impl.Name, l.Name);
+                {
+                  Output.PrintLine("..... {0} uses lock '{1}'", parent, l.Name);
+                }
+
                 if (Output.Debugging)
+                {
                   Output.PrintLine("....... replacing lock '{0}' in call '{1}', line {2}",
                     call.Ins[0], call.callee, call.Line);
+                }
 
                 call.Ins[0] = new IdentifierExpr(l.Id.tok, l.Id);
               }
@@ -222,8 +232,8 @@ namespace Lockpwn.Analysis
             }
 
             if (!Utilities.ShouldSkipFromAnalysis(call.callee) ||
-              call.callee.Equals("pthread_create") ||
-              call.callee.Equals("__call_wrapper"))
+              call.callee.StartsWith("pthread_create$") ||
+              call.callee.StartsWith("__call_wrapper$"))
             {
               List<Expr> computedRootPointers = new List<Expr>();
               foreach (var inParam in call.Ins)
@@ -237,9 +247,16 @@ namespace Lockpwn.Analysis
                   var exprs = new HashSet<Expr>();
                   new PointerAnalysis(this.AC, impl).GetPointerOrigins(inParam, out exprs);
                   var ptrExpr = exprs.FirstOrDefault();
-
                   computedRootPointers.Add(ptrExpr);
                 }
+              }
+
+              Thread child = null;
+              if (call.callee.StartsWith("pthread_create$"))
+              {
+                var tid = computedRootPointers[0] as IdentifierExpr;
+                child = this.AC.Threads.First(val => !val.IsMain && val.Id.IsEqual(tid));
+                parent = child;
               }
 
               this.IdentifyLockUsageInCall(parent, call, computedRootPointers);
@@ -290,10 +307,15 @@ namespace Lockpwn.Analysis
       Lock l = this.GetAbstractLock(lockExpr);
 
       if (ToolCommandLineOptions.Get().SuperVerboseMode)
-        Output.PrintLine("..... '{0}' initializes lock '{1}'", parent.Name, l.Id);
+      {
+        Output.PrintLine("..... {0} initializes lock '{1}'", parent, l.Name);
+      }
+
       if (Output.Debugging)
+      {
         Output.PrintLine("....... replacing lock '{0}' in call '{1}', line {2}",
           locker.Ins[0], locker.callee, locker.Line);
+      }
 
       locker.Ins[0] = new IdentifierExpr(l.Id.tok, l.Id);
     }
@@ -309,10 +331,15 @@ namespace Lockpwn.Analysis
       Lock l = this.GetAbstractLock(lockExpr);
 
       if (ToolCommandLineOptions.Get().SuperVerboseMode)
-        Output.PrintLine("..... '{0}' uses unidentified lock '{1}'", parent.Name, l.Id);
+      {
+        Output.PrintLine("..... {0} uses unidentified lock '{1}'", parent, l.Name);
+      }
+
       if (Output.Debugging)
+      {
         Output.PrintLine("....... replacing lock '{0}' in call '{1}', line {2}",
           locker.Ins[0], locker.callee, locker.Line);
+      }
 
       locker.Ins[0] = new IdentifierExpr(l.Id.tok, l.Id);
     }

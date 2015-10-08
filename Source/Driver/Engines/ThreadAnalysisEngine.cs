@@ -41,10 +41,10 @@ namespace Lockpwn
       }
 
       Analysis.Factory.CreateThreadUsageAnalysis(base.Program.AC).Run();
-      Analysis.Factory.CreateLockUsageAnalysis(base.Program.AC).Run();
 
       Refactoring.Factory.CreateThreadRefactoring(base.Program.AC).Run();
 
+      Analysis.Factory.CreateLockUsageAnalysis(base.Program.AC).Run();
       Analysis.Factory.CreateSharedStateAnalysis(base.Program.AC).Run();
 
       if (ToolCommandLineOptions.Get().MeasureTime)

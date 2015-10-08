@@ -41,7 +41,7 @@ namespace Lockpwn
     internal List<Declaration> TopLevelDeclarations;
 
     internal Thread MainThread;
-    internal HashSet<Thread> ThreadTemplates;
+    internal HashSet<Thread> Threads;
 
     internal List<ThreadId> ThreadIds;
     internal List<Lock> Locks;
@@ -86,7 +86,7 @@ namespace Lockpwn
       this.ResContext = rc;
 
       this.MainThread = null;
-      this.ThreadTemplates = new HashSet<Thread>();
+      this.Threads = new HashSet<Thread>();
 
       this.ThreadIds = new List<ThreadId>();
       this.Locks = new List<Lock>();
@@ -381,15 +381,6 @@ namespace Lockpwn
       }
 
       return false;
-    }
-
-    /// <summary>
-    /// Registers a new thread template.
-    /// </summary>
-    internal void RegisterThreadTemplate(Thread thread)
-    {
-      if (!this.ThreadTemplates.Any(val => val.Name.Equals(thread.Name)))
-        this.ThreadTemplates.Add(thread);
     }
 
     /// <summary>

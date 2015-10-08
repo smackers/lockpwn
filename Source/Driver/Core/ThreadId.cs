@@ -19,6 +19,7 @@ namespace Lockpwn
   {
     private IdentifierExpr Ptr;
     private int Ixs;
+    private Implementation Initializer;
 
     internal readonly Constant Id;
     internal readonly string Name;
@@ -29,7 +30,7 @@ namespace Lockpwn
       this.Name = id.Name;
     }
 
-    internal ThreadId(Constant id, Expr tidExpr)
+    internal ThreadId(Constant id, Expr tidExpr, Implementation initializer)
     {
       this.Id = id;
       this.Name = id.Name;
@@ -43,34 +44,44 @@ namespace Lockpwn
       {
         this.Ptr = tidExpr as IdentifierExpr;
       }
+
+      this.Initializer = initializer;
     }
 
-    internal bool IsEqual(AnalysisContext ac, Implementation impl, Expr tidExpr)
+    internal bool IsEqual(IdentifierExpr tid)
+    {
+      if (tid.Name.Equals(this.Id.Name))
+        return true;
+      return false;
+    }
+
+    internal bool IsEqual(AnalysisContext ac, Implementation impl, Expr tid)
     {
       if (this.Ptr == null)
         return false;
-      if (tidExpr == null)
+      if (tid == null)
         return false;
 
-      if (tidExpr.ToString() == this.Ptr.ToString() &&
-        tidExpr.Line == this.Ptr.Line &&
-        tidExpr.Col == this.Ptr.Col)
+      if (impl.Equals(this.Initializer) &&
+        tid.ToString() == this.Ptr.ToString() &&
+        tid.Line == this.Ptr.Line &&
+        tid.Col == this.Ptr.Col)
         return true;
 
       IdentifierExpr ptr = null;
-      if (tidExpr is NAryExpr)
+      if (tid is NAryExpr)
       {
-        ptr = (tidExpr as NAryExpr).Args[0] as IdentifierExpr;
-        int ixs = ((tidExpr as NAryExpr).Args[1] as LiteralExpr).asBigNum.ToInt;
+        ptr = (tid as NAryExpr).Args[0] as IdentifierExpr;
+        int ixs = ((tid as NAryExpr).Args[1] as LiteralExpr).asBigNum.ToInt;
         if (this.Ixs != ixs)
           return false;
       }
       else
       {
-        ptr = tidExpr as IdentifierExpr;
-        if (tidExpr is IdentifierExpr &&
-          ac.GetConstant((tidExpr as IdentifierExpr).Name) != null &&
-          this.Ptr.Name.Equals((tidExpr as IdentifierExpr).Name))
+        ptr = tid as IdentifierExpr;
+        if (tid is IdentifierExpr &&
+          ac.GetConstant((tid as IdentifierExpr).Name) != null &&
+          this.Ptr.Name.Equals((tid as IdentifierExpr).Name))
         {
           return true;
         }
@@ -105,6 +116,11 @@ namespace Lockpwn
       }
 
       return false;
+    }
+
+    public override string ToString()
+    {
+      return this.Name;
     }
   }
 }

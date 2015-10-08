@@ -49,7 +49,7 @@ namespace Lockpwn
       Instrumentation.Factory.CreateErrorReportingInstrumentation(base.Program.AC).Run();
       Instrumentation.Factory.CreateAccessCheckingInstrumentation(base.Program.AC).Run();
 
-      foreach (var thread in base.Program.AC.ThreadTemplates)
+      foreach (var thread in base.Program.AC.Threads)
         base.Program.AC.InlineThread(thread);
       base.Program.AC.InlineThreadHelpers();
 

@@ -51,7 +51,7 @@ namespace Lockpwn.Instrumentation
       this.InstrumentMainFunction();
       this.AddNonCheckedFunc();
 
-      foreach (var thread in this.AC.ThreadTemplates)
+      foreach (var thread in this.AC.Threads)
       {
         this.InstrumentThread(thread);
       }
@@ -79,10 +79,10 @@ namespace Lockpwn.Instrumentation
       {
         var p1 = this.LockCounter == 1 ? "" : "s";
         var p2 = this.UnlockCounter == 1 ? "" : "s";
-        Output.PrintLine("..... Instrumented '{0}' lock" + p1 + " in '{1}'",
-          this.LockCounter, thread.Name);
-        Output.PrintLine("..... Instrumented '{0}' unlock" + p2 + " in '{1}'",
-          this.UnlockCounter, thread.Name);
+        Output.PrintLine("..... Instrumented '{0}' lock" + p1 + " in {1}",
+          this.LockCounter, thread);
+        Output.PrintLine("..... Instrumented '{0}' unlock" + p2 + " in {1}",
+          this.UnlockCounter, thread);
       }
 
       this.LockCounter = 0;
@@ -112,9 +112,10 @@ namespace Lockpwn.Instrumentation
       inParams.Add(in1);
       inParams.Add(in2);
 
-      Procedure proc = new Procedure(Token.NoToken, str + this.Thread.Name,
-                         new List<TypeVariable>(), inParams, outParams,
-                         new List<Requires>(), new List<IdentifierExpr>(), new List<Ensures>());
+      Procedure proc = new Procedure(Token.NoToken,
+        str + this.Thread.Name + "$" + this.Thread.Id,
+        new List<TypeVariable>(), inParams, outParams,
+        new List<Requires>(), new List<IdentifierExpr>(), new List<Ensures>());
       proc.AddAttribute("inline", new object[] { new LiteralExpr(Token.NoToken, BigNum.FromInt(1)) });
 
       foreach (var ls in this.AC.CurrentLocksets.Where(val => val.Thread.Equals(this.Thread)))
@@ -143,9 +144,10 @@ namespace Lockpwn.Instrumentation
         b.Cmds.Add(assign);
       }
 
-      Implementation impl = new Implementation(Token.NoToken, str + this.Thread.Name,
-                              new List<TypeVariable>(), inParams, outParams,
-                              new List<Variable>(), new List<Block>());
+      Implementation impl = new Implementation(Token.NoToken,
+        str + this.Thread.Name + "$" + this.Thread.Id,
+        new List<TypeVariable>(), inParams, outParams,
+        new List<Variable>(), new List<Block>());
 
       if (type == Microsoft.Boogie.Type.Int)
       {
@@ -198,14 +200,14 @@ namespace Lockpwn.Instrumentation
         {
           if (c.callee.Equals("pthread_mutex_lock"))
           {
-            c.callee = "_UPDATE_CLS_$int$" + this.Thread.Name;
+            c.callee = "_UPDATE_CLS_$int$" + this.Thread.Name + "$" + this.Thread.Id;
             c.Ins.Add(Expr.True);
             this.LockCounter++;
           }
           else if (c.callee.Equals("pthread_mutex_unlock") ||
             c.callee.Equals("spin_unlock"))
           {
-            c.callee = "_UPDATE_CLS_$int$" + this.Thread.Name;
+            c.callee = "_UPDATE_CLS_$int$" + this.Thread.Name + "$" + this.Thread.Id;
             c.Ins.Add(Expr.False);
             this.UnlockCounter++;
           }

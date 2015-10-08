@@ -37,8 +37,10 @@ namespace Lockpwn.Analysis
     private Dictionary<IdentifierExpr, HashSet<Expr>> AssignmentMap;
     private Dictionary<IdentifierExpr, HashSet<CallCmd>> CallMap;
 
-    private static Dictionary<Implementation, Dictionary<IdentifierExpr, HashSet<Expr>>> Cache =
+    private static Dictionary<Implementation, Dictionary<IdentifierExpr, HashSet<Expr>>> ExprCache =
       new Dictionary<Implementation, Dictionary<IdentifierExpr, HashSet<Expr>>>();
+    private static Dictionary<Implementation, Dictionary<IdentifierExpr, HashSet<CallCmd>>> CallCache =
+      new Dictionary<Implementation, Dictionary<IdentifierExpr, HashSet<CallCmd>>>();
 
     private enum ArithmeticOperation
     {
@@ -52,11 +54,12 @@ namespace Lockpwn.Analysis
     {
       Unknown = 0,
       Pointer,
+      InParam,
+      Shared,
+      Allocated,
       Literal,
       Axiom,
-      Const,
-      Shared,
-      Allocated
+      Const
     }
 
     #endregion
@@ -76,9 +79,12 @@ namespace Lockpwn.Analysis
       this.AssignmentMap = new Dictionary<IdentifierExpr, HashSet<Expr>>();
       this.CallMap = new Dictionary<IdentifierExpr, HashSet<CallCmd>>();
 
-      if (!PointerAnalysis.Cache.ContainsKey(impl))
-        PointerAnalysis.Cache.Add(impl,
+      if (!PointerAnalysis.ExprCache.ContainsKey(impl))
+        PointerAnalysis.ExprCache.Add(impl,
           new Dictionary<IdentifierExpr, HashSet<Expr>>());
+      if (!PointerAnalysis.CallCache.ContainsKey(impl))
+        PointerAnalysis.CallCache.Add(impl,
+          new Dictionary<IdentifierExpr, HashSet<CallCmd>>());
     }
 
     /// <summary>
@@ -90,6 +96,12 @@ namespace Lockpwn.Analysis
     internal ResultType GetPointerOrigins(Expr id, out HashSet<Expr> ptrExprs)
     {
       ptrExprs = new HashSet<Expr>();
+
+      if (id is IdentifierExpr && this.AC.GetConstant((id as IdentifierExpr).Name) != null)
+      {
+        ptrExprs.Add(id);
+        return ResultType.Const;
+      }
 
       if (id is NAryExpr && !this.Optimise)
       {
@@ -117,7 +129,7 @@ namespace Lockpwn.Analysis
       if (this.InParams.Any(val => val.Name.Equals(identifier.Name)))
       {
         ptrExprs.Add(Expr.Add(identifier, new LiteralExpr(Token.NoToken, BigNum.FromInt(0))));
-        return ResultType.Pointer;
+        return ResultType.InParam;
       }
       else if (this.IsAxiom(identifier))
       {
@@ -125,9 +137,21 @@ namespace Lockpwn.Analysis
         return ResultType.Axiom;
       }
 
-      if (PointerAnalysis.Cache[this.Implementation].ContainsKey(identifier))
+      if (PointerAnalysis.ExprCache[this.Implementation].ContainsKey(identifier) &&
+        PointerAnalysis.ExprCache[this.Implementation][identifier].Count > 0)
       {
-        ptrExprs = PointerAnalysis.Cache[this.Implementation][identifier];
+        ptrExprs = PointerAnalysis.ExprCache[this.Implementation][identifier];
+        return ResultType.Pointer;
+      }
+      else if (PointerAnalysis.CallCache[this.Implementation].ContainsKey(identifier))
+      {
+        Expr local = null;
+        if (this.TryGetAllocatedIdentifier(identifier, out local))
+        {
+          ptrExprs.Add(local);
+          return ResultType.Allocated;
+        }
+        ptrExprs = PointerAnalysis.ExprCache[this.Implementation][identifier];
         return ResultType.Pointer;
       }
 
@@ -158,9 +182,9 @@ namespace Lockpwn.Analysis
         }
       }
 
-      if (PointerAnalysis.Cache[this.Implementation][identifier].Count > 0)
+      if (PointerAnalysis.ExprCache[this.Implementation][identifier].Count > 0)
       {
-        ptrExprs = PointerAnalysis.Cache[this.Implementation][identifier];
+        ptrExprs = PointerAnalysis.ExprCache[this.Implementation][identifier];
         return ResultType.Pointer;
       }
 
@@ -264,9 +288,9 @@ namespace Lockpwn.Analysis
 
     private void ComputeMapsForIdentifierExpr(IdentifierExpr id)
     {
-      if (PointerAnalysis.Cache[this.Implementation].ContainsKey(id))
+      if (PointerAnalysis.ExprCache[this.Implementation].ContainsKey(id))
         return;
-
+      
       if (!this.ExpressionMap.ContainsKey(id))
         this.ExpressionMap.Add(id, new Dictionary<Expr, int>());
       if (!this.AssignmentMap.ContainsKey(id))
@@ -290,7 +314,9 @@ namespace Lockpwn.Analysis
             PointerAnalysis.TryPerformCast(ref expr);
             this.AssignmentMap[id].Add(expr);
 
-            if (expr.ToString().StartsWith("$pa("))
+//            if (expr.ToString().StartsWith("$pa("))
+//              this.ExpressionMap[id].Add(expr, 0);
+            if (expr.ToString().StartsWith("$p"))
               this.ExpressionMap[id].Add(expr, 0);
             if (expr is IdentifierExpr && this.InParams.Any(val =>
               val.Name.Equals((expr as IdentifierExpr).Name)))
@@ -320,7 +346,7 @@ namespace Lockpwn.Analysis
     {
       foreach (var id in identifiers.Keys.ToList())
       {
-        if (PointerAnalysis.Cache[this.Implementation].ContainsKey(id))
+        if (PointerAnalysis.ExprCache[this.Implementation].ContainsKey(id))
           continue;
         if (identifiers[id]) continue;
 
@@ -345,7 +371,7 @@ namespace Lockpwn.Analysis
             continue;
 
           this.ComputeMapsForIdentifierExpr(exprId);
-          if (PointerAnalysis.Cache[this.Implementation].ContainsKey(exprId) &&
+          if (PointerAnalysis.ExprCache[this.Implementation].ContainsKey(exprId) &&
             !identifiers.ContainsKey(exprId))
           {
             identifiers.Add(exprId, true);
@@ -367,7 +393,8 @@ namespace Lockpwn.Analysis
             continue;
 
           this.ComputeMapsForIdentifierExpr(exprId);
-          if (PointerAnalysis.Cache[this.Implementation].ContainsKey(exprId) &&
+
+          if (PointerAnalysis.ExprCache[this.Implementation].ContainsKey(exprId) &&
             !identifiers.ContainsKey(exprId))
           {
             identifiers.Add(exprId, true);
@@ -387,35 +414,44 @@ namespace Lockpwn.Analysis
     {
       foreach (var identifier in this.ExpressionMap)
       {
-        if (PointerAnalysis.Cache[this.Implementation].ContainsKey(identifier.Key))
-          continue;
-
-        PointerAnalysis.Cache[this.Implementation].Add(identifier.Key, new HashSet<Expr>());
-        foreach (var pair in identifier.Value)
+        if (!PointerAnalysis.ExprCache[this.Implementation].ContainsKey(identifier.Key))
         {
-          if (pair.Key is LiteralExpr)
+          PointerAnalysis.ExprCache[this.Implementation].Add(identifier.Key, new HashSet<Expr>());
+          foreach (var pair in identifier.Value)
           {
-            PointerAnalysis.Cache[this.Implementation][identifier.Key].Add(
-              Expr.Add(pair.Key, new LiteralExpr(Token.NoToken, BigNum.FromInt(pair.Value))));
-          }
-          else if (pair.Key is IdentifierExpr)
-          {
-            var id = pair.Key as IdentifierExpr;
-            if (this.InParams.Any(val => val.Name.Equals(id.Name)))
+            if (pair.Key is LiteralExpr)
             {
-              PointerAnalysis.Cache[this.Implementation][identifier.Key].Add(
-                Expr.Add(id, new LiteralExpr(Token.NoToken, BigNum.FromInt(pair.Value))));
+              PointerAnalysis.ExprCache[this.Implementation][identifier.Key].Add(
+                Expr.Add(pair.Key, new LiteralExpr(Token.NoToken, BigNum.FromInt(pair.Value))));
             }
-            else
+            else if (pair.Key is IdentifierExpr)
             {
-              var outcome = new HashSet<Expr>();
-              var alreadyMatched = new HashSet<Tuple<IdentifierExpr, IdentifierExpr>>();
-              this.MatchExpressions(outcome, identifier.Key, id, pair.Value, alreadyMatched);
-              foreach (var expr in outcome)
+              var id = pair.Key as IdentifierExpr;
+              if (this.InParams.Any(val => val.Name.Equals(id.Name)))
               {
-                PointerAnalysis.Cache[this.Implementation][identifier.Key].Add(expr);
+                PointerAnalysis.ExprCache[this.Implementation][identifier.Key].Add(
+                  Expr.Add(id, new LiteralExpr(Token.NoToken, BigNum.FromInt(pair.Value))));
+              }
+              else
+              {
+                var outcome = new HashSet<Expr>();
+                var alreadyMatched = new HashSet<Tuple<IdentifierExpr, IdentifierExpr>>();
+                this.MatchExpressions(outcome, identifier.Key, id, pair.Value, alreadyMatched);
+                foreach (var expr in outcome)
+                {
+                  PointerAnalysis.ExprCache[this.Implementation][identifier.Key].Add(expr);
+                }
               }
             }
+          }
+        }
+
+        if (!PointerAnalysis.CallCache[this.Implementation].ContainsKey(identifier.Key))
+        {
+          PointerAnalysis.CallCache[this.Implementation].Add(identifier.Key, new HashSet<CallCmd>());
+          foreach (var call in this.CallMap[identifier.Key])
+          {
+            PointerAnalysis.CallCache[this.Implementation][identifier.Key].Add(call);
           }
         }
       }
@@ -425,7 +461,7 @@ namespace Lockpwn.Analysis
     {
       foreach (var identifier in this.AssignmentMap)
       {
-        if (!PointerAnalysis.Cache[this.Implementation].ContainsKey(identifier.Key))
+        if (!PointerAnalysis.ExprCache[this.Implementation].ContainsKey(identifier.Key))
           continue;
 
         foreach (var expr in identifier.Value)
@@ -433,13 +469,13 @@ namespace Lockpwn.Analysis
           if (!(expr is IdentifierExpr))continue;
           var exprId = expr as IdentifierExpr;
           if (!exprId.Name.StartsWith("$p")) continue;
-          if (!PointerAnalysis.Cache[this.Implementation].ContainsKey(exprId))
+          if (!PointerAnalysis.ExprCache[this.Implementation].ContainsKey(exprId))
             continue;
 
-          var results = PointerAnalysis.Cache[this.Implementation][exprId];
+          var results = PointerAnalysis.ExprCache[this.Implementation][exprId];
           foreach (var res in results)
           {
-            PointerAnalysis.Cache[this.Implementation][identifier.Key].Add(res);
+            PointerAnalysis.ExprCache[this.Implementation][identifier.Key].Add(res);
           }
         }
       }
@@ -453,9 +489,9 @@ namespace Lockpwn.Analysis
         return;
 
       alreadyMatched.Add(new Tuple<IdentifierExpr, IdentifierExpr>(lhs, rhs));
-      if (PointerAnalysis.Cache[this.Implementation].ContainsKey(rhs))
+      if (PointerAnalysis.ExprCache[this.Implementation].ContainsKey(rhs))
       {
-        var results = PointerAnalysis.Cache[this.Implementation][rhs];
+        var results = PointerAnalysis.ExprCache[this.Implementation][rhs];
         foreach (var r in results)
         {
           var arg = (r as NAryExpr).Args[0];
@@ -613,12 +649,12 @@ namespace Lockpwn.Analysis
 
     private bool TryGetAllocatedIdentifier(IdentifierExpr identifier, out Expr allocated)
     {
-      var call = this.CallMap[identifier].FirstOrDefault(val => val.callee.Equals("$alloc"));
+      var call = PointerAnalysis.CallCache[this.Implementation][identifier].
+        FirstOrDefault(val => val.callee.Equals("$alloc"));
       if (call != null)
       {
         var id = call.Outs[0] as IdentifierExpr;
         var local = this.Implementation.LocVars.FirstOrDefault(val => val.Name.Equals(id.Name));
-
         allocated = new IdentifierExpr(local.tok, local);
         return true;
       }

@@ -46,7 +46,7 @@ namespace Lockpwn.Instrumentation
         this.Timer.Start();
       }
 
-      foreach (var thread in this.AC.ThreadTemplates)
+      foreach (var thread in this.AC.Threads)
       {
         this.Thread = thread;
         this.InstrumentAsyncFuncs();
@@ -202,7 +202,9 @@ namespace Lockpwn.Instrumentation
         if (curr.Key.Equals("sourceloc")) break;
         curr = curr.Next;
       }
-      Contract.Requires(curr.Key.Equals("sourceloc") && curr.Params.Count == 3);
+
+      if (curr == null)
+        return attributes;
 
       col = new QKeyValue(Token.NoToken, "column",
         new List<object>() { new LiteralExpr(Token.NoToken,

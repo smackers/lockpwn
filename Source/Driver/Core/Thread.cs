@@ -106,14 +106,14 @@ namespace Lockpwn
     {
       var thread = new Thread(ac);
       ac.MainThread = thread;
-      ac.RegisterThreadTemplate(thread);
+      ac.Threads.Add(thread);
       return thread;
     }
 
     internal static Thread Create(AnalysisContext ac, ThreadId id, string name, Expr arg, Thread parent)
     {
       var thread = new Thread(ac, id, name, arg, parent);
-      ac.RegisterThreadTemplate(thread);
+      ac.Threads.Add(thread);
       return thread;
     }
 
@@ -165,9 +165,24 @@ namespace Lockpwn
         thread.Children.Add(clonedChild);
       }
 
-      ac.RegisterThreadTemplate(thread);
+      ac.Threads.Add(thread);
 
       return thread;
+    }
+
+    public override string ToString()
+    {
+      string text = "";
+      if (this.IsMain)
+      {
+        text = string.Format("thread '{0}'", this.Name);
+      }
+      else
+      {
+        text = string.Format("thread '{0}' with id '{1}'", this.Name, this.Id);
+      }
+
+      return text;
     }
 
     #endregion

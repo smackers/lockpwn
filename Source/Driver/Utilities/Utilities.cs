@@ -22,10 +22,10 @@ namespace Lockpwn
     /// <returns>Boolean value</returns>
     internal static bool ShouldAccessFunction(string funcName)
     {
-      if (funcName.Contains("$memcpy") || funcName.Contains("memcpy_fromio") ||
-        funcName.Contains("$memset") ||
-        funcName.Contains("$malloc") || funcName.Contains("$alloca") ||
-        funcName.Contains("$free") ||
+      if (funcName.StartsWith("$memcpy") || funcName.StartsWith("$memcpy_fromio") ||
+        funcName.StartsWith("$memset") ||
+        funcName.StartsWith("$malloc") || funcName.StartsWith("$alloc") ||
+        funcName.StartsWith("$free") ||
         funcName.Equals("pthread_mutex_lock") ||
         funcName.Equals("pthread_mutex_unlock"))
         return false;
@@ -39,9 +39,10 @@ namespace Lockpwn
     /// <returns>Boolean value</returns>
     internal static bool ShouldSkipFromAnalysis(string funcName)
     {
-      if (funcName.Contains("$static_init") ||
-        funcName.Contains("$malloc") || funcName.Contains("$alloca") ||
-        funcName.Contains("$free") ||
+      if (funcName.StartsWith("$static_init") ||
+        funcName.StartsWith("$init_funcs") ||
+        funcName.StartsWith("$malloc") || funcName.StartsWith("$alloc") ||
+        funcName.StartsWith("$free") ||
         funcName.Contains("pthread_mutex_init") ||
         funcName.Contains("pthread_create") ||
         funcName.Contains("pthread_join") ||
@@ -58,7 +59,10 @@ namespace Lockpwn
         funcName.Contains("corral_getThreadID") ||
         funcName.Contains("__call_wrapper") ||
         funcName.Contains("__SMACK_nondet") ||
-        funcName.Contains("__SMACK_dummy"))
+        funcName.Contains("__SMACK_dummy") ||
+        funcName.Contains("__VERIFIER_assume") ||
+        funcName.Contains("__VERIFIER_error") ||
+        funcName.Contains("__VERIFIER_nondet_int"))
         return true;
       return false;
     }

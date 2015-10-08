@@ -23,7 +23,6 @@ namespace Lockpwn.Analysis
   internal class SharedStateAnalysis : IPass
   {
     private AnalysisContext AC;
-    private Thread Thread;
     private ExecutionTimer Timer;
 
     private HashSet<Implementation> AlreadyAnalysed;
@@ -50,7 +49,7 @@ namespace Lockpwn.Analysis
         this.Timer.Start();
       }
 
-      foreach (var thread in this.AC.ThreadTemplates)
+      foreach (var thread in this.AC.Threads)
       {
         this.AnalyseThread(thread);
       }
@@ -62,36 +61,40 @@ namespace Lockpwn.Analysis
       }
     }
 
+    /// <summary>
+    /// Analyses the shared state of the given thread.
+    /// </summary>
+    /// <param name="thread">Thread</param>
     private void AnalyseThread(Thread thread)
     {
-      this.Thread = thread;
-      this.AC.ThreadMemoryRegions.Add(this.Thread, new HashSet<GlobalVariable>());
+      this.AC.ThreadMemoryRegions.Add(thread, new HashSet<GlobalVariable>());
 
       foreach (var impl in this.AC.GetThreadSpecificFunctions(thread))
       {
-        this.IdentifySharedMemoryRegions(impl);
+        this.IdentifySharedMemoryRegions(thread, impl);
       }
 
       if (ToolCommandLineOptions.Get().SuperVerboseMode)
       {
         string accesses = "";
-        foreach (var mr in this.AC.ThreadMemoryRegions[this.Thread])
+        foreach (var mr in this.AC.ThreadMemoryRegions[thread])
           accesses += " '" + mr.Name + "'";
 
-        if (this.AC.ThreadMemoryRegions[this.Thread].Count == 0)
-          Output.PrintLine("..... '{0}' accesses no memory regions", this.Thread.Name, accesses);
-        else if (this.AC.ThreadMemoryRegions[this.Thread].Count == 1)
-          Output.PrintLine("..... '{0}' accesses{1}", this.Thread.Name, accesses);
+        if (this.AC.ThreadMemoryRegions[thread].Count == 0)
+          Output.PrintLine("..... {0} accesses no memory regions", thread, accesses);
+        else if (this.AC.ThreadMemoryRegions[thread].Count == 1)
+          Output.PrintLine("..... {0} accesses{1}", thread, accesses);
         else
-          Output.PrintLine("..... '{0}' accesses{1}", this.Thread.Name, accesses);
+          Output.PrintLine("..... {0} accesses{1}", thread, accesses);
       }
     }
 
     /// <summary>
     /// Performs an analysis to identify shared memory regions.
     /// </summary>
+    /// <param name="thread">Thread</param>
     /// <param name="impl">Implementation</param>
-    private void IdentifySharedMemoryRegions(Implementation impl)
+    private void IdentifySharedMemoryRegions(Thread thread, Implementation impl)
     {
       if (this.AlreadyAnalysed.Contains(impl))
         return;
@@ -159,8 +162,8 @@ namespace Lockpwn.Analysis
       {
         if (!this.AC.SharedMemoryRegions.Contains(mr))
           this.AC.SharedMemoryRegions.Add(mr);
-        if (!this.AC.ThreadMemoryRegions[this.Thread].Contains(mr))
-          this.AC.ThreadMemoryRegions[this.Thread].Add(mr);
+        if (!this.AC.ThreadMemoryRegions[thread].Contains(mr))
+          this.AC.ThreadMemoryRegions[thread].Add(mr);
       }
     }
   }

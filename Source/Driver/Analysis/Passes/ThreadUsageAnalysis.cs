@@ -54,7 +54,7 @@ namespace Lockpwn.Analysis
       this.IdentifyThreadUsageInThread(this.AC.MainThread);
 
       if (ToolCommandLineOptions.Get().SuperVerboseMode &&
-        this.AC.ThreadTemplates.Count == 0)
+        this.AC.Threads.Count == 0)
       {
         Output.PrintLine("..... No child threads detected");
       }
@@ -74,7 +74,7 @@ namespace Lockpwn.Analysis
       var thread = Thread.CreateMain(this.AC);
 
       if (ToolCommandLineOptions.Get().SuperVerboseMode)
-        Output.PrintLine("..... '{0}' is the main thread", thread.Name);
+        Output.PrintLine("..... {0} is the main thread", thread);
     }
 
     /// <summary>
@@ -83,20 +83,27 @@ namespace Lockpwn.Analysis
     /// <param name="parent">Thread</param>
     private void IdentifyThreadUsageInThread(Thread parent)
     {
-      this.IdentifyThreadUsageInImplementation(parent, parent.Function);
+      this.IdentifyThreadUsageInImplementation(parent, null, parent.Function);
     }
 
     /// <summary>
     /// Performs an analysis to identify thread usage.
     /// </summary>
     /// <param name="parent">Thread</param>
+    /// <param name="parent">child</param>
     /// <param name="impl">Implementation</param>
     /// <param name="ins">Optional list of expressions</param>
-    private void IdentifyThreadUsageInImplementation(Thread parent, Implementation impl, List<Expr> inPtrs = null)
+    private void IdentifyThreadUsageInImplementation(Thread parent, Thread child,
+      Implementation impl, List<Expr> inPtrs = null)
     {
       if (this.AlreadyAnalyzedImplementations.Contains(impl))
         return;
       this.AlreadyAnalyzedImplementations.Add(impl);
+
+      if (child != null && impl.Name.Equals(child.Name))
+      {
+        parent = child;
+      }
 
       foreach (var block in impl.Blocks)
       {
@@ -105,6 +112,7 @@ namespace Lockpwn.Analysis
           if (cmd is CallCmd)
           {
             CallCmd call = cmd as CallCmd;
+            Thread spawned = null;
 
             if (call.callee.Equals("pthread_create"))
             {
@@ -119,21 +127,7 @@ namespace Lockpwn.Analysis
                 tidExpr = new PointerAnalysis(this.AC, impl).RecomputeExprFromInParams(tidExpr, inPtrs);
               }
 
-              bool matched = false;
-              foreach (var tid in this.AC.ThreadIds)
-              {
-                if (tid.IsEqual(this.AC, impl, tidExpr))
-                {
-                  call.Ins[0] = new IdentifierExpr(tid.Id.tok, tid.Id);
-                  matched = true;
-                  break;
-                }
-              }
-
-              if (!matched)
-              {
-                this.AbstractSpawnedThread(parent, tidExpr, call);
-              }
+              spawned = this.GetAbstractSpawnedThread(parent, impl, tidExpr, call);
             }
             else if (call.callee.Equals("pthread_join"))
             {
@@ -162,7 +156,7 @@ namespace Lockpwn.Analysis
 
                   if (ToolCommandLineOptions.Get().SuperVerboseMode)
                   {
-                    Output.PrintLine("..... '{0}' blocks thread with id '{1}'", parent.Name, tid.Id);
+                    Output.PrintLine("..... {0} blocks {1}", parent, thread);
                   }
                   
                   matched = true;
@@ -172,12 +166,13 @@ namespace Lockpwn.Analysis
 
               if (!matched)
               {
-                this.AbstractBlockedThread(parent, tidExpr, call);
+                this.AbstractBlockedThread(parent, impl, tidExpr, call);
               }
             }
 
             if (!Utilities.ShouldSkipFromAnalysis(call.callee) ||
-              call.callee.Equals("pthread_create"))
+              call.callee.Equals("pthread_create") ||
+              call.callee.Equals("__call_wrapper"))
             {
               List<Expr> computedRootPointers = new List<Expr>();
               foreach (var inParam in call.Ins)
@@ -196,7 +191,7 @@ namespace Lockpwn.Analysis
                 }
               }
 
-              this.IdentifyThreadUsageInCall(parent, call, computedRootPointers);
+              this.IdentifyThreadUsageInCall(parent, spawned, call, computedRootPointers);
             }
           }
         }
@@ -207,26 +202,28 @@ namespace Lockpwn.Analysis
     /// Performs an analysis to identify thread usage in the callee.
     /// </summary>
     /// <param name="parent">Thread</param>
+    /// <param name="child">Thread</param>
     /// <param name="cmd">CallCmd</param>
     /// <param name="ins">List of expressions</param>
-    private void IdentifyThreadUsageInCall(Thread parent, CallCmd cmd, List<Expr> inPtrs)
+    private void IdentifyThreadUsageInCall(Thread parent, Thread child, CallCmd cmd, List<Expr> inPtrs)
     {
       var impl = this.AC.GetImplementation(cmd.callee);
       if (impl == null || !Utilities.ShouldAccessFunction(impl.Name))
         return;
 
-      this.IdentifyThreadUsageInImplementation(parent, impl, inPtrs);
+      this.IdentifyThreadUsageInImplementation(parent, child, impl, inPtrs);
     }
 
     /// <summary>
-    /// Abstracts the spawned thread.
+    /// Abstracts and returns the spawned thread.
     /// </summary>
     /// <param name="parent">Parent</param>
+    /// <param name="impl">Implementation</param>
     /// <param name="tidExpr">Expr</param>
     /// <param name="spawner">CallCmd</param>
-    private void AbstractSpawnedThread(Thread parent, Expr tidExpr, CallCmd spawner)
+    private Thread GetAbstractSpawnedThread(Thread parent, Implementation impl, Expr tidExpr, CallCmd spawner)
     {
-      ThreadId tid = this.GetAbstractThreadId(tidExpr, spawner);
+      ThreadId tid = this.GetAbstractThreadId(tidExpr, impl, spawner);
       var threadName = (spawner.Ins[2] as IdentifierExpr).Name;
       var thread = Thread.Create(this.AC, tid, threadName, spawner.Ins[3], parent);
 
@@ -234,25 +231,28 @@ namespace Lockpwn.Analysis
 
       if (ToolCommandLineOptions.Get().SuperVerboseMode)
       {
-        Output.PrintLine("..... '{0}' spawns thread '{1}' with id '{2}'",
-          parent.Name, thread.Name, tid.Id);
+        Output.PrintLine("..... {0} spawns {1}",
+          parent, thread);
       }
+
+      return thread;
     }
 
     /// <summary>
     /// Abstracts the blocked thread.
     /// </summary>
     /// <param name="parent">Parent</param>
+    /// <param name="impl">Implementation</param>
     /// <param name="tidExpr">Expr</param>
     /// <param name="spawner">CallCmd</param>
-    private void AbstractBlockedThread(Thread parent, Expr tidExpr, CallCmd spawner)
+    private void AbstractBlockedThread(Thread parent, Implementation impl, Expr tidExpr, CallCmd spawner)
     {
-      ThreadId tid = this.GetAbstractThreadId(tidExpr, spawner);
+      ThreadId tid = this.GetAbstractThreadId(tidExpr, impl, spawner);
 
       if (ToolCommandLineOptions.Get().SuperVerboseMode)
       {
-        Output.PrintLine("..... '{0}' blocks unidentified thread with id '{1}'",
-          parent.Name, tid.Id);
+        Output.PrintLine("..... {0} blocks unidentified thread with id '{1}'",
+          parent, tid.Id);
       }
     }
 
@@ -260,13 +260,14 @@ namespace Lockpwn.Analysis
     /// Returns an abstract thread id.
     /// </summary>
     /// <param name="tidExpr">Expr</param>
+    /// <param name="impl">Implementation</param>
     /// <param name="spawner">CallCmd</param>
     /// <returns>ThreadId</returns>
-    private ThreadId GetAbstractThreadId(Expr tidExpr, CallCmd spawner)
+    private ThreadId GetAbstractThreadId(Expr tidExpr, Implementation impl, CallCmd spawner)
     {
       ThreadId tid = new ThreadId(new Constant(Token.NoToken,
         new TypedIdent(Token.NoToken, "tid$" + this.AC.ThreadIds.Count,
-          Microsoft.Boogie.Type.Int), true), tidExpr);
+          Microsoft.Boogie.Type.Int), true), tidExpr, impl);
       spawner.Ins[0] = new IdentifierExpr(tid.Id.tok, tid.Id);
 
       tid.Id.AddAttribute("tid", new object[] { });

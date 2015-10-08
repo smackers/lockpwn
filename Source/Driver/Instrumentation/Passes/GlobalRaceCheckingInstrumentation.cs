@@ -42,14 +42,14 @@ namespace Lockpwn.Instrumentation
         this.Timer.Start();
       }
 
-      foreach (var thread in this.AC.ThreadTemplates)
+      foreach (var thread in this.AC.Threads)
       {
         this.AddCurrentLocksets(thread);
         this.AddMemoryLocksets(thread);
         this.AddAccessCheckingVariables(thread);
 
         if (ToolCommandLineOptions.Get().SuperVerboseMode)
-          Output.PrintLine("..... Instrumented lockset analysis globals for '{0}'", thread.Name);
+          Output.PrintLine("..... Instrumented lockset analysis globals for {0}", thread);
       }
 
       this.AddAccessWatchdogConstants();
@@ -66,7 +66,8 @@ namespace Lockpwn.Instrumentation
       foreach (var l in this.AC.GetLockVariables())
       {
         var ls = new GlobalVariable(Token.NoToken, new TypedIdent(Token.NoToken,
-          l.Name + "_in_CLS_$" + thread.Name, Microsoft.Boogie.Type.Bool));
+          l.Name + "_in_CLS_$" + thread.Name + "_$" + thread.Id,
+          Microsoft.Boogie.Type.Bool));
         ls.AddAttribute("current_lockset", new object[] { });
         this.AC.TopLevelDeclarations.Add(ls);
         this.AC.CurrentLocksets.Add(new Lockset(ls, l, thread));
@@ -80,7 +81,8 @@ namespace Lockpwn.Instrumentation
         foreach (var l in this.AC.GetLockVariables())
         {
           var ls = new GlobalVariable(Token.NoToken, new TypedIdent(Token.NoToken,
-            l.Name + "_in_LS_" + mr.Name + "_$" + thread.Name, Microsoft.Boogie.Type.Bool));
+            l.Name + "_in_LS_" + mr.Name + "_$" + thread.Name + "_$" + thread.Id,
+            Microsoft.Boogie.Type.Bool));
           ls.AddAttribute("lockset", new object[] { });
           this.AC.TopLevelDeclarations.Add(ls);
           this.AC.MemoryLocksets.Add(new Lockset(ls, l, thread, mr.Name));
@@ -94,10 +96,10 @@ namespace Lockpwn.Instrumentation
       {
         var wavar = new GlobalVariable(Token.NoToken,
           new TypedIdent(Token.NoToken, "WRITTEN_" + mr.Name +
-            "_$" + thread.Name, Microsoft.Boogie.Type.Bool));
+            "_$" + thread.Name + "_$" + thread.Id, Microsoft.Boogie.Type.Bool));
         var ravar = new GlobalVariable(Token.NoToken,
           new TypedIdent(Token.NoToken, "READ_" + mr.Name +
-            "_$" + thread.Name, Microsoft.Boogie.Type.Bool));
+            "_$" + thread.Name + "_$" + thread.Id, Microsoft.Boogie.Type.Bool));
 
         wavar.AddAttribute("access_checking", new object[] { });
         ravar.AddAttribute("access_checking", new object[] { });

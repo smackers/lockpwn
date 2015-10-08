@@ -67,6 +67,20 @@ namespace Lockpwn.Analysis
       }
     }
 
+    internal static void Remove(AnalysisContext ac, string name)
+    {
+      ac.TopLevelDeclarations.RemoveAll(val => val is Constant &&
+        (val as Constant).Name.Equals(name));
+      ac.TopLevelDeclarations.RemoveAll(val => val is Procedure &&
+        (val as Procedure).Name.Equals(name));
+      ac.TopLevelDeclarations.RemoveAll(val => val is Implementation &&
+        (val as Implementation).Name.Equals(name));
+      ac.TopLevelDeclarations.RemoveAll(val => val is Axiom &&
+        ((val as Axiom).Expr is NAryExpr) &&
+        (((val as Axiom).Expr as NAryExpr).Args[0] is IdentifierExpr) &&
+        (((val as Axiom).Expr as NAryExpr).Args[0] as IdentifierExpr).Name.Equals(name));
+    }
+
     internal static void RemoveImplementations(AnalysisContext ac)
     {
       ac.TopLevelDeclarations.RemoveAll(val => val is Implementation);
