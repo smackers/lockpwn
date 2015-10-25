@@ -56,10 +56,11 @@ namespace Lockpwn.Analysis
       Pointer,
       InParam,
       Shared,
-      Allocated,
+      Const,
       Literal,
       Axiom,
-      Const
+      Allocated,
+      Loaded
     }
 
     #endregion
@@ -290,7 +291,7 @@ namespace Lockpwn.Analysis
     {
       if (PointerAnalysis.ExprCache[this.Implementation].ContainsKey(id))
         return;
-      
+
       if (!this.ExpressionMap.ContainsKey(id))
         this.ExpressionMap.Add(id, new Dictionary<Expr, int>());
       if (!this.AssignmentMap.ContainsKey(id))
@@ -307,15 +308,14 @@ namespace Lockpwn.Analysis
             var assign = block.Cmds[i] as AssignCmd;
             if (!assign.Lhss[0].DeepAssignedIdentifier.Name.Equals(id.Name))
               continue;
-            if (this.AssignmentMap[id].Contains(assign.Rhss[0]))
-              continue;
-            
+
             var expr = assign.Rhss[0];
-            PointerAnalysis.TryPerformCast(ref expr);
+            this.TryTransform(ref expr);
+
+            if (this.AssignmentMap[id].Contains(expr))
+              continue;
             this.AssignmentMap[id].Add(expr);
 
-//            if (expr.ToString().StartsWith("$pa("))
-//              this.ExpressionMap[id].Add(expr, 0);
             if (expr.ToString().StartsWith("$p"))
               this.ExpressionMap[id].Add(expr, 0);
             if (expr is IdentifierExpr && this.InParams.Any(val =>
@@ -334,7 +334,6 @@ namespace Lockpwn.Analysis
             {
               if (!call.Outs[0].Name.Equals(id.Name))
                 continue;
-
               this.CallMap[id].Add(call);
             }
           }
@@ -369,7 +368,7 @@ namespace Lockpwn.Analysis
             continue;
           if (this.AC.TopLevelDeclarations.OfType<Constant>().Any(val => val.Name.Equals(exprId.Name)))
             continue;
-
+          
           this.ComputeMapsForIdentifierExpr(exprId);
           if (PointerAnalysis.ExprCache[this.Implementation].ContainsKey(exprId) &&
             !identifiers.ContainsKey(exprId))
@@ -391,7 +390,7 @@ namespace Lockpwn.Analysis
             continue;
           if (this.InParams.Any(val => val.Name.Equals(exprId.Name)))
             continue;
-
+          
           this.ComputeMapsForIdentifierExpr(exprId);
 
           if (PointerAnalysis.ExprCache[this.Implementation].ContainsKey(exprId) &&
@@ -453,6 +452,21 @@ namespace Lockpwn.Analysis
           {
             PointerAnalysis.CallCache[this.Implementation][identifier.Key].Add(call);
           }
+
+          foreach (var pair in identifier.Value)
+          {
+            if (pair.Key is IdentifierExpr)
+            {
+              var id = pair.Key as IdentifierExpr;
+              if (PointerAnalysis.CallCache[this.Implementation].ContainsKey(id))
+              {
+                foreach (var call in PointerAnalysis.CallCache[this.Implementation][id])
+                {
+                  PointerAnalysis.CallCache[this.Implementation][identifier.Key].Add(call);
+                }
+              }
+            }
+          }
         }
       }
     }
@@ -463,7 +477,7 @@ namespace Lockpwn.Analysis
       {
         if (!PointerAnalysis.ExprCache[this.Implementation].ContainsKey(identifier.Key))
           continue;
-
+        
         foreach (var expr in identifier.Value)
         {
           if (!(expr is IdentifierExpr))continue;
@@ -471,7 +485,7 @@ namespace Lockpwn.Analysis
           if (!exprId.Name.StartsWith("$p")) continue;
           if (!PointerAnalysis.ExprCache[this.Implementation].ContainsKey(exprId))
             continue;
-
+          
           var results = PointerAnalysis.ExprCache[this.Implementation][exprId];
           foreach (var res in results)
           {
@@ -685,30 +699,32 @@ namespace Lockpwn.Analysis
       return false;
     }
 
+    private bool TryTransform(ref Expr expr)
+    {
+      if (expr is NAryExpr)
+      {
+        var fun = (expr as NAryExpr).Fun;
+        if (fun.FunctionName == "$bitcast.ref.ref" ||
+          fun.FunctionName.StartsWith("$zext.") ||
+          fun.FunctionName.StartsWith("$i2p.") ||
+          fun.FunctionName.StartsWith("$p2i."))
+        {
+          expr = (expr as NAryExpr).Args[0];
+          return true;
+        }
+        else if (fun.FunctionName.StartsWith("$load."))
+        {
+          expr = (expr as NAryExpr).Args[1];
+          return true;
+        }
+      }
+
+      return false;
+    }
+
     #endregion
 
     #region helper functions
-
-    private static bool TryPerformCast(ref Expr expr)
-    {
-      if (!(expr is NAryExpr))
-      {
-        return false;
-      }
-
-      var fun = (expr as NAryExpr).Fun;
-      if (!(fun.FunctionName == "$bitcast.ref.ref" ||
-        fun.FunctionName.StartsWith("$zext.") ||
-        fun.FunctionName.StartsWith("$i2p.") ||
-        fun.FunctionName.StartsWith("$p2i.")))
-      {
-        return false;
-      }
-
-      expr = (expr as NAryExpr).Args[0];
-
-      return true;
-    }
 
     private static bool IsArithmeticExpression(NAryExpr expr)
     {
