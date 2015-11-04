@@ -46,11 +46,14 @@ namespace Lockpwn.IO
       }
     }
 
-    internal static void EmitToFileWithName(List<Declaration> declarations, string file, string name)
+    /// <summary>
+    /// Emites to a user specified file.
+    /// </summary>
+    /// <param name="declarations">Declarations</param>
+    /// <param name="file">File</param>
+    internal static void EmitToFile(List<Declaration> declarations, string file)
     {
-      string directory = BoogieProgramEmitter.GetDirectoryWithFile(file);
-      var fileName = directory + Path.DirectorySeparatorChar + name + ".bpl";
-
+      var fileName = file + ".bpl";
       using(TokenTextWriter writer = new TokenTextWriter(fileName, true))
       {
         declarations.Emit(writer);

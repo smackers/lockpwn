@@ -92,8 +92,7 @@ namespace Lockpwn
     /// <param name="suffix">Suffix</param>
     protected void EmitProgramContext(AnalysisContext ac)
     {
-      Lockpwn.IO.BoogieProgramEmitter.EmitToFileWithName(ac.TopLevelDeclarations,
-        ToolCommandLineOptions.Get().Files[ToolCommandLineOptions.Get().Files.Count - 1],
+      Lockpwn.IO.BoogieProgramEmitter.EmitToFile(ac.TopLevelDeclarations,
         ToolCommandLineOptions.Get().OutputFile);
     }
 
