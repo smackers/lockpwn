@@ -182,7 +182,7 @@ namespace Lockpwn.Instrumentation
           var ptr = new LocalVariable(Token.NoToken, new TypedIdent(Token.NoToken, "ptr",
             this.AC.MemoryModelType));
           var watchdog = this.AC.GetAccessWatchdogConstants().Find(val =>
-            val.Name.Contains("WATCHED_ACCESS_" +mr.Name));
+            val.Name.Contains("WATCHED_ACCESS_" + mr.Name));
 
           var ptrExpr = new IdentifierExpr(ptr.tok, ptr);
           var watchdogExpr = new IdentifierExpr(watchdog.tok, watchdog);
