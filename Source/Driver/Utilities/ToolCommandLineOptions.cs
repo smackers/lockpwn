@@ -158,12 +158,12 @@ namespace Lockpwn
         this.EnableCorralMode = true;
         return true;
       }
-      else
-      {
-        Lockpwn.IO.Reporter.ErrorWriteLine("lockpwn: error: command line option /{0} not available.", option);
-        this.ShowHelp();
-        System.Environment.Exit((int)Outcome.FatalError);
-      }
+//      else
+//      {
+//        Lockpwn.IO.Reporter.ErrorWriteLine("lockpwn: error: command line option /{0} not available.", option);
+//        this.ShowHelp();
+//        System.Environment.Exit((int)Outcome.FatalError);
+//      }
 
       return base.ParseOption(option, ps);
     }
