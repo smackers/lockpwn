@@ -154,7 +154,7 @@ namespace Lockpwn.Refactoring
       }
       else
       {
-        cmd.callee = cmd.callee + "$" + thread.Name;
+        cmd.callee = cmd.callee + "$" + thread.Name + "$" + thread.Id.Name;
       }
 
       this.ParseAndRenameNestedFunctions(thread, callee, tid);
@@ -167,7 +167,8 @@ namespace Lockpwn.Refactoring
         if (callee != null && Utilities.ShouldAccessFunction(callee.Name))
         {
           this.ParseAndRenameNestedFunctions(thread, callee, tid);
-          (expr as IdentifierExpr).Name = (expr as IdentifierExpr).Name + "$" + thread.Name;
+          (expr as IdentifierExpr).Name = (expr as IdentifierExpr).Name + "$" +
+            thread.Name + "$" + thread.Id.Name;
         }
       }
     }
@@ -198,7 +199,8 @@ namespace Lockpwn.Refactoring
           }
 
           this.ParseAndRenameNestedFunctions(thread, callee, tid);
-          (rhs as IdentifierExpr).Name = (rhs as IdentifierExpr).Name + "$" + thread.Name;
+          (rhs as IdentifierExpr).Name = (rhs as IdentifierExpr).Name + "$" +
+            thread.Name + "$" + thread.Id.Name;
         }
       }
     }
@@ -254,7 +256,8 @@ namespace Lockpwn.Refactoring
             }
 
             this.ParseAndRenameNestedFunctions(thread, callee, tid);
-            (expr as IdentifierExpr).Name = (expr as IdentifierExpr).Name + "$" + thread.Name;
+            (expr as IdentifierExpr).Name = (expr as IdentifierExpr).Name + "$" +
+              thread.Name + "$" + thread.Id.Name;
           }
         }
       }

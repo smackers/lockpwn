@@ -44,6 +44,8 @@ namespace Lockpwn
 
       Refactoring.Factory.CreateThreadRefactoring(base.Program.AC).Run();
 
+      base.EmitProgramContext(base.Program.AC, "test");
+
       Analysis.Factory.CreateLockUsageAnalysis(base.Program.AC).Run();
       Analysis.Factory.CreateSharedStateAnalysis(base.Program.AC).Run();
 

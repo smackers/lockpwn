@@ -39,7 +39,8 @@ namespace Lockpwn
     /// <returns>Boolean value</returns>
     internal static bool ShouldSkipFromAnalysis(string funcName)
     {
-      if (funcName.StartsWith("__SMACK_static_init") ||
+      if (funcName.Equals("$initialize") ||
+        funcName.StartsWith("__SMACK_static_init") ||
         funcName.StartsWith("__SMACK_init_func_memory_model") ||
         funcName.StartsWith("__SMACK_init_func_corral_primitives") ||
         funcName.StartsWith("__SMACK_init_func_thread") ||
