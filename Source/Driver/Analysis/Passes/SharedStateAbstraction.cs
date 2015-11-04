@@ -73,7 +73,7 @@ namespace Lockpwn.Analysis
 
           foreach (var rhs in (b.Cmds[k] as AssignCmd).Rhss.OfType<NAryExpr>())
           {
-            if (!(rhs.Fun is MapSelect) || rhs.Args.Count != 2 ||
+            if (!(rhs.Fun.FunctionName.StartsWith("$load.")) || rhs.Args.Count != 2 ||
               !((rhs.Args[0] as IdentifierExpr).Name.StartsWith("$M.")))
               continue;
 
@@ -114,15 +114,6 @@ namespace Lockpwn.Analysis
         for (int k = 0; k < b.Cmds.Count; k++)
         {
           if (!(b.Cmds[k] is AssignCmd)) continue;
-
-          foreach (var lhs in (b.Cmds[k] as AssignCmd).Lhss.OfType<MapAssignLhs>())
-          {
-            if (!(lhs.DeepAssignedIdentifier.Name.StartsWith("$M.")) ||
-                !(lhs.Map is SimpleAssignLhs) || lhs.Indexes.Count != 1)
-              continue;
-
-            cmdsToRemove.Add(b.Cmds[k]);
-          }
 
           foreach (var lhs in (b.Cmds[k] as AssignCmd).Lhss.OfType<SimpleAssignLhs>())
           {

@@ -132,7 +132,6 @@ namespace Lockpwn.Instrumentation
           if (!(block.Cmds[idx] is AssignCmd)) continue;
           var assign = block.Cmds[idx] as AssignCmd;
 
-          var lhssMap = assign.Lhss.OfType<MapAssignLhs>();
           var lhss = assign.Lhss.OfType<SimpleAssignLhs>();
           var rhssMap = assign.Rhss.OfType<NAryExpr>();
           var rhss = assign.Rhss.OfType<IdentifierExpr>();
@@ -142,17 +141,7 @@ namespace Lockpwn.Instrumentation
 
           var resource = "";
 
-          if (lhssMap.Count() == 1)
-          {
-            var lhs = lhssMap.First();
-            if (lhs.DeepAssignedIdentifier.Name.StartsWith("$M.") &&
-              lhs.Map is SimpleAssignLhs && lhs.Indexes.Count == 1)
-            {
-              writeAccessFound = true;
-              resource = lhs.DeepAssignedIdentifier.Name;
-            }
-          }
-          else if (lhss.Count() == 1)
+          if (lhss.Count() == 1)
           {
             var lhs = lhss.First();
             if (lhs.DeepAssignedIdentifier.Name.StartsWith("$M."))
@@ -165,7 +154,7 @@ namespace Lockpwn.Instrumentation
           if (rhssMap.Count() == 1)
           {
             var rhs = rhssMap.First();
-            if (rhs.Fun is MapSelect && rhs.Args.Count == 2 &&
+            if (rhs.Fun.FunctionName.StartsWith("$load.") && rhs.Args.Count == 2 &&
               (rhs.Args[0] as IdentifierExpr).Name.StartsWith("$M."))
             {
               readAccessFound = true;

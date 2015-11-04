@@ -683,7 +683,7 @@ namespace Lockpwn.Analysis
       {
         foreach (var naryExpr in this.AssignmentMap[identifier].OfType<NAryExpr>())
         {
-          if (naryExpr.Fun is MapSelect && naryExpr.Args.Count == 2 &&
+          if (naryExpr.Fun.FunctionName.StartsWith("$load.") && naryExpr.Args.Count == 2 &&
             (naryExpr.Args[0] as IdentifierExpr).Name.StartsWith("$M."))
           {
             var id = naryExpr.Args[1] as IdentifierExpr;

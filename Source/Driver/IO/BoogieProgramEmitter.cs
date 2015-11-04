@@ -46,7 +46,7 @@ namespace Lockpwn.IO
       }
     }
 
-    internal static void EmitToUserSpecifiedOutput(List<Declaration> declarations, string file, string name)
+    internal static void EmitToFileWithName(List<Declaration> declarations, string file, string name)
     {
       string directory = BoogieProgramEmitter.GetDirectoryWithFile(file);
       var fileName = directory + Path.DirectorySeparatorChar + name + ".bpl";

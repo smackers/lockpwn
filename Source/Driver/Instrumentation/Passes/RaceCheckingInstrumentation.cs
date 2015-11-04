@@ -232,44 +232,12 @@ namespace Lockpwn.Instrumentation
           if (!(block.Cmds[idx] is AssignCmd)) continue;
           var assign = block.Cmds[idx] as AssignCmd;
 
-          var lhssMap = assign.Lhss.OfType<MapAssignLhs>();
           var lhss = assign.Lhss.OfType<SimpleAssignLhs>();
           var rhssMap = assign.Rhss.OfType<NAryExpr>();
           var rhss = assign.Rhss.OfType<IdentifierExpr>();
 
           CallCmd call = null;
-          if (lhssMap.Count() == 1)
-          {
-            var lhs = lhssMap.First();
-            if (lhs.DeepAssignedIdentifier.Name.StartsWith("$M.") &&
-              lhs.Map is SimpleAssignLhs && lhs.Indexes.Count == 1)
-            {
-              if (this.AC.ThreadMemoryRegions[this.Thread].Any(val =>
-                val.Name.Equals(lhs.DeepAssignedIdentifier.Name)))
-              {
-                var ind = lhs.Indexes[0];
-                call = new CallCmd(Token.NoToken,
-                  this.MakeAccessFuncName(AccessType.WRITE, lhs.DeepAssignedIdentifier.Name),
-                  new List<Expr> { ind }, new List<IdentifierExpr>());
-
-                if (rhssMap.Count() == 0 && assign.Rhss.Count == 1 &&
-                  assign.Rhss[0].ToString().StartsWith("$p"))
-                {
-                  call.Attributes = new QKeyValue(Token.NoToken, "rhs",
-                    new List<object>() { assign.Rhss[0]
-                  }, call.Attributes);
-                }
-
-                this.WriteCounter++;
-              }
-              else
-              {
-                call = new CallCmd(Token.NoToken, "_NO_OP",
-                  new List<Expr>(), new List<IdentifierExpr>());
-              }
-            }
-          }
-          else if (lhss.Count() == 1)
+          if (lhss.Count() == 1)
           {
             var lhs = lhss.First();
             if (lhs.DeepAssignedIdentifier.Name.StartsWith("$M."))
@@ -286,7 +254,13 @@ namespace Lockpwn.Instrumentation
                 {
                   call.Attributes = new QKeyValue(Token.NoToken, "rhs",
                     new List<object>() { assign.Rhss[0]
-                  }, call.Attributes);
+                    }, call.Attributes);
+                }
+                else if (rhssMap.Count() == 1 &&
+                  rhssMap.First().Fun.FunctionName.StartsWith("$store."))
+                {
+                  var ptr = rhssMap.First().Args[1];
+                  call.Ins.Add(ptr);
                 }
 
                 this.WriteCounter++;
@@ -302,7 +276,7 @@ namespace Lockpwn.Instrumentation
           if (rhssMap.Count() == 1)
           {
             var rhs = rhssMap.First();
-            if (rhs.Fun is MapSelect && rhs.Args.Count == 2 &&
+            if (rhs.Fun.FunctionName.StartsWith("$load.") && rhs.Args.Count == 2 &&
               (rhs.Args[0] as IdentifierExpr).Name.StartsWith("$M."))
             {
               if (this.AC.ThreadMemoryRegions[this.Thread].Any(val =>

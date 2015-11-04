@@ -106,19 +106,6 @@ namespace Lockpwn.Analysis
       {
         foreach (var cmd in b.Cmds.OfType<AssignCmd>())
         {
-          foreach (var lhs in cmd.Lhss.OfType<MapAssignLhs>())
-          {
-            if (!(lhs.DeepAssignedIdentifier.Name.StartsWith("$M.")) ||
-              !(lhs.Map is SimpleAssignLhs) || lhs.Indexes.Count != 1)
-              continue;
-
-            var v = this.AC.TopLevelDeclarations.OfType<GlobalVariable>().ToList().
-              Find(val => val.Name.Equals(lhs.DeepAssignedIdentifier.Name));
-
-            if (!memoryRegions.Any(val => val.Name.Equals(v.Name)))
-              memoryRegions.Add(v);
-          }
-
           foreach (var lhs in cmd.Lhss.OfType<SimpleAssignLhs>())
           {
             if (!(lhs.DeepAssignedIdentifier.Name.StartsWith("$M.")))
@@ -133,7 +120,7 @@ namespace Lockpwn.Analysis
 
           foreach (var rhs in cmd.Rhss.OfType<NAryExpr>())
           {
-            if (!(rhs.Fun is MapSelect) || rhs.Args.Count != 2 ||
+            if (!(rhs.Fun.FunctionName.StartsWith("$load.")) || rhs.Args.Count != 2 ||
               !((rhs.Args[0] as IdentifierExpr).Name.StartsWith("$M.")))
               continue;
 
