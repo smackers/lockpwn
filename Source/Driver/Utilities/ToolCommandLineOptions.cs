@@ -17,6 +17,11 @@ namespace Lockpwn
   internal class ToolCommandLineOptions : CommandLineOptions
   {
     /// <summary>
+    /// The output file.
+    /// </summary>
+    internal string OutputFile = "";
+
+    /// <summary>
     /// Print verbose information.
     /// </summary>
     internal bool VerboseMode = false;
@@ -84,22 +89,22 @@ namespace Lockpwn
         this.ShowHelp();
         System.Environment.Exit(1);
       }
-//      else if (option == "o")
-//      {
-//        if (ps.ConfirmArgumentCount(1))
-//        {
-//          var split = ps.args[ps.i].Split('.');
-//          if (split.Length != 2 || !split[1].Equals("bpl"))
-//          {
-//            Lockpwn.IO.Reporter.ErrorWriteLine("Extension of output must be '.bpl'");
-//            System.Environment.Exit((int)Outcome.ParsingError);
-//          }
-//
-//          this.OutputFile = split[0];
-//        }
-//
-//        return true;
-//      }
+      else if (option == "o")
+      {
+        if (ps.ConfirmArgumentCount(1))
+        {
+          var split = ps.args[ps.i].Split('.');
+          if (split.Length != 2 || !split[1].Equals("bpl"))
+          {
+            Lockpwn.IO.Reporter.ErrorWriteLine("Extension of output must be '.bpl'");
+            System.Environment.Exit((int)Outcome.ParsingError);
+          }
+
+          this.OutputFile = split[0];
+        }
+
+        return true;
+      }
       else if (option == "v")
       {
         this.VerboseMode = true;

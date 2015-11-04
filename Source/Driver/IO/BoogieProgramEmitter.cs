@@ -46,6 +46,17 @@ namespace Lockpwn.IO
       }
     }
 
+    internal static void EmitToUserSpecifiedOutput(List<Declaration> declarations, string file, string name)
+    {
+      string directory = BoogieProgramEmitter.GetDirectoryWithFile(file);
+      var fileName = directory + Path.DirectorySeparatorChar + name + ".bpl";
+
+      using(TokenTextWriter writer = new TokenTextWriter(fileName, true))
+      {
+        declarations.Emit(writer);
+      }
+    }
+
     /// <summary>
     /// Checks if the file with the given suffix and extension exists.
     /// </summary>

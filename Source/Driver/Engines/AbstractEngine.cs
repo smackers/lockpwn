@@ -86,6 +86,20 @@ namespace Lockpwn
     }
 
     /// <summary>
+    /// Emits the given analysis context to the user specified output file.
+    /// </summary>
+    /// <param name="ac">AnalysisContext</param>
+    /// <param name="suffix">Suffix</param>
+    protected void EmitProgramContext(AnalysisContext ac)
+    {
+
+
+      Lockpwn.IO.BoogieProgramEmitter.EmitToUserSpecifiedOutput(ac.TopLevelDeclarations,
+        ToolCommandLineOptions.Get().Files[ToolCommandLineOptions.Get().Files.Count - 1],
+        ToolCommandLineOptions.Get().OutputFile);
+    }
+
+    /// <summary>
     /// Emits the given analysis context.
     /// </summary>
     /// <param name="ac">AnalysisContext</param>

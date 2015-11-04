@@ -60,7 +60,14 @@ namespace Lockpwn
         var originalAnalysisContext = base.ParseContextFromInputFile();
         Instrumentation.Factory.CreateYieldInstrumentation(originalAnalysisContext).Run();
 
-        base.EmitProgramContext(originalAnalysisContext, "corral");
+        if (ToolCommandLineOptions.Get().OutputFile.Length > 0)
+        {
+          base.EmitProgramContext(originalAnalysisContext);
+        }
+        else
+        {
+          base.EmitProgramContext(originalAnalysisContext, "corral");
+        }
       }
 
       if (ToolCommandLineOptions.Get().MeasureTime)
