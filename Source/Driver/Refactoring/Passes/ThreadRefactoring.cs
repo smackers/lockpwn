@@ -152,6 +152,10 @@ namespace Lockpwn.Refactoring
       {
         cmd.callee = cmd.callee + "$" + tid.Name;
       }
+      else if (thread.IsMain)
+      {
+        cmd.callee = cmd.callee + "$" + thread.Name;
+      }
       else
       {
         cmd.callee = cmd.callee + "$" + thread.Name + "$" + thread.Id.Name;
@@ -167,8 +171,18 @@ namespace Lockpwn.Refactoring
         if (callee != null && Utilities.ShouldAccessFunction(callee.Name))
         {
           this.ParseAndRenameNestedFunctions(thread, callee, tid);
-          (expr as IdentifierExpr).Name = (expr as IdentifierExpr).Name + "$" +
-            thread.Name + "$" + thread.Id.Name;
+
+          var suffix = "";
+          if (thread.IsMain)
+          {
+            suffix = "$" + thread.Name;
+          }
+          else
+          {
+            suffix = "$" + thread.Name + "$" + thread.Id.Name;
+          }
+
+          (expr as IdentifierExpr).Name = (expr as IdentifierExpr).Name + suffix;
         }
       }
     }
@@ -199,8 +213,18 @@ namespace Lockpwn.Refactoring
           }
 
           this.ParseAndRenameNestedFunctions(thread, callee, tid);
-          (rhs as IdentifierExpr).Name = (rhs as IdentifierExpr).Name + "$" +
-            thread.Name + "$" + thread.Id.Name;
+
+          var suffix = "";
+          if (thread.IsMain)
+          {
+            suffix = "$" + thread.Name;
+          }
+          else
+          {
+            suffix = "$" + thread.Name + "$" + thread.Id.Name;
+          }
+
+          (rhs as IdentifierExpr).Name = (rhs as IdentifierExpr).Name + suffix;
         }
       }
     }
@@ -256,8 +280,18 @@ namespace Lockpwn.Refactoring
             }
 
             this.ParseAndRenameNestedFunctions(thread, callee, tid);
-            (expr as IdentifierExpr).Name = (expr as IdentifierExpr).Name + "$" +
-              thread.Name + "$" + thread.Id.Name;
+
+            var suffix = "";
+            if (thread.IsMain)
+            {
+              suffix = "$" + thread.Name;
+            }
+            else
+            {
+              suffix = "$" + thread.Name + "$" + thread.Id.Name;
+            }
+
+            (expr as IdentifierExpr).Name = (expr as IdentifierExpr).Name + suffix;
           }
         }
       }
