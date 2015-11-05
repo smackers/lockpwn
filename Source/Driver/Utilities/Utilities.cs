@@ -63,6 +63,7 @@ namespace Lockpwn
         funcName.Contains("__call_wrapper") ||
         funcName.Contains("__SMACK_nondet") ||
         funcName.Contains("__SMACK_dummy") ||
+        funcName.Contains("__VERIFIER_assert") ||
         funcName.Contains("__VERIFIER_assume") ||
         funcName.Contains("__VERIFIER_error") ||
         funcName.Contains("__VERIFIER_nondet_int"))
