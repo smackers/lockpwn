@@ -224,7 +224,21 @@ namespace Lockpwn.Analysis
     private Thread GetAbstractSpawnedThread(Thread parent, Implementation impl, Expr tidExpr, CallCmd spawner)
     {
       ThreadId tid = this.GetAbstractThreadId(tidExpr, impl, spawner);
-      var threadName = (spawner.Ins[2] as IdentifierExpr).Name;
+
+      string threadName = "";
+      if (spawner.Ins[2] is IdentifierExpr)
+      {
+        threadName = (spawner.Ins[2] as IdentifierExpr).Name;
+      }
+      else if (spawner.Ins[2] is NAryExpr)
+      {
+        var threadExpr = spawner.Ins[2] as NAryExpr;
+        if (threadExpr.Fun.FunctionName.StartsWith("$bitcast."))
+        {
+          threadName = (threadExpr.Args[0] as IdentifierExpr).Name;
+        }
+      }
+
       var thread = Thread.Create(this.AC, tid, threadName, spawner.Ins[3], parent);
 
       parent.AddChild(thread);
