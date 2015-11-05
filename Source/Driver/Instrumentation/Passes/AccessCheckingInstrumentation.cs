@@ -285,6 +285,12 @@ namespace Lockpwn.Instrumentation
         }
       }
 
+      // HACK for functions with infinite loops
+      if (block == null)
+      {
+        block = targetFunction.Blocks[targetFunction.Blocks.Count - 1];
+      }
+
       return new Tuple<Block, int>(block, index);
     }
 
