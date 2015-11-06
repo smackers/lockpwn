@@ -46,7 +46,8 @@ namespace Lockpwn.Instrumentation
         this.Timer.Start();
       }
 
-      this.InstrumentYieldsInPThreadCreate();
+//      this.InstrumentYieldInPThreadCreate();
+      this.InstrumentYieldInThreadStart();
 
       foreach (var impl in this.AC.TopLevelDeclarations.OfType<Implementation>().ToList())
       {
@@ -57,9 +58,9 @@ namespace Lockpwn.Instrumentation
         if (Utilities.ShouldSkipFromAnalysis(impl.Name))
           continue;
         
-        this.InstrumentYieldsInLocks(impl);
-        this.InstrumentYieldsInUnlocks(impl);
-        this.InstrumentYieldsInMemoryAccesses(impl);
+        this.InstrumentYieldInLocks(impl);
+        this.InstrumentYieldInUnlocks(impl);
+        this.InstrumentYieldInMemoryAccesses(impl);
       }
 
       if (ToolCommandLineOptions.Get().SuperVerboseMode)
@@ -77,7 +78,7 @@ namespace Lockpwn.Instrumentation
 
     #region yield instrumentation
 
-    private void InstrumentYieldsInPThreadCreate()
+    private void InstrumentYieldInPThreadCreate()
     {
       var impl = this.AC.GetImplementation("pthread_create");
       foreach (var block in impl.Blocks)
@@ -102,7 +103,17 @@ namespace Lockpwn.Instrumentation
       }
     }
 
-    private void InstrumentYieldsInLocks(Implementation impl)
+    private void InstrumentYieldInThreadStart()
+    {
+      foreach (var impl in this.AC.GetThreadFunctions())
+      {
+        var firstBlock = impl.Blocks[0];
+        firstBlock.Cmds.Insert(0, new YieldCmd(Token.NoToken));
+        this.YieldCounter++;
+      }
+    }
+
+    private void InstrumentYieldInLocks(Implementation impl)
     {
       foreach (var block in impl.Blocks)
       {
@@ -124,7 +135,7 @@ namespace Lockpwn.Instrumentation
       }
     }
 
-    private void InstrumentYieldsInUnlocks(Implementation impl)
+    private void InstrumentYieldInUnlocks(Implementation impl)
     {
       foreach (var block in impl.Blocks)
       {
@@ -149,7 +160,7 @@ namespace Lockpwn.Instrumentation
       }
     }
 
-    private void InstrumentYieldsInMemoryAccesses(Implementation impl)
+    private void InstrumentYieldInMemoryAccesses(Implementation impl)
     {
       foreach (var block in impl.Blocks)
       {

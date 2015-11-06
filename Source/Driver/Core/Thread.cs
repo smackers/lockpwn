@@ -106,14 +106,14 @@ namespace Lockpwn
     {
       var thread = new Thread(ac);
       ac.MainThread = thread;
-      ac.Threads.Add(thread);
+      ac.RegisterThread(thread);
       return thread;
     }
 
     internal static Thread Create(AnalysisContext ac, ThreadId id, string name, Expr arg, Thread parent)
     {
       var thread = new Thread(ac, id, name, arg, parent);
-      ac.Threads.Add(thread);
+      ac.RegisterThread(thread);
       return thread;
     }
 
@@ -165,7 +165,7 @@ namespace Lockpwn
         thread.Children.Add(clonedChild);
       }
 
-      ac.Threads.Add(thread);
+      ac.RegisterThread(thread);
 
       return thread;
     }

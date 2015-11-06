@@ -31,6 +31,11 @@ namespace Lockpwn
     /// </summary>
     private static ErrorReporter ErrorReporter;
 
+    /// <summary>
+    /// List of known thread names in the analysis context.
+    /// </summary>
+    private static HashSet<string> KnownThreadNames;
+
     #endregion
 
     #region fields
@@ -69,6 +74,7 @@ namespace Lockpwn
     static AnalysisContext()
     {
       AnalysisContext.ErrorReporter = new ErrorReporter();
+      AnalysisContext.KnownThreadNames = new HashSet<string>();
     }
 
     /// <summary>
@@ -139,6 +145,19 @@ namespace Lockpwn
     }
 
     /// <summary>
+    /// Registers a new thread.
+    /// </summary>
+    /// <param name="thread">Thread</param>
+    internal void RegisterThread(Thread thread)
+    {
+      this.Threads.Add(thread);
+      if (!thread.IsMain)
+      {
+        AnalysisContext.KnownThreadNames.Add(thread.Name);
+      }
+    }
+
+    /// <summary>
     /// Returns the error reporter associated with this analysis context.
     /// </summary>
     /// <returns>ErrorReporter</returns>
@@ -147,84 +166,15 @@ namespace Lockpwn
       return AnalysisContext.ErrorReporter;
     }
 
-    /// <summary>
-    /// Eliminates the dead variables.
-    /// </summary>
-    internal void EliminateDeadVariables()
-    {
-      ExecutionEngine.EliminateDeadVariables(this.BoogieProgram);
-    }
-
-    /// <summary>
-    /// Eliminates the assertions.
-    /// </summary>
-    internal void EliminateAssertions()
-    {
-      foreach (var impl in this.TopLevelDeclarations.OfType<Implementation>())
-      {
-        foreach (var block in impl.Blocks)
-        {
-          block.Cmds.RemoveAll(val => val is AssertCmd);
-        }
-      }
-    }
-
-    /// <summary>
-    /// Eliminates the non-candidate invariant inference assertions.
-    /// </summary>
-    internal void EliminateNonInvariantInferenceAssertions()
-    {
-      foreach (var impl in this.TopLevelDeclarations.OfType<Implementation>())
-      {
-        foreach (var block in impl.Blocks)
-        {
-          block.Cmds.RemoveAll(val => val is AssertCmd &&
-            !QKeyValue.FindBoolAttribute((val as AssertCmd).Attributes, "candidate"));
-        }
-      }
-    }
-
-    /// <summary>
-    /// Inlines the program.
-    /// </summary>
-    internal void Inline()
-    {
-      ExecutionEngine.Inline(this.BoogieProgram);
-    }
-
-    internal void InlineThread(Thread thread)
-    {
-      foreach (var impl in this.GetThreadSpecificFunctions(thread))
-      {
-        if (impl.Equals(thread.Function) && thread.IsMain)
-          continue;
-        impl.Proc.Attributes = new QKeyValue(Token.NoToken,
-          "inline", new List<object>{ new LiteralExpr(Token.NoToken, BigNum.FromInt(1)) },
-          impl.Proc.Attributes);
-        impl.Attributes = new QKeyValue(Token.NoToken,
-          "inline", new List<object>{ new LiteralExpr(Token.NoToken, BigNum.FromInt(1)) },
-          impl.Attributes);
-      }
-    }
-
-    internal void InlineThreadHelpers()
-    {
-      foreach (var impl in this.TopLevelDeclarations.OfType<Implementation>())
-      {
-        if (!Utilities.IsPThreadFunction(impl.Name))
-          continue;
-        impl.Proc.Attributes = new QKeyValue(Token.NoToken,
-          "inline", new List<object>{ new LiteralExpr(Token.NoToken, BigNum.FromInt(1)) },
-          impl.Proc.Attributes);
-        impl.Attributes = new QKeyValue(Token.NoToken,
-          "inline", new List<object>{ new LiteralExpr(Token.NoToken, BigNum.FromInt(1)) },
-          impl.Attributes);
-      }
-    }
-
     internal Graph<Block> GetImplementationGraph(Implementation impl)
     {
       return Microsoft.Boogie.Program.GraphFromImpl(impl);
+    }
+
+    internal List<Implementation> GetThreadFunctions()
+    {
+      return this.TopLevelDeclarations.OfType<Implementation>().ToList().
+        FindAll(val => AnalysisContext.KnownThreadNames.Contains(val.Name));
     }
 
     internal List<Implementation> GetThreadSpecificFunctions(Thread thread)
@@ -235,7 +185,7 @@ namespace Lockpwn
       foreach (var impl in this.TopLevelDeclarations.OfType<Implementation>())
       {
         if (QKeyValue.FindStringAttribute(impl.Attributes, "tag") != null &&
-            QKeyValue.FindStringAttribute(impl.Attributes, "tag").Equals(thread.Name))
+          QKeyValue.FindStringAttribute(impl.Attributes, "tag").Equals(thread.Name))
         {
           functions.Add(impl);
         }
@@ -319,6 +269,81 @@ namespace Lockpwn
     internal string GetAccessWatchdogConstantName(string name)
     {
       return "WATCHED_ACCESS_" + name;
+    }
+
+    /// <summary>
+    /// Eliminates the dead variables.
+    /// </summary>
+    internal void EliminateDeadVariables()
+    {
+      ExecutionEngine.EliminateDeadVariables(this.BoogieProgram);
+    }
+
+    /// <summary>
+    /// Eliminates the assertions.
+    /// </summary>
+    internal void EliminateAssertions()
+    {
+      foreach (var impl in this.TopLevelDeclarations.OfType<Implementation>())
+      {
+        foreach (var block in impl.Blocks)
+        {
+          block.Cmds.RemoveAll(val => val is AssertCmd);
+        }
+      }
+    }
+
+    /// <summary>
+    /// Eliminates the non-candidate invariant inference assertions.
+    /// </summary>
+    internal void EliminateNonInvariantInferenceAssertions()
+    {
+      foreach (var impl in this.TopLevelDeclarations.OfType<Implementation>())
+      {
+        foreach (var block in impl.Blocks)
+        {
+          block.Cmds.RemoveAll(val => val is AssertCmd &&
+            !QKeyValue.FindBoolAttribute((val as AssertCmd).Attributes, "candidate"));
+        }
+      }
+    }
+
+    /// <summary>
+    /// Inlines the program.
+    /// </summary>
+    internal void Inline()
+    {
+      ExecutionEngine.Inline(this.BoogieProgram);
+    }
+
+    internal void InlineThread(Thread thread)
+    {
+      foreach (var impl in this.GetThreadSpecificFunctions(thread))
+      {
+        if (impl.Equals(thread.Function) && thread.IsMain)
+          continue;
+        impl.Proc.Attributes = new QKeyValue(Token.NoToken,
+          "inline", new List<object>{ new LiteralExpr(Token.NoToken, BigNum.FromInt(1)) },
+          impl.Proc.Attributes);
+        impl.Attributes = new QKeyValue(Token.NoToken,
+          "inline", new List<object>{ new LiteralExpr(Token.NoToken, BigNum.FromInt(1)) },
+          impl.Attributes);
+      }
+    }
+
+    internal void InlineThreadHelpers()
+    {
+      foreach (var impl in this.TopLevelDeclarations.OfType<Implementation>())
+      {
+        if (!Utilities.IsPThreadFunction(impl.Name))
+          continue;
+        impl.Proc.Attributes = new QKeyValue(Token.NoToken,
+          "inline", new List<object>{ new LiteralExpr(Token.NoToken, BigNum.FromInt(1)) },
+          impl.Proc.Attributes);
+        impl.Attributes = new QKeyValue(Token.NoToken,
+          "inline", new List<object>{ new LiteralExpr(Token.NoToken, BigNum.FromInt(1)) },
+          impl.Attributes);
+      }
     }
 
     internal bool IsAToolVariable(Variable v)
