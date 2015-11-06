@@ -50,6 +50,8 @@ namespace Lockpwn
 
     internal bool IsEqual(IdentifierExpr tid)
     {
+      if (tid == null)
+        return false;
       if (tid.Name.Equals(this.Id.Name))
         return true;
       return false;

@@ -120,8 +120,8 @@ namespace Lockpwn.Refactoring
       }
     }
 
-    private void ParseAndRenameFunctionsInCall(Thread thread, Implementation impl, Block block,
-      CallCmd cmd, IdentifierExpr tid)
+    private void ParseAndRenameFunctionsInCall(Thread thread, Implementation impl,
+      Block block, CallCmd cmd, IdentifierExpr tid)
     {
       var callee = this.AC.GetImplementation(cmd.callee);
 
@@ -137,7 +137,7 @@ namespace Lockpwn.Refactoring
 
       if (this.AC.Threads.Any(val => val.Name.Equals(cmd.callee)))
       {
-        thread = this.AC.Threads.First(val => !val.IsMain && val.Id.IsEqual(tid));
+        thread = this.AC.Threads.First(val => val.Name.Equals(cmd.callee));
         cmd.callee = thread.Name + "$" + thread.Id;
         return;
       }
