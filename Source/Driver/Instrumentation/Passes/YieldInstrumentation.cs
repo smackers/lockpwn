@@ -58,6 +58,7 @@ namespace Lockpwn.Instrumentation
           continue;
         
         this.InstrumentYieldsInLocks(impl);
+        this.InstrumentYieldsInUnlocks(impl);
         this.InstrumentYieldsInMemoryAccesses(impl);
       }
 
@@ -112,10 +113,35 @@ namespace Lockpwn.Instrumentation
 
           var call = block.Cmds[idx] as CallCmd;
           if (!call.callee.Equals("pthread_mutex_lock") &&
-              !call.callee.Equals("pthread_mutex_unlock"))
+            !call.callee.Equals("corral_atomic_begin"))
             continue;
 
           block.Cmds.Insert(idx, new YieldCmd(Token.NoToken));
+          idx++;
+
+          this.YieldCounter++;
+        }
+      }
+    }
+
+    private void InstrumentYieldsInUnlocks(Implementation impl)
+    {
+      foreach (var block in impl.Blocks)
+      {
+        for (int idx = 0; idx < block.Cmds.Count; idx++)
+        {
+          if (!(block.Cmds[idx] is CallCmd))
+            continue;
+
+          var call = block.Cmds[idx] as CallCmd;
+          if (!call.callee.Equals("pthread_mutex_unlock") &&
+            !call.callee.Equals("corral_atomic_end"))
+            continue;
+
+          if (block.Cmds.Count == idx + 1)
+            block.Cmds.Add(new YieldCmd(Token.NoToken));
+          else
+            block.Cmds.Insert(idx + 1, new YieldCmd(Token.NoToken));
           idx++;
 
           this.YieldCounter++;
