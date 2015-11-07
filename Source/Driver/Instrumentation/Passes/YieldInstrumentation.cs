@@ -46,9 +46,9 @@ namespace Lockpwn.Instrumentation
         this.Timer.Start();
       }
 
-      this.InstrumentYieldInPThreadCreate();
+//      this.InstrumentYieldInThreadCreate();
       this.InstrumentYieldInCallWrapperStart();
-      this.InstrumentYieldInThreadStart();
+//      this.InstrumentYieldInThreadStart();
 
       foreach (var impl in this.AC.TopLevelDeclarations.OfType<Implementation>().ToList())
       {
@@ -58,7 +58,8 @@ namespace Lockpwn.Instrumentation
           continue;
         if (Utilities.ShouldSkipFromAnalysis(impl.Name))
           continue;
-        
+
+        this.InstrumentYieldInThreadJoins(impl);
         this.InstrumentYieldInLocks(impl);
         this.InstrumentYieldInUnlocks(impl);
         this.InstrumentYieldInMemoryAccesses(impl);
@@ -79,7 +80,7 @@ namespace Lockpwn.Instrumentation
 
     #region yield instrumentation
 
-    private void InstrumentYieldInPThreadCreate()
+    private void InstrumentYieldInThreadCreate()
     {
       var impl = this.AC.GetImplementation("pthread_create");
       foreach (var block in impl.Blocks)
@@ -163,6 +164,27 @@ namespace Lockpwn.Instrumentation
             block.Cmds.Add(new YieldCmd(Token.NoToken));
           else
             block.Cmds.Insert(idx + 1, new YieldCmd(Token.NoToken));
+          idx++;
+
+          this.YieldCounter++;
+        }
+      }
+    }
+
+    private void InstrumentYieldInThreadJoins(Implementation impl)
+    {
+      foreach (var block in impl.Blocks)
+      {
+        for (int idx = 0; idx < block.Cmds.Count; idx++)
+        {
+          if (!(block.Cmds[idx] is CallCmd))
+            continue;
+
+          var call = block.Cmds[idx] as CallCmd;
+          if (!call.callee.Equals("pthread_join"))
+            continue;
+
+          block.Cmds.Insert(idx, new YieldCmd(Token.NoToken));
           idx++;
 
           this.YieldCounter++;
