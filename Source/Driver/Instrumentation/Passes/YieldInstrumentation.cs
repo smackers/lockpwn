@@ -46,7 +46,8 @@ namespace Lockpwn.Instrumentation
         this.Timer.Start();
       }
 
-      this.InstrumentYieldInPThreadCreate();
+//      this.InstrumentYieldInPThreadCreate();
+      this.InstrumentYieldInCallWrapperStart();
       this.InstrumentYieldInThreadStart();
 
       foreach (var impl in this.AC.TopLevelDeclarations.OfType<Implementation>().ToList())
@@ -101,6 +102,15 @@ namespace Lockpwn.Instrumentation
           this.YieldCounter++;
         }
       }
+    }
+
+    // HACK make this start of async call
+    private void InstrumentYieldInCallWrapperStart()
+    {
+      var impl = this.AC.GetImplementation("__call_wrapper");
+      var firstBlock = impl.Blocks[0];
+      firstBlock.Cmds.Insert(0, new YieldCmd(Token.NoToken));
+      this.YieldCounter++;
     }
 
     private void InstrumentYieldInThreadStart()
