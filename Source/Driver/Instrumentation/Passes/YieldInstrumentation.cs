@@ -46,7 +46,7 @@ namespace Lockpwn.Instrumentation
         this.Timer.Start();
       }
 
-//      this.InstrumentYieldInPThreadCreate();
+      this.InstrumentYieldInPThreadCreate();
       this.InstrumentYieldInThreadStart();
 
       foreach (var impl in this.AC.TopLevelDeclarations.OfType<Implementation>().ToList())
