@@ -189,7 +189,7 @@ namespace Lockpwn.Instrumentation
     {
       if (this.AC.IsAToolFunc(impl.Name))
         return;
-      if (!Utilities.ShouldAccessFunction(impl.Name))
+      if (Utilities.ShouldNotAccessFunction(impl.Name))
         return;
       if (Utilities.ShouldSkipFromAnalysis(impl.Name))
         return;
@@ -219,7 +219,7 @@ namespace Lockpwn.Instrumentation
     {
       if (this.AC.IsAToolFunc(impl.Name))
         return;
-      if (!Utilities.ShouldAccessFunction(impl.Name))
+      if (Utilities.ShouldNotAccessFunction(impl.Name))
         return;
       if (Utilities.ShouldSkipFromAnalysis(impl.Name))
         return;

@@ -275,7 +275,7 @@ namespace Lockpwn.Analysis
     private void IdentifyLockCreationInCall(Thread parent, CallCmd cmd, List<Expr> inPtrs)
     {
       var impl = this.AC.GetImplementation(cmd.callee);
-      if (impl == null || !Utilities.ShouldAccessFunction(impl.Name))
+      if (impl == null || Utilities.ShouldNotAccessFunction(impl.Name))
         return;
 
       this.IdentifyLockCreationInImplementation(parent, impl, inPtrs);
@@ -290,7 +290,7 @@ namespace Lockpwn.Analysis
     private void IdentifyLockUsageInCall(Thread parent, CallCmd cmd, List<Expr> inPtrs)
     {
       var impl = this.AC.GetImplementation(cmd.callee);
-      if (impl == null || !Utilities.ShouldAccessFunction(impl.Name))
+      if (impl == null || Utilities.ShouldNotAccessFunction(impl.Name))
         return;
 
       this.IdentifyLockUsageInImplementation(parent, impl, inPtrs);

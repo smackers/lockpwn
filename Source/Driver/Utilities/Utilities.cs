@@ -16,11 +16,11 @@ namespace Lockpwn
   internal static class Utilities
   {
     /// <summary>
-    /// Checks if the given function should be accessed.
+    /// Checks if the given function should not be accessed.
     /// </summary>
     /// <param name="funcName">Function name</param>
     /// <returns>Boolean value</returns>
-    internal static bool ShouldAccessFunction(string funcName)
+    internal static bool ShouldNotAccessFunction(string funcName)
     {
       if (funcName.StartsWith("$memcpy") || funcName.StartsWith("$memcpy_fromio") ||
         funcName.StartsWith("$memset") ||
@@ -28,8 +28,8 @@ namespace Lockpwn
         funcName.StartsWith("$free") ||
         funcName.Equals("pthread_mutex_lock") ||
         funcName.Equals("pthread_mutex_unlock"))
-        return false;
-      return true;
+        return true;
+      return false;
     }
 
     /// <summary>
@@ -44,6 +44,7 @@ namespace Lockpwn
         funcName.StartsWith("__SMACK_init_func_memory_model") ||
         funcName.StartsWith("__SMACK_init_func_corral_primitives") ||
         funcName.StartsWith("__SMACK_init_func_thread") ||
+        funcName.StartsWith("boogie_si_record_") ||
         funcName.StartsWith("$malloc") || funcName.StartsWith("$alloc") ||
         funcName.StartsWith("$free") ||
         funcName.Contains("pthread_mutex_init") ||
@@ -56,7 +57,6 @@ namespace Lockpwn
         funcName.Contains("pthread_mutexattr_init") ||
         funcName.Contains("pthread_mutexattr_settype") ||
         funcName.Contains("pthread_self") ||
-        funcName.Contains("boogie_si_record_i32") ||
         funcName.Contains("corral_atomic_begin") ||
         funcName.Contains("corral_atomic_end") ||
         funcName.Contains("corral_getThreadID") ||

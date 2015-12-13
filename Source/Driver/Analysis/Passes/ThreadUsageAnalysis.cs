@@ -208,7 +208,7 @@ namespace Lockpwn.Analysis
     private void IdentifyThreadUsageInCall(Thread parent, Thread child, CallCmd cmd, List<Expr> inPtrs)
     {
       var impl = this.AC.GetImplementation(cmd.callee);
-      if (impl == null || !Utilities.ShouldAccessFunction(impl.Name))
+      if (impl == null || Utilities.ShouldNotAccessFunction(impl.Name))
         return;
 
       this.IdentifyThreadUsageInImplementation(parent, child, impl, inPtrs);

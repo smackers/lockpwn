@@ -54,7 +54,7 @@ namespace Lockpwn.Instrumentation
       {
         if (this.AC.IsAToolFunc(impl.Name))
           continue;
-        if (!Utilities.ShouldAccessFunction(impl.Name))
+        if (Utilities.ShouldNotAccessFunction(impl.Name))
           continue;
         if (Utilities.ShouldSkipFromAnalysis(impl.Name))
           continue;
