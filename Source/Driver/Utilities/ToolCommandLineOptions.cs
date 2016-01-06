@@ -99,7 +99,7 @@ namespace Lockpwn
         if (ps.ConfirmArgumentCount(1))
         {
           var output = ps.args[ps.i];
-          if (output.Length < 5 && !output.Substring(output.Length - 4).Equals(".bpl"))
+          if (output.Length < 5 || !output.Substring(output.Length - 4).Equals(".bpl"))
           {
             Lockpwn.IO.Reporter.ErrorWriteLine("Extension of output must be '.bpl'");
             System.Environment.Exit((int)Outcome.ParsingError);

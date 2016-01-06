@@ -53,9 +53,18 @@ namespace Lockpwn.IO
     internal static void EmitToUserSpecifiedFile(List<Declaration> declarations)
     {
       string directory = ToolCommandLineOptions.Get().OutputDirectory;
-      BoogieProgramEmitter.TryCreateDirectory(directory);
 
-      var fileName = directory + Path.DirectorySeparatorChar + ToolCommandLineOptions.Get().OutputFile;
+      var fileName = "";
+      if (directory.Length > 0)
+      {
+        BoogieProgramEmitter.TryCreateDirectory(directory);
+        fileName = directory.Length + Path.DirectorySeparatorChar + ToolCommandLineOptions.Get().OutputFile;
+      }
+      else
+      {
+        fileName = ToolCommandLineOptions.Get().OutputFile;
+      }
+
       using(TokenTextWriter writer = new TokenTextWriter(fileName, true))
       {
         declarations.Emit(writer);
@@ -109,7 +118,10 @@ namespace Lockpwn.IO
     /// </summary>
     /// <param name="directory">Directory</param>
     private static void TryCreateDirectory(string directory) {
-      Directory.CreateDirectory(directory);
+      if (directory.Length > 0)
+      {
+        Directory.CreateDirectory(directory);
+      }
     }
   }
 }
