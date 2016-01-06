@@ -17,6 +17,11 @@ namespace Lockpwn
   internal class ToolCommandLineOptions : CommandLineOptions
   {
     /// <summary>
+    /// The output directory.
+    /// </summary>
+    internal string OutputDirectory = "";
+
+    /// <summary>
     /// The output file.
     /// </summary>
     internal string OutputFile = "";
@@ -93,14 +98,15 @@ namespace Lockpwn
       {
         if (ps.ConfirmArgumentCount(1))
         {
-          var split = ps.args[ps.i].Split('.');
-          if (split.Length != 2 || !split[1].Equals("bpl"))
+          var output = ps.args[ps.i];
+          if (output.Length < 5 && !output.Substring(output.Length - 4).Equals(".bpl"))
           {
             Lockpwn.IO.Reporter.ErrorWriteLine("Extension of output must be '.bpl'");
             System.Environment.Exit((int)Outcome.ParsingError);
           }
 
-          this.OutputFile = split[0];
+          this.OutputDirectory = System.IO.Path.GetDirectoryName(output);
+          this.OutputFile = System.IO.Path.GetFileName(output);
         }
 
         return true;

@@ -50,10 +50,12 @@ namespace Lockpwn.IO
     /// Emites to a user specified file.
     /// </summary>
     /// <param name="declarations">Declarations</param>
-    /// <param name="file">File</param>
-    internal static void EmitToFile(List<Declaration> declarations, string file)
+    internal static void EmitToUserSpecifiedFile(List<Declaration> declarations)
     {
-      var fileName = file + ".bpl";
+      string directory = ToolCommandLineOptions.Get().OutputDirectory;
+      BoogieProgramEmitter.TryCreateDirectory(directory);
+
+      var fileName = directory + Path.DirectorySeparatorChar + ToolCommandLineOptions.Get().OutputFile;
       using(TokenTextWriter writer = new TokenTextWriter(fileName, true))
       {
         declarations.Emit(writer);
@@ -100,6 +102,14 @@ namespace Lockpwn.IO
       if (string.IsNullOrEmpty(directoryContainingFile))
         directoryContainingFile = Directory.GetCurrentDirectory();
       return directoryContainingFile;
+    }
+
+    /// <summary>
+    /// Creates the given directory if it does not exist.
+    /// </summary>
+    /// <param name="directory">Directory</param>
+    private static void TryCreateDirectory(string directory) {
+      Directory.CreateDirectory(directory);
     }
   }
 }
