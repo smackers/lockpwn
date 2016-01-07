@@ -58,7 +58,7 @@ namespace Lockpwn.IO
       if (directory.Length > 0)
       {
         BoogieProgramEmitter.TryCreateDirectory(directory);
-        fileName = directory.Length + Path.DirectorySeparatorChar + ToolCommandLineOptions.Get().OutputFile;
+        fileName = directory + Path.DirectorySeparatorChar + ToolCommandLineOptions.Get().OutputFile;
       }
       else
       {
