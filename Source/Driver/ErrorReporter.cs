@@ -96,8 +96,8 @@ namespace Lockpwn
 
     private bool AnalyseConflict(string state1, string state2, AssumeCmd assume1, AssumeCmd assume2)
     {
-      string t1 = this.GetThreadName(assume1.Attributes);
-      string t2 = this.GetThreadName(assume2.Attributes);
+//      string t1 = this.GetThreadName(assume1.Attributes);
+//      string t2 = this.GetThreadName(assume2.Attributes);
 
 //      if (!this.Pair.EntryPoint1.Name.Equals(ep1))
 //        return false;

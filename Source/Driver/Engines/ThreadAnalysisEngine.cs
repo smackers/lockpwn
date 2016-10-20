@@ -33,7 +33,9 @@ namespace Lockpwn
     internal override void Start()
     {
       if (ToolCommandLineOptions.Get().VerboseMode)
+      {
         Output.PrintLine(". ThreadAnalysis");
+      }
 
       if (ToolCommandLineOptions.Get().MeasureTime)
       {

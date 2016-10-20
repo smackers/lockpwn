@@ -37,7 +37,9 @@ namespace Lockpwn
     internal override void Start()
     {
       if (ToolCommandLineOptions.Get().VerboseMode)
+      {
         Output.PrintLine(". Summarization");
+      }
 
       if (ToolCommandLineOptions.Get().MeasureTime)
       {

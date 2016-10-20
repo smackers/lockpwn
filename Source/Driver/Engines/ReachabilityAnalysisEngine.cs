@@ -36,22 +36,27 @@ namespace Lockpwn
     internal override void Start()
     {
       if (ToolCommandLineOptions.Get().VerboseMode)
+      {
         Output.PrintLine(". ReachabilityAnalysis");
+      }
 
       if (ToolCommandLineOptions.Get().MeasureTime)
       {
         base.Timer.Start();
       }
 
+      string suffix;
       if (!ToolCommandLineOptions.Get().RequiresInvariantInference ||
         ToolCommandLineOptions.Get().SkipSummarization)
       {
-        base.Program.AC = base.ParseContextFromFile("sequentialized");
+        suffix = "sequentialized";
       }
       else
       {
-        base.Program.AC = base.ParseContextFromFile("summarised");
+        suffix = "summarised";
       }
+
+      base.Program.AC = base.ParseContextFromFile(suffix);
 
       Analysis.Factory.CreateRaceCheckAnalysis(base.Program.AC).Run();
 

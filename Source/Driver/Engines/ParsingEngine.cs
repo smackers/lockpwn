@@ -32,7 +32,9 @@ namespace Lockpwn
     internal override void Start()
     {
       if (ToolCommandLineOptions.Get().VerboseMode)
+      {
         Output.PrintLine(". Parsing");
+      }
 
       if (ToolCommandLineOptions.Get().MeasureTime)
       {

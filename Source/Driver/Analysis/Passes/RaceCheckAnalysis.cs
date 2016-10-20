@@ -129,7 +129,7 @@ namespace Lockpwn.Analysis
         Console.Out.Flush();
 
       ToolCommandLineOptions.Get().TheProverFactory.Close();
-      //      cce.NonNull(ToolCommandLineOptions.Get().TheProverFactory).Close();
+      cce.NonNull(ToolCommandLineOptions.Get().TheProverFactory).Close();
       vcgen.Dispose();
 
       Lockpwn.IO.Reporter.WriteTrailer(this.Stats);

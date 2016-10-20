@@ -308,10 +308,11 @@ namespace Lockpwn.Refactoring
 
     private void CleanUp()
     {
-      foreach (var func in this.DuplicatedFunctions)
-      {
-        ModelCleaner.Remove(this.AC, func);
-      }
+      // TODO: proper cleanup that does not break program due to SMACK changes
+      //foreach (var func in this.DuplicatedFunctions)
+      //{
+      //  ModelCleaner.Remove(this.AC, func);
+      //}
     }
   }
 }
