@@ -150,6 +150,7 @@ namespace Lockpwn.Analysis
       switch (outcome)
       {
         case VC.VCGen.Outcome.ReachedBound:
+          this.AC.GetErrorReporter().Result = ErrorReporter.Outcome.Correct;
           Lockpwn.IO.Reporter.Inform(String.Format("{0}verified", timeIndication));
           Output.PrintLine(string.Format("Stratified Inlining: Reached recursion bound of {0}",
             ToolCommandLineOptions.Get().RecursionBound));
@@ -157,6 +158,7 @@ namespace Lockpwn.Analysis
           break;
 
         case VC.VCGen.Outcome.Correct:
+          this.AC.GetErrorReporter().Result = ErrorReporter.Outcome.Correct;
           if (ToolCommandLineOptions.Get().vcVariety == CommandLineOptions.VCVariety.Doomed)
           {
             Lockpwn.IO.Reporter.Inform(String.Format("{0}credible", timeIndication));
@@ -171,16 +173,19 @@ namespace Lockpwn.Analysis
 
         case VC.VCGen.Outcome.TimedOut:
           stats.TimeoutCount++;
+          this.AC.GetErrorReporter().Result = ErrorReporter.Outcome.TimedOut;
           Lockpwn.IO.Reporter.Inform(String.Format("{0}timed out", timeIndication));
           break;
 
         case VC.VCGen.Outcome.OutOfMemory:
           stats.OutOfMemoryCount++;
+          this.AC.GetErrorReporter().Result = ErrorReporter.Outcome.OutOfMemory;
           Lockpwn.IO.Reporter.Inform(String.Format("{0}out of memory", timeIndication));
           break;
 
         case VC.VCGen.Outcome.Inconclusive:
           stats.InconclusiveCount++;
+          this.AC.GetErrorReporter().Result = ErrorReporter.Outcome.Inconclusive;
           Lockpwn.IO.Reporter.Inform(String.Format("{0}inconclusive", timeIndication));
           break;
 

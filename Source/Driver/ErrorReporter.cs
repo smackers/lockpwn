@@ -27,6 +27,7 @@ namespace Lockpwn
       Correct,
       Error,
       Inconclusive,
+      TimedOut,
       OutOfMemory
     }
 
