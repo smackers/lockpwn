@@ -242,8 +242,12 @@ namespace Lockpwn.Instrumentation
 
           if (!writeAccessFound && !readAccessFound)
             continue;
-          if (!this.AC.GetErrorReporter().UnprotectedResources.Contains(resource))
-            continue;
+          if (this.AC.GetErrorReporter().Result != ErrorReporter.Outcome.Inconclusive &&
+              this.AC.GetErrorReporter().Result != ErrorReporter.Outcome.OutOfMemory)
+          {
+            if (!this.AC.GetErrorReporter().UnprotectedResources.Contains(resource))
+              continue;
+          }
 
           if (block.Cmds.Count == idx + 1)
             block.Cmds.Add(new YieldCmd(Token.NoToken));

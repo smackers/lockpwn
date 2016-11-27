@@ -21,11 +21,14 @@ namespace Lockpwn
 {
   public sealed class ErrorReporter
   {
-//    private EntryPointPair Pair;
-
-    public HashSet<string> UnprotectedResources;
-
-    public bool FoundErrors;
+    public enum Outcome
+    {
+      None = 0,
+      Correct,
+      Error,
+      Inconclusive,
+      OutOfMemory
+    }
 
     enum ErrorMsgType
     {
@@ -34,11 +37,16 @@ namespace Lockpwn
       NoError
     }
 
+//    private EntryPointPair Pair;
+
+    public HashSet<string> UnprotectedResources;
+    public Outcome Result;
+
     public ErrorReporter(/*EntryPointPair pair*/)
     {
 //      this.Pair = pair;
       this.UnprotectedResources = new HashSet<string>();
-      this.FoundErrors = false;
+      this.Result = Outcome.None;
     }
 
     public int ReportCounterexample(Counterexample error)
@@ -63,7 +71,9 @@ namespace Lockpwn
       }
 
       if (errors > 0)
-        this.FoundErrors = true;
+      {
+        this.Result = Outcome.Error;
+      }
 
       return errors;
     }

@@ -61,7 +61,7 @@ namespace Lockpwn.IO
       Lockpwn.IO.Reporter.ErrorWriteLine(s);
     }
 
-    internal static void AdvisoryWriteLine(string format, params object[] args)
+    internal static void WarningWriteLine(string format, params object[] args)
     {
       Contract.Requires(format != null);
       ConsoleColor col = Console.ForegroundColor;

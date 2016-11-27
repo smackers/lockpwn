@@ -102,14 +102,23 @@ namespace Lockpwn.Analysis
         Lockpwn.IO.Reporter.ReportBplError(this.AC.EntryPoint, String.Format("Error BP5010: {0}  Encountered in implementation {1}.",
           e.Message, this.AC.EntryPoint.Name), true, true);
         errors = null;
+        this.AC.GetErrorReporter().Result = ErrorReporter.Outcome.Inconclusive;
         vcOutcome = VC.VCGen.Outcome.Inconclusive;
       }
       catch (UnexpectedProverOutputException e)
       {
-        Lockpwn.IO.Reporter.AdvisoryWriteLine("Advisory: {0} SKIPPED because of internal error: unexpected prover output: {1}",
-          this.AC.EntryPoint.Name, e.Message);
+        Lockpwn.IO.Reporter.WarningWriteLine("Warning: unexpected prover output: {0}", e.Message);
         errors = null;
+        this.AC.GetErrorReporter().Result = ErrorReporter.Outcome.Inconclusive;
         vcOutcome = VC.VCGen.Outcome.Inconclusive;
+      }
+      catch (OutOfMemoryException)
+      {
+        Lockpwn.IO.Reporter.WarningWriteLine("Warning: run out of memory during VC verification");
+        errors = null;
+        this.AC.GetErrorReporter().Result = ErrorReporter.Outcome.OutOfMemory;
+        vcOutcome = VC.VCGen.Outcome.OutOfMemory;
+        GC.Collect();
       }
 
       string timeIndication = "";
