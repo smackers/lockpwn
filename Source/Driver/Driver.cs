@@ -42,9 +42,16 @@ namespace Lockpwn
 
         Driver.ParseFiles(program);
 
-        Driver.ParseAnalyzeAndSequentialize(program);
-        Driver.RunSummarizationEngine(program);
-        Driver.RunReachabilityAnalysisEngine(program);
+        try
+        {
+          Driver.ParseAnalyzeAndSequentialize(program);
+          Driver.RunSummarizationEngine(program);
+          Driver.RunReachabilityAnalysisEngine(program);
+        }
+        catch (AnalysisFailedException)
+        {
+          Lockpwn.IO.Reporter.WarningWriteLine("Warning: Failed fast");
+        }
 
         if (ToolCommandLineOptions.Get().MeasureTime)
         {

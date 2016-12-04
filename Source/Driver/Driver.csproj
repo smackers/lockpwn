@@ -116,6 +116,7 @@
     <Compile Include="Core\ThreadId.cs" />
     <Compile Include="Analysis\PointerAnalysis.cs" />
     <Compile Include="Analysis\Passes\LockUsageAnalysis.cs" />
+    <Compile Include="Utilities\AnalysisFailedException.cs" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Utilities\" />

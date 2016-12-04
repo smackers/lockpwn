@@ -59,7 +59,30 @@ namespace Lockpwn
         base.Program.AC.Inline();
 
         var summarizedAnalysisContext = base.ParseContextFromFile("sequentialized");
-        Analysis.Factory.CreateHoudiniInvariantInference(base.Program.AC, summarizedAnalysisContext).Run();
+
+        try
+        {
+          Analysis.Factory.CreateHoudiniInvariantInference(base.Program.AC, summarizedAnalysisContext).Run();
+        }
+        catch (AnalysisFailedException)
+        {
+          if (ToolCommandLineOptions.Get().EnableCorralMode)
+          {
+            var originalAnalysisContext = base.ParseContextFromInputFile();
+            Instrumentation.Factory.CreateYieldInstrumentation(originalAnalysisContext).Run();
+
+            if (ToolCommandLineOptions.Get().OutputFile.Length > 0)
+            {
+              base.EmitProgramContext(originalAnalysisContext);
+            }
+            else
+            {
+              base.EmitProgramContext(originalAnalysisContext, "corral");
+            }
+          }
+
+          throw;
+        }
 
         ModelCleaner.RemoveExistentials(summarizedAnalysisContext);
 

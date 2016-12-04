@@ -92,6 +92,8 @@ namespace Lockpwn.Analysis
         }
       }
 
+      GC.Collect();
+
       VC.VCGen.Outcome vcOutcome;
       try
       {

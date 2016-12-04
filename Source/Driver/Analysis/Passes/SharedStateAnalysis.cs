@@ -74,6 +74,11 @@ namespace Lockpwn.Analysis
         this.IdentifySharedMemoryRegions(thread, impl);
       }
 
+      foreach (var mr in this.AC.ThreadMemoryRegions[thread])
+      {
+        AnalysisContext.SharedMemoryRegionNames.Add(mr.Name);
+      }
+
       if (ToolCommandLineOptions.Get().SuperVerboseMode)
       {
         string accesses = "";

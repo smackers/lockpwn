@@ -36,6 +36,11 @@ namespace Lockpwn
     /// </summary>
     private static HashSet<string> KnownThreadNames;
 
+    /// <summary>
+    /// Set of shared memory region names.
+    /// </summary>
+    internal static HashSet<string> SharedMemoryRegionNames;
+
     #endregion
 
     #region fields
@@ -75,6 +80,7 @@ namespace Lockpwn
     {
       AnalysisContext.ErrorReporter = new ErrorReporter();
       AnalysisContext.KnownThreadNames = new HashSet<string>();
+      AnalysisContext.SharedMemoryRegionNames = new HashSet<string>();
     }
 
     /// <summary>

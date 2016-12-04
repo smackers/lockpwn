@@ -63,8 +63,26 @@ namespace Lockpwn.Analysis
     private void PerformHoudini()
     {
       var houdiniStats = new HoudiniSession.HoudiniStatistics();
-      this.Houdini = new Houdini(this.AC.BoogieProgram, houdiniStats);
-      this.Outcome = this.Houdini.PerformHoudiniInference();
+
+      GC.Collect();
+
+      try
+      {
+        this.Houdini = new Houdini(this.AC.BoogieProgram, houdiniStats);
+        this.Outcome = this.Houdini.PerformHoudiniInference();
+      }
+      catch (OutOfMemoryException)
+      {
+        Lockpwn.IO.Reporter.WarningWriteLine("Warning: Houdini run out of memory");
+        GC.Collect();
+        throw new AnalysisFailedException();
+      }
+      catch (Exception ex)
+      {
+        Lockpwn.IO.Reporter.WarningWriteLine("Warning: Houdini failed: " + ex.Message);
+        GC.Collect();
+        throw new AnalysisFailedException();
+      }
 
       if (CommandLineOptions.Clo.PrintAssignment)
       {

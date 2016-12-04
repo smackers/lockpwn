@@ -240,6 +240,8 @@ namespace Lockpwn.Instrumentation
             }
           }
 
+          if (!AnalysisContext.SharedMemoryRegionNames.Contains(resource))
+            continue;
           if (!writeAccessFound && !readAccessFound)
             continue;
           if (this.AC.GetErrorReporter().Result != ErrorReporter.Outcome.Inconclusive &&
