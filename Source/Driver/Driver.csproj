@@ -34,41 +34,41 @@
   <ItemGroup>
     <Reference Include="System" />
     <Reference Include="Microsoft.CSharp" />
-    <Reference Include="Core">
-      <HintPath>..\..\BoogieBinaries\Core.dll</HintPath>
+    <Reference Include="BoogieAbsInt">
+      <HintPath>..\..\BoogieBinaries\BoogieAbsInt.dll</HintPath>
     </Reference>
-    <Reference Include="Basetypes">
-      <HintPath>..\..\BoogieBinaries\Basetypes.dll</HintPath>
+    <Reference Include="BoogieBasetypes">
+      <HintPath>..\..\BoogieBinaries\BoogieBasetypes.dll</HintPath>
     </Reference>
-    <Reference Include="CodeContractsExtender">
-      <HintPath>..\..\BoogieBinaries\CodeContractsExtender.dll</HintPath>
+    <Reference Include="BoogieCodeContractsExtender">
+      <HintPath>..\..\BoogieBinaries\BoogieCodeContractsExtender.dll</HintPath>
     </Reference>
-    <Reference Include="AbsInt">
-      <HintPath>..\..\BoogieBinaries\AbsInt.dll</HintPath>
+    <Reference Include="BoogieCore">
+      <HintPath>..\..\BoogieBinaries\BoogieCore.dll</HintPath>
     </Reference>
-    <Reference Include="ExecutionEngine">
-      <HintPath>..\..\BoogieBinaries\ExecutionEngine.dll</HintPath>
+    <Reference Include="BoogieExecutionEngine">
+      <HintPath>..\..\BoogieBinaries\BoogieExecutionEngine.dll</HintPath>
     </Reference>
-    <Reference Include="ParserHelper">
-      <HintPath>..\..\BoogieBinaries\ParserHelper.dll</HintPath>
+    <Reference Include="BoogieGraph">
+      <HintPath>..\..\BoogieBinaries\BoogieGraph.dll</HintPath>
+    </Reference>
+    <Reference Include="BoogieHoudini">
+      <HintPath>..\..\BoogieBinaries\BoogieHoudini.dll</HintPath>
+    </Reference>
+    <Reference Include="BoogieModel">
+      <HintPath>..\..\BoogieBinaries\BoogieModel.dll</HintPath>
+    </Reference>
+    <Reference Include="BoogieParserHelper">
+      <HintPath>..\..\BoogieBinaries\BoogieParserHelper.dll</HintPath>
+    </Reference>
+    <Reference Include="BoogieVCExpr">
+      <HintPath>..\..\BoogieBinaries\BoogieVCExpr.dll</HintPath>
+    </Reference>
+    <Reference Include="BoogieVCGeneration">
+      <HintPath>..\..\BoogieBinaries\BoogieVCGeneration.dll</HintPath>
     </Reference>
     <Reference Include="Provers.SMTLib">
       <HintPath>..\..\BoogieBinaries\Provers.SMTLib.dll</HintPath>
-    </Reference>
-    <Reference Include="VCExpr">
-      <HintPath>..\..\BoogieBinaries\VCExpr.dll</HintPath>
-    </Reference>
-    <Reference Include="VCGeneration">
-      <HintPath>..\..\BoogieBinaries\VCGeneration.dll</HintPath>
-    </Reference>
-    <Reference Include="Graph">
-      <HintPath>..\..\BoogieBinaries\Graph.dll</HintPath>
-    </Reference>
-    <Reference Include="Model">
-      <HintPath>..\..\BoogieBinaries\Model.dll</HintPath>
-    </Reference>
-    <Reference Include="Houdini">
-      <HintPath>..\..\BoogieBinaries\Houdini.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>
