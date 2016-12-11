@@ -161,7 +161,8 @@ namespace Lockpwn.Instrumentation
     private Constant CreateConstant(Thread thread)
     {
       Constant cons = new Constant(Token.NoToken, new TypedIdent(Token.NoToken, "_b$" +
-        thread.Name + "$" + this.CandidateCounter[thread], Microsoft.Boogie.Type.Bool), false);
+        thread.Name + "$" + thread.Id + "$" + this.CandidateCounter[thread],
+        Microsoft.Boogie.Type.Bool), false);
       this.ExistentialBooleans.Add(cons);
       this.CandidateCounter[thread]++;
       return cons;
