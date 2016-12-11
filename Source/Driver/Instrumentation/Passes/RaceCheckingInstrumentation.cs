@@ -78,9 +78,9 @@ namespace Lockpwn.Instrumentation
         var p1 = this.ReadCounter == 1 ? "" : "es";
         var p2 = this.WriteCounter == 1 ? "" : "es";
         Output.PrintLine("..... Instrumented '{0}' read access" + p1 + " in {1}",
-          this.ReadCounter, thread.Name);
+          this.ReadCounter, thread);
         Output.PrintLine("..... Instrumented '{0}' write access" + p2 + " in {1}",
-          this.WriteCounter, thread.Name);
+          this.WriteCounter, thread);
       }
 
       this.ReadCounter = 0;

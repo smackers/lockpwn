@@ -57,7 +57,7 @@ namespace Lockpwn.Instrumentation
         {
           var suffix = this.CandidateCounter[thread] == 1 ? "" : "s";
           Output.PrintLine("..... Instrumented '{0}' loop invariant candidate" + suffix +
-            " in '{1}'", this.CandidateCounter[thread], thread.Name);
+            " in '{1}'", this.CandidateCounter[thread], thread);
         }
       }
 
