@@ -26,6 +26,7 @@ namespace Lockpwn.Analysis
     private ExecutionTimer Timer;
 
     private HashSet<Implementation> AlreadyAnalyzedImplementations;
+    private bool UsesAtomicLock;
 
     internal LockUsageAnalysis(AnalysisContext ac)
     {
@@ -33,6 +34,7 @@ namespace Lockpwn.Analysis
       this.AC = ac;
 
       this.AlreadyAnalyzedImplementations = new HashSet<Implementation>();
+      this.UsesAtomicLock = false;
     }
 
     /// <summary>
@@ -123,6 +125,11 @@ namespace Lockpwn.Analysis
 
               this.AbstractInitializedLock(parent, lockExpr, call);
             }
+            else if (!this.UsesAtomicLock && call.callee.Equals("corral_atomic_begin"))
+            {
+              this.CreateAtomicLock();
+              this.UsesAtomicLock = true;
+            }
 
             if (!Utilities.ShouldSkipFromAnalysis(call.callee) ||
               call.callee.StartsWith("pthread_create$"))
@@ -208,9 +215,11 @@ namespace Lockpwn.Analysis
                 }
               }
 
-              if (!matched && this.AC.Locks.Count == 1)
+              if ((!matched && this.AC.Locks.Count == 1) ||
+                (!matched && this.AC.Locks.Count == 2 && this.UsesAtomicLock))
               {
-                var l = this.AC.Locks[0];
+                var l = this.AC.Locks.First(val => !val.Name.Equals("lock$atomic"));
+                //var l = this.AC.Locks[1];
 
                 if (ToolCommandLineOptions.Get().SuperVerboseMode)
                 {
@@ -228,6 +237,14 @@ namespace Lockpwn.Analysis
               else if (!matched)
               {
                 this.AbstractUsedLock(parent, lockExpr, call);
+              }
+            }
+            else if (call.callee.Equals("corral_atomic_begin") ||
+              call.callee.Equals("corral_atomic_end"))
+            {
+              if (ToolCommandLineOptions.Get().SuperVerboseMode)
+              {
+                Output.PrintLine("..... {0} uses lock 'lock$atomic'", parent);
               }
             }
 
@@ -348,13 +365,30 @@ namespace Lockpwn.Analysis
     /// Returns an abstract lock.
     /// </summary>
     /// <param name="lockExpr">Expr</param>
-    /// <returns>ThreadId</returns>
+    /// <returns>Lock</returns>
     private Lock GetAbstractLock(Expr lockExpr)
     {
       Lock l = new Lock(new Constant(Token.NoToken,
         new TypedIdent(Token.NoToken, "lock$" + this.AC.Locks.Count,
           Microsoft.Boogie.Type.Int), true), lockExpr);
       
+      l.Id.AddAttribute("lock", new object[] { });
+      this.AC.TopLevelDeclarations.Add(l.Id);
+      this.AC.Locks.Add(l);
+
+      return l;
+    }
+
+    /// <summary>
+    /// Creates the atomic lock.
+    /// </summary>
+    /// <returns>Lock</returns>
+    private Lock CreateAtomicLock()
+    {
+      Lock l = new Lock(new Constant(Token.NoToken,
+        new TypedIdent(Token.NoToken, "lock$atomic",
+          Microsoft.Boogie.Type.Int), true));
+
       l.Id.AddAttribute("lock", new object[] { });
       this.AC.TopLevelDeclarations.Add(l.Id);
       this.AC.Locks.Add(l);

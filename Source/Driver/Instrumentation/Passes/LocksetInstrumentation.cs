@@ -67,6 +67,7 @@ namespace Lockpwn.Instrumentation
     {
       this.Thread = thread;
 
+      this.AddUpdateAtomicLocksetFunc();
       this.AddUpdateLocksetFunc(Microsoft.Boogie.Type.Int);
 
       foreach (var impl in this.AC.GetThreadSpecificFunctions(thread))
@@ -120,6 +121,8 @@ namespace Lockpwn.Instrumentation
 
       foreach (var ls in this.AC.CurrentLocksets.Where(val => val.Thread.Equals(this.Thread)))
       {
+        if (ls.Lock.Name.Equals("lock$atomic"))
+          continue;
         proc.Modifies.Add(new IdentifierExpr(ls.Id.tok, ls.Id));
       }
 
@@ -130,6 +133,9 @@ namespace Lockpwn.Instrumentation
 
       foreach (var ls in this.AC.CurrentLocksets.Where(val => val.Thread.Equals(this.Thread)))
       {
+        if (ls.Lock.Name.Equals("lock$atomic"))
+          continue;
+        
         List<AssignLhs> newLhss = new List<AssignLhs>();
         List<Expr> newRhss = new List<Expr>();
 
@@ -162,6 +168,54 @@ namespace Lockpwn.Instrumentation
           },
           new List<Expr> { iVarId }));
       }
+
+      impl.Blocks.Add(b);
+      impl.Proc = proc;
+      impl.AddAttribute("inline", new object[] { new LiteralExpr(Token.NoToken, BigNum.FromInt(1)) });
+
+      this.AC.TopLevelDeclarations.Add(impl);
+    }
+
+    private void AddUpdateAtomicLocksetFunc()
+    {
+      var ls = this.AC.CurrentLocksets.Where(val => val.Thread.Equals(this.Thread)).
+        FirstOrDefault(val => val.Lock.Name.Equals("lock$atomic"));
+      if (ls == null)
+        return;
+
+      var str = "_UPDATE_CLS_ATOMIC_$";
+
+      var inParams = new List<Variable>();
+      var inParam = new LocalVariable(Token.NoToken, new TypedIdent(Token.NoToken,
+        "isLocked", Microsoft.Boogie.Type.Bool));
+
+      inParams.Add(inParam);
+
+      Procedure proc = new Procedure(Token.NoToken,
+        str + this.Thread.Name + "$" + this.Thread.Id,
+        new List<TypeVariable>(), inParams, new List<Variable>(),
+        new List<Requires>(), new List<IdentifierExpr>(), new List<Ensures>());
+      proc.AddAttribute("inline", new object[] { new LiteralExpr(Token.NoToken, BigNum.FromInt(1)) });
+      proc.Modifies.Add(new IdentifierExpr(ls.Id.tok, ls.Id));
+
+      this.AC.TopLevelDeclarations.Add(proc);
+      this.AC.ResContext.AddProcedure(proc);
+
+      Block b = new Block(Token.NoToken, "_UPDATE", new List<Cmd>(), new ReturnCmd(Token.NoToken));
+
+      List<AssignLhs> newLhss = new List<AssignLhs>();
+      List<Expr> newRhss = new List<Expr>();
+
+      newLhss.Add(new SimpleAssignLhs(ls.Id.tok, new IdentifierExpr(ls.Id.tok, ls.Id)));
+      newRhss.Add(new IdentifierExpr(inParam.tok, inParam));
+
+      var assign = new AssignCmd(Token.NoToken, newLhss, newRhss);
+      b.Cmds.Add(assign);
+
+      Implementation impl = new Implementation(Token.NoToken,
+        str + this.Thread.Name + "$" + this.Thread.Id,
+        new List<TypeVariable>(), inParams, new List<Variable>(),
+        new List<Variable>(), new List<Block>());
 
       impl.Blocks.Add(b);
       impl.Proc = proc;
@@ -208,6 +262,19 @@ namespace Lockpwn.Instrumentation
             c.callee.Equals("spin_unlock"))
           {
             c.callee = "_UPDATE_CLS_$int$" + this.Thread.Name + "$" + this.Thread.Id;
+            c.Ins.Add(Expr.False);
+            this.UnlockCounter++;
+          }
+          else if (c.callee.Equals("corral_atomic_begin"))
+          {
+            c.callee = "_UPDATE_CLS_ATOMIC_$" + this.Thread.Name + "$" + this.Thread.Id;
+            c.Ins.Add(Expr.True);
+            this.LockCounter++;
+          }
+          else if (c.callee.Equals("corral_atomic_end") ||
+            c.callee.Equals("spin_unlock"))
+          {
+            c.callee = "_UPDATE_CLS_ATOMIC_$" + this.Thread.Name + "$" + this.Thread.Id;
             c.Ins.Add(Expr.False);
             this.UnlockCounter++;
           }
