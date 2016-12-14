@@ -117,6 +117,7 @@
     <Compile Include="Analysis\PointerAnalysis.cs" />
     <Compile Include="Analysis\Passes\LockUsageAnalysis.cs" />
     <Compile Include="Utilities\AnalysisFailedException.cs" />
+    <Compile Include="Analysis\Passes\AtomicUsageAnalysis.cs" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Utilities\" />

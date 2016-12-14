@@ -24,6 +24,11 @@ namespace Lockpwn.Analysis
       return new LockUsageAnalysis(ac);
     }
 
+    internal static IPass CreateAtomicRegionsAnalysis(AnalysisContext ac)
+    {
+      return new AtomicRegionsAnalysis(ac);
+    }
+
     internal static IPass CreateSharedStateAnalysis(AnalysisContext ac)
     {
       return new SharedStateAnalysis(ac);

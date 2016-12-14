@@ -47,6 +47,7 @@ namespace Lockpwn
       Refactoring.Factory.CreateThreadRefactoring(base.Program.AC).Run();
 
       Analysis.Factory.CreateLockUsageAnalysis(base.Program.AC).Run();
+      Analysis.Factory.CreateAtomicRegionsAnalysis(base.Program.AC).Run();
       Analysis.Factory.CreateSharedStateAnalysis(base.Program.AC).Run();
 
       if (ToolCommandLineOptions.Get().MeasureTime)
