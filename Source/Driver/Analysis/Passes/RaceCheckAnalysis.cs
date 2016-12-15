@@ -106,6 +106,7 @@ namespace Lockpwn.Analysis
         errors = null;
         this.AC.GetErrorReporter().Result = ErrorReporter.Outcome.Inconclusive;
         vcOutcome = VC.VCGen.Outcome.Inconclusive;
+        GC.Collect();
       }
       catch (UnexpectedProverOutputException e)
       {
@@ -113,6 +114,7 @@ namespace Lockpwn.Analysis
         errors = null;
         this.AC.GetErrorReporter().Result = ErrorReporter.Outcome.Inconclusive;
         vcOutcome = VC.VCGen.Outcome.Inconclusive;
+        GC.Collect();
       }
       catch (OutOfMemoryException)
       {
@@ -120,6 +122,14 @@ namespace Lockpwn.Analysis
         errors = null;
         this.AC.GetErrorReporter().Result = ErrorReporter.Outcome.OutOfMemory;
         vcOutcome = VC.VCGen.Outcome.OutOfMemory;
+        GC.Collect();
+      }
+      catch (Exception ex)
+      {
+        Lockpwn.IO.Reporter.WarningWriteLine("Warning: VC verification failed: " + ex.Message);
+        errors = null;
+        this.AC.GetErrorReporter().Result = ErrorReporter.Outcome.Inconclusive;
+        vcOutcome = VC.VCGen.Outcome.Inconclusive;
         GC.Collect();
       }
 
